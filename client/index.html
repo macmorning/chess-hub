@@ -15,13 +15,21 @@
     <script>
         function connect(user) {
             $('#returnmessage').innerHTML = "Connecting you to the server.";
-            $.getJSON('/connect/'+user, function(response) {
-                    $('#returnmessage').text(response.returnmessage);
-                    if(response.returncode == 'ok'){
-                        window.location.replace("/client/board.html?user="+user);
-                    }
-                 })
-                .fail(function() { $('#returnmessage').text("Error connecting you to the server :("); });
+                var data = { user: user } ;
+                $.ajax({
+                    type: 'POST',
+                    url : '/connect',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        $('#returnmessage').text(response.returnmessage);
+                        if(response.returncode == 'ok'){
+                            window.location = "/client/board.html?user="+user;
+                        }
+                    },
+                    error: function() { $('#returnmessage').text("Error connecting you to the server :("); }
+                 });
         }
     </script>
 </head>

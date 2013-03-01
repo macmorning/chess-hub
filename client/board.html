@@ -2,7 +2,7 @@
 <html lang="en" ng-app="angularChess" manifest="cache.manifest">
 <head>
     <meta charset="utf-8">
-    <title>Angular Chess</title>
+    <title>Welcome to Chess Hub</title>
     <meta name=viewport content="width=device-width, initial-scale=1.0, minimum-scale=0.5 maximum-scale=1.0">
     <link rel="stylesheet" media="all" href="css/app.css"/>
     <link rel="stylesheet" media="only screen and (max-width: 800px)" href="css/app_mobile.css"/>
@@ -15,20 +15,35 @@
     <!--  <script src="js/directives.js"></script>-->
   <script>
     var user = window.location.href.substr(window.location.href.indexOf("=")+1);
-    alert(user);
+
     var counter = 0;
     var poll = function() {
-      $.getJSON('/poll/'+counter, function(response) {
-         counter = response.count;
-         var elem = $('#output');
-         elem.text(elem.text() + response.append);
-         poll();
-      });
+        $.getJSON('/poll/'+counter, function(response) {
+            counter = response.count;
+            var output = $('#output');
+            response.append.forEach( 
+                function(message) { output.text(output.text() + message.time + " " + message.user + " : " + message.msg + "\n" );}
+            );
+            output.scrollTop = output.scrollHeight;
+            poll();
+        });
     }
     poll();
+
     function sendMessage(text) {
-            $.get('/msg/'+user+'/'+text);
+            var data = { user: user, msg: text } ;
+            var output = $('#output');
+            $.ajax({
+                type: 'POST',
+                url : '/msg',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify(data),
+                success: function() {$('#input').val('');},
+                error: function() { output.text(output.text() + "Error connecting you to the server :(\n"); }
+             });
     }
+
   </script>
 </head>
 <body ng-controller="GlobalCtrl">

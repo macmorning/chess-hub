@@ -1,8 +1,21 @@
+var PORT = 8080;
 var http = require('http'),
     url = require('url'),
     fs = require('fs');
 
-var messages = ["testing"];
+
+function currTime() {
+    var currentDate = new Date();
+    var hours = currentDate.getHours();
+    if (hours < 10) hours = "0" + hours;
+    var minutes = currentDate.getMinutes();
+    if (minutes < 10) minutes = "0" + minutes;
+    return(hours + ":" + minutes);
+}
+
+var messages = [
+        { time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !"}
+        ];
 var clients = [];
 var users = [];
 
@@ -19,34 +32,42 @@ http.createServer(function (req, res) {
    //console.log(url_parts);
 
     if(url_parts.pathname.substr(0, 8) == '/connect') {
-        LOGCONNECT && console.log(new Date() + ' [CONNEC] connect');
         // connect a user
-        var user = url_parts.pathname.substr(9);
-        LOGCONNECT && console.log(new Date() + ' [CONNEC] ... connect ' + user);
-        LOGCONNECT && console.log(new Date() + ' [CONNEC] ... current users : ' + users);
+        LOGCONNECT && console.log(currTime() + ' [CONNEC] connect');
+        var user = "";
+        var data = "";
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
+        req.on('end', function() {
+            var json = JSON.parse(data);
+            user = json.user;
+            LOGCONNECT && console.log(currTime() + ' [CONNEC] ... connect ' + user);
 
-        if (users.indexOf(user) == -1) {
-            LOGCONNECT && console.log(new Date() + ' [CONNEC] ... adding ' + user);
-            users.push(user);
-            res.writeHead(200, { 'Content-type': 'text/html'});
-            res.end(JSON.stringify( {
-                returncode: 'ok',
-                returnmessage: 'Welcome ' + user
-            }));
-        } else {
-            LOGCONNECT && console.log(new Date() + ' [CONNEC] ... ' + user + ' is already reserved');
-            res.writeHead(200, { 'Content-type': 'text/html'});
-            res.end(JSON.stringify( {
-                returncode: 'ko',
-                returnmessage: 'Sorry, ' + user + ' is already used. Please pick another name.'
-            }));
-        }
+            if (users.indexOf(user) == -1) {
+                LOGCONNECT && console.log(currTime() + ' [CONNEC] ... adding ' + user);
+                users.push(user);
+                res.writeHead(200, { 'Content-type': 'text/html'});
+                res.end(JSON.stringify( {
+                    returncode: 'ok',
+                    returnmessage: 'Welcome ' + user
+                }));
+            } else {
+                LOGCONNECT && console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved');
+                res.writeHead(200, { 'Content-type': 'text/html'});
+                res.end(JSON.stringify( {
+                    returncode: 'ko',
+                    returnmessage: 'Sorry, ' + user + ' is already used. Please pick another name.'
+                }));
+            }
+            LOGCONNECT && console.log(currTime() + ' [CONNEC] ... current users : ' + users);
+        });
     } 
 
 
     if(url_parts.pathname.substr(0, 7) == '/client' || url_parts.pathname == '/' || url_parts.pathname.substr(0, 8) == '/favicon') {
         // file serving
-        LOGSTATIC && console.log(new Date() + ' [STATIC] client file request');
+        LOGSTATIC && console.log(currTime() + ' [STATIC] client file request');
         var file='';
         if(url_parts.pathname == '/' || url_parts.pathname == '/client' || url_parts.pathname == '/client/') {
             file = 'index.html';
@@ -56,7 +77,7 @@ http.createServer(function (req, res) {
         }  else {
             file = escape(url_parts.pathname.substr(8));
         }
-        LOGSTATIC && console.log(new Date() + ' [STATIC] ... serving ../client/' + file);
+        LOGSTATIC && console.log(currTime() + ' [STATIC] ... serving ../client/' + file);
         fs.readFile('../client/'+file, function(err, data) {
          res.end(data);
         });
@@ -66,37 +87,64 @@ http.createServer(function (req, res) {
     
     else if(url_parts.pathname.substr(0, 5) == '/poll') {
         // polling
-        LOGPOLLING && console.log(new Date() + ' [POLLIN] polling')
+        LOGPOLLING && console.log(currTime() + ' [POLLIN] polling')
         var count = url_parts.pathname.replace(/[^0-9]*/, '');
-        LOGPOLLING && console.log(new Date() + ' [POLLIN] ... count = ' + count);
+        LOGPOLLING && console.log(currTime() + ' [POLLIN] ... count = ' + count);
+        res.writeHead(200, {'Content-Type': 'application/json'});
         if(messages.length > count) {
-            LOGPOLLING && console.log(new Date() + ' [POLLIN] ... sending ' + (messages.length - count) + ' new message(s)');
+            LOGPOLLING && console.log(currTime() + ' [POLLIN] ... sending ' + (messages.length - count) + ' new message(s)');
             res.end(JSON.stringify( {
             count: messages.length,
-            append: messages.slice(count).join("\n")+"\n"
+            append: messages.slice(count)
           }));
         } else {
             clients.push(res);
         }
     } 
     
+    
     else if(url_parts.pathname.substr(0, 4) == '/msg') {
-        // message receiving
-        LOGMESSAGING && console.log(new Date() + ' [MESSAG] new message');
-        var msg = unescape(url_parts.pathname.substr(5));
-        LOGMESSAGING && console.log(new Date() + ' [MESSAG] ... msg = ' + msg);
-        messages.push(msg);
-        var i=0;
-        while(clients.length > 0) {
-            i++;
-            var client = clients.pop();
-            client.end(JSON.stringify( {
-                count: messages.length,
-                append: msg+"\n"
-            }));
-        }
-        LOGMESSAGING && console.log(new Date() + ' [MESSAG] ... sent message to ' + i + ' clients');
-        res.end();
+        // message receiving via POST
+        // user : user issuing the messages
+        // msg : message
+        LOGMESSAGING && console.log(currTime() + ' [MESSAG] new message');
+        var user = "";
+        var msg = "";
+        var data = "";
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
+        req.on('end', function() {
+            var json = JSON.parse(data);
+            msg = json.msg;
+            user = json.user;
+            
+            LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user);
+            var message = [];
+            message.push({time: currTime(), user: user, msg: msg});
+            messages.push(message);
+            var i = clients.length;
+            var json = JSON.stringify( { count: messages.length, append: message });
+            while(clients.length > 0) {
+                var client = clients.pop();
+                client.end(json);
+            }
+            LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... sent message to ' + i + ' client(s)');
+            res.end();
+        });
     }
-}).listen(8080, 'localhost');
-console.log('Server running.');
+    
+
+    else if(url_parts.pathname.substr(0) == '/admin') {
+        console.log(currTime() + ' [ADMIN ] dumping objects to console');
+        console.log(currTime() + ' [ADMIN ] ... users');
+        console.log(users);
+        //console.log(currTime() + ' [ADMIN ] ... clients');
+        //console.log(clients);
+        console.log(currTime() + ' [ADMIN ] ... messages');
+        console.log(messages);
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        res.end(currTime() + ' Objects dumped to console');
+    }
+}).listen(PORT, 'localhost');
+console.log(currTime() + ' [START ] Server running on port ' + PORT);
