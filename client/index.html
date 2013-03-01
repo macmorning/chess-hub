@@ -1,24 +1,39 @@
-<html>
+<!doctype html>
+<html lang="en">
 <head>
+  <meta charset="utf-8">
+  <title>Welcome to Chess Hub</title>
+  <link rel="stylesheet" media="all" href="/client/css/app.css"/>
   <script src="/client/lib/jquery.js"></script>
-  <script>
-    var counter = 0;
-    var poll = function() {
-      $.getJSON('/poll/'+counter, function(response) {
-         counter = response.count;
-         var elem = $('#output');
-         elem.text(elem.text() + response.append);
-         poll();
-      });
-    }
-    poll();
-    function sendMessage(text) {
-            $.get('/msg/'+text);
-    }
-  </script>
+    <link rel="stylesheet" media="only screen and (max-width: 800px)" href="/client/css/app_mobile.css"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon"
+          href="/client/img/wking.png" />
+    <link rel="apple-touch-icon-precomposed"
+          href="/client/img/wking.png" />
+    <script>
+        function connect(user) {
+            $('#returnmessage').innerHTML = "Connecting you to the server.";
+            $.getJSON('/connect/'+user, function(response) {
+                    $('#returnmessage').text(response.returnmessage);
+                    if(response.returncode == 'ok'){
+                        window.location.replace("/client/board.html?user="+user);
+                    }
+                 })
+                .fail(function() { $('#returnmessage').text("Error connecting you to the server :("); });
+        }
+    </script>
 </head>
 <body>
-    <input type='text' id="input" style="width: 100%;" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">
-    <textarea id="output" style="width: 100%; height: 100%;"></textarea>
+    <div id="maincontainer">
+          <div id="contentwrapper">
+              <div id="chessBoardColumn">
+                <label for='input'>Please enter a login name and press enter</form>
+                <input type='text' id="input" style="width: 100%;" onkeypress="{if (event.keyCode==13 && this.value !== '') connect(this.value)}">
+                <span class="info" id="returnmessage"></span>
+             </div>
+         </div>
+    </div>
 </body>
 </html>
