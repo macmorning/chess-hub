@@ -146,5 +146,5 @@ http.createServer(function (req, res) {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end(currTime() + ' Objects dumped to console');
     }
-}).listen(PORT, 'localhost');
+}).listen(PORT);
 console.log(currTime() + ' [START ] Server running on port ' + PORT);
