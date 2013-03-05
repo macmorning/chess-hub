@@ -1,7 +1,7 @@
 chess-hub
 =========
 
-Project for a Chess Hub for online play, server + client.
+Online chess games hub + client.
 
 
 server
@@ -10,11 +10,11 @@ server
 Built with NodeJS. In a first version at least without framework.
 
 1st version Goals :
-- do everything with nodejs : routing, server static files, connecting, messaging
+- do everything with nodejs : routing, serving static files, handling connections and messaging
 - simple login (no login/password database, IRC style) : give a login name, if it's free then you're in
 - use a simple dialog protocol based on json post requests, allowing the use of custome clients
 - should enforce chess rules (don't delegate all to clients)
-- messaging : 1 main lobby, 1 channel per game, direct messages, IRC style
+- messaging : 1 main lobby, 1 channel per game, direct messages, IRC style ("XX has joined #MyGame", "@YY Hey !", ...)
 - find a partner based on : self-estimated level (beginner, experienced, master, great master)
 - learning games : have a willing master+ and a willing beginner play together
 - must be playable through proxies => long polling instead of web sockets
