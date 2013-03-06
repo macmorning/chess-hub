@@ -25,7 +25,7 @@
                     success: function(response) {
                         $('#returnmessage').text(response.returnmessage);
                         if(response.returncode == 'ok'){
-                            window.location = "/client/board.html?user="+user;
+                            window.location = "/client/main.html?user="+user;
                         }
                     },
                     error: function() { $('#returnmessage').text("Error connecting you to the server :("); }

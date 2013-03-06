@@ -20,16 +20,33 @@
     var poll = function() {
         $.getJSON('/poll/'+counter, function(response) {
             counter = response.count;
-            var output = $('#output');
-            response.append.forEach( 
-                function(message) { output.text(output.text() + message.time + " " + message.user + " : " + message.msg + "\n" );}
-            );
-            output.scrollTop = output.scrollHeight;
+            if(response.append[0]) {  // to be replaced with a better test : is "append" an array of objects, or an object ? works for now.
+                response.append.forEach(function(message) { addMessage(message); });
+            } else {
+                addMessage(response.append);
+            }
             poll();
         });
     }
     poll();
 
+    function addMessage(message) {
+        // adds a message to the chat_output div of the current page
+        var output = $('#output');
+        console.log(message);
+        output.html(
+            output.html()
+            + '<p class="chat_'
+            + message.category
+            + '"><span class="chat_time">'
+            + message.time
+            + '</span><span class="chat_user">'
+            + message.user
+            + '</span><span class="chat_msg">'
+            + message.msg
+            + '</span></p>' );
+    }
+    
     function sendMessage(text) {
             var data = { user: user, msg: text } ;
             var output = $('#output');
@@ -90,8 +107,8 @@
                           </img>
                   </div>
           </div>
-    <input type='text' id="input" style="width: 100%;" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">
-    <textarea id="output" style="width: 100%; height: 100%;"></textarea>
+    <input type='text' id="input" class="chat_input" style="width: 100%;" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">
+    <div id="output" class="chat_output" style="width: 100%; height: 100%;"></textarea>
     </div>
 
 </body>

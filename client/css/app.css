@@ -11,23 +11,6 @@ body {
   background-color : #eeeeee;
 }
 
-label {
-    font-size:10pt;
-    color:#000000;  
-}
-input[type='text'],textarea {
-    background-color : transparent;
-    border:1px solid #888888;
-    border-radius:4px;
-    font-size:10pt;
-    color:#000000;
-}
-
-input[type='text']:focus,textarea:focus { 
-    outline:none;
-    box-shadow:0 0 3px #000000;
-}
-
 div#maincontainer {
     width: 750px; /*Width of main container*/
     margin: 0 auto; /*Center container on page*/
@@ -53,6 +36,45 @@ div#bGraveyard {
     float: left;
     width: 130px; /*Width of right column*/
     margin-left: -130px; /*Set left margin to -(RightColumnWidth)*/
+}
+
+/************************
+        CHAT
+*************************/
+
+label {
+    font-size:10pt;
+    color:#000000;  
+}
+input[type='text']:focus,textarea:focus,.chat_input, .chat_output {
+    background-color : transparent;
+    border:1px solid #888888;
+    border-radius:4px;
+    font-size:10pt;
+    color:#000000;
+}
+
+input[type='text']:focus,textarea:focus,.chat_input { 
+    outline:none;
+    box-shadow:0 0 3px #000000;
+}
+
+p.chat_msg, p.chat_sys, p.chat_activity, p.chat_me {
+    margin: 0.2em;
+    line-height: 1em;
+}
+p.chat_sys {
+    color: #AA0000;
+}
+span.chat_time {
+    color: #AA0000;
+    margin-right: 0.3em;
+}
+span.chat_user {
+    color: #00AA00;
+    margin-right: 0.3em;
+}
+span.chat_msg {
 }
 
 /************************

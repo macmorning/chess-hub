@@ -4,17 +4,8 @@ var http = require('http'),
     fs = require('fs');
 
 
-function currTime() {
-    var currentDate = new Date();
-    var hours = currentDate.getHours();
-    if (hours < 10) hours = "0" + hours;
-    var minutes = currentDate.getMinutes();
-    if (minutes < 10) minutes = "0" + minutes;
-    return(hours + ":" + minutes);
-}
-
 var messages = [
-        { time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !"}
+        { time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  }
         ];
 var clients = [];
 var users = [];
@@ -23,6 +14,38 @@ var LOGSTATIC = false;
 var LOGCONNECT = true;
 var LOGMESSAGING = true;
 var LOGPOLLING = true;
+
+function sendMessage(from, msg, category, to ) {
+    // adds a message to the messages array and send it to polling clients
+    // sendMessage(from, msg, [category, [to]])
+    // from : user issuing the message
+    // msg : message
+    // category : message category : chat_msg (by default), chat_sys, chat_me, chat_activity, or game
+    // to : target for the message : a user, a game channel id, or main channel (by default)
+    var message = [];
+    if (!category) category = "chat_msg";
+    message = {time: currTime(), user: from, msg: msg, category: category, to: to };
+    LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... sendMessage : ' + message.msg);
+    messages.push(message);
+    var json = JSON.stringify( { count: messages.length, append: message });
+    var i = 0;
+    while(clients.length > 0) {
+        var client = clients.pop();
+        client.end(json);
+        i++;
+    }
+    LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... sent message to ' + i + ' client(s)');
+}
+
+function currTime() {
+    // write current time in HH:mm format
+    var currentDate = new Date();
+    var hours = currentDate.getHours();
+    if (hours < 10) hours = "0" + hours;
+    var minutes = currentDate.getMinutes();
+    if (minutes < 10) minutes = "0" + minutes;
+    return(hours + ":" + minutes);
+}
 
 
 http.createServer(function (req, res) {
@@ -52,6 +75,7 @@ http.createServer(function (req, res) {
                     returncode: 'ok',
                     returnmessage: 'Welcome ' + user
                 }));
+                sendMessage('ADMIN',user + ' joined','join');
             } else {
                 LOGCONNECT && console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved');
                 res.writeHead(200, { 'Content-type': 'text/html'});
@@ -104,7 +128,7 @@ http.createServer(function (req, res) {
     
     
     else if(url_parts.pathname.substr(0, 4) == '/msg') {
-        // message receiving via POST
+        // message receiving via JSON POST request
         // user : user issuing the messages
         // msg : message
         LOGMESSAGING && console.log(currTime() + ' [MESSAG] new message');
@@ -120,16 +144,8 @@ http.createServer(function (req, res) {
             user = json.user;
             
             LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user);
-            var message = [];
-            message.push({time: currTime(), user: user, msg: msg});
-            messages.push(message);
-            var i = clients.length;
-            var json = JSON.stringify( { count: messages.length, append: message });
-            while(clients.length > 0) {
-                var client = clients.pop();
-                client.end(json);
-            }
-            LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... sent message to ' + i + ' client(s)');
+            sendMessage(user, msg);
+            res.writeHead(200, { 'Content-type': 'text/html'});
             res.end();
         });
     }
