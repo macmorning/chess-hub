@@ -1,26 +1,43 @@
+//////////////////////////////////////////////////
+//                                              //
+//      Main server for Chess Hub               //
+//  http://www.github.com/macmorning/chess-hub  //
+//                                              //
+//////////////////////////////////////////////////
+
 var PORT = 8080;
 var http = require('http'),
     url = require('url'),
     fs = require('fs');
+var client = require('./client'),
+    channel = require('./channel');
 
 
 var messages = [
         { time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  }
         ];
-var clients = [];
-var users = [];
+var clients = [];               // init the clients array
+var users = [];                 // init the users array
+var channels = [];              // init the channels array
+var chan_main = new Channel();  // create the main chat channel
+channels.push(chan_main);       // push the main chat channel to the channels array
 
-var LOGSTATIC = false;
-var LOGCONNECT = true;
-var LOGMESSAGING = true;
-var LOGPOLLING = true;
+
+var LOGSTATIC = false;          // enable or disable static files serving logs
+var LOGCONNECT = true;          // enable or disable connections logs
+var LOGMESSAGING = true;        // enable or disable messaging logs
+var LOGPOLLING = true;          // enable or disable polling logs
 
 function sendMessage(from, msg, category, to ) {
     // adds a message to the messages array and send it to polling clients
     // sendMessage(from, msg, [category, [to]])
     // from : user issuing the message
     // msg : message
-    // category : message category : chat_msg (by default), chat_sys, chat_me, chat_activity, or game
+    // category : message category : 
+    //        - chat_msg (by default), simple message sent to a chat channel or a user
+    //        - chat_sys, system message to be broadcasted in all opened chat channels
+    //        - chat_activity, chat channel activity : join, leave, quit
+    //        - game, game channel activity
     // to : target for the message : a user, a game channel id, or main channel (by default)
     var message = [];
     if (!category) category = "chat_msg";
@@ -50,12 +67,16 @@ function currTime() {
 
 http.createServer(function (req, res) {
 
-   // parse URL
+//
+// ROUTING
+//
    var url_parts = url.parse(req.url);
    //console.log(url_parts);
 
+//
+// CONNECTION SERVICE
+//
     if(url_parts.pathname.substr(0, 8) == '/connect') {
-        // connect a user
         LOGCONNECT && console.log(currTime() + ' [CONNEC] connect');
         var user = "";
         var data = "";
@@ -75,7 +96,7 @@ http.createServer(function (req, res) {
                     returncode: 'ok',
                     returnmessage: 'Welcome ' + user
                 }));
-                sendMessage('ADMIN',user + ' joined','join');
+                sendMessage('ADMIN',user + ' joined','chat_join');
             } else {
                 LOGCONNECT && console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved');
                 res.writeHead(200, { 'Content-type': 'text/html'});
@@ -89,6 +110,9 @@ http.createServer(function (req, res) {
     } 
 
 
+//
+// STATIC FILES SERVING
+//
     if(url_parts.pathname.substr(0, 7) == '/client' || url_parts.pathname == '/' || url_parts.pathname.substr(0, 8) == '/favicon') {
         // file serving
         LOGSTATIC && console.log(currTime() + ' [STATIC] client file request');

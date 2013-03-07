@@ -64,8 +64,10 @@ p.chat_msg, p.chat_sys, p.chat_activity, p.chat_me {
     line-height: 1em;
 }
 p.chat_sys {
+    font-weight: bold;
     color: #AA0000;
 }
+
 span.chat_time {
     color: #AA0000;
     margin-right: 0.3em;

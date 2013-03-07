@@ -28,17 +28,26 @@
         // adds a message to the chat_output div of the current page
         var output = $('#output');
         console.log(message);
-        output.html(
-            output.html()
-            + '<p class="'
-            + message.category
-            + '"><span class="chat_time">'
-            + message.time
-            + '</span><span class="chat_user">'
-            + message.user
-            + '</span><span class="chat_msg">'
-            + message.msg
-            + '</span></p>' );
+        if (message.category == "chat_sys") {
+            output.html(
+                output.html()
+                + '<p class="chat_sys">'
+                + message.user + " > "
+                + message.msg
+                + '</p>' );
+        } else {
+            output.html(
+                output.html()
+                + '<p class="'
+                + message.category
+                + '"><span class="chat_time">'
+                + message.time
+                + '</span><span class="chat_user">'
+                + message.user + " > "
+                + '</span><span class="chat_msg">'
+                + message.msg
+                + '</span></p>' );
+        }
     }
     
     function sendMessage(text) {
@@ -60,18 +69,8 @@
 </head>
 <body>
     <div id="maincontainer">
-          <div id="contentwrapper">
-              <div id="chessBoardColumn">
-              </div>
-          </div>
-          <div id='graveyards'>
-                  <div id='wGraveyard'>
-                  </div>
-                  <div id='bGraveyard'>
-                  </div>
-          </div>
-    <input type='text' id="input" class="chat_input" style="width: 100%;" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">
-    <div id="output" class="chat_output" style="width: 100%; height: 100%;"></textarea>
+        <div id="output" class="chat_output" style="width: 100%; height: 300px;">
+        <input type='text' id="input" class="chat_input" style="width: 100%;" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">
     </div>
 
 </body>
