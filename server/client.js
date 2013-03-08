@@ -3,4 +3,4 @@ function Client(user, client) {
     this.client = client;
 }
 
-
+module.exports = Client;

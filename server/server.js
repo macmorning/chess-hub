@@ -9,18 +9,18 @@ var PORT = 8080;
 var http = require('http'),
     url = require('url'),
     fs = require('fs');
-var client = require('./client'),
-    channel = require('./channel');
+var client = require('./client');
+var channel = require('./channel');
 
 
 var messages = [
         { time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  }
         ];
-var clients = [];               // init the clients array
-var users = [];                 // init the users array
-var channels = [];              // init the channels array
-var chan_main = new Channel();  // create the main chat channel
-channels.push(chan_main);       // push the main chat channel to the channels array
+var clients = [];                                   // init the clients array
+var users = [];                                     // init the users array
+var channels = [];                                  // init the channels array
+//var chan_main = new Channel('Main channel',true);   // create the main chat channel
+//channels.push(chan_main);       // push the main chat channel to the channels array
 
 
 var LOGSTATIC = false;          // enable or disable static files serving logs
@@ -96,7 +96,7 @@ http.createServer(function (req, res) {
                     returncode: 'ok',
                     returnmessage: 'Welcome ' + user
                 }));
-                sendMessage('ADMIN',user + ' joined','chat_join');
+                sendMessage('ADMIN',user + ' joined','chat_activity');
             } else {
                 LOGCONNECT && console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved');
                 res.writeHead(200, { 'Content-type': 'text/html'});
