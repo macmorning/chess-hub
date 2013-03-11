@@ -5,7 +5,7 @@
 //                                              //
 //////////////////////////////////////////////////
 
-var PORT = process.env.PORT;
+var PORT = process.env.PORT || 8080;
 var ADDRESS = process.env.IP;
 var http = require('http'),
     url = require('url'),
@@ -95,7 +95,9 @@ http.createServer(function (req, res) {
                 res.writeHead(200, { 'Content-type': 'text/html'});
                 res.end(JSON.stringify( {
                     returncode: 'ok',
-                    returnmessage: 'Welcome ' + user
+                    returnmessage: 'Welcome ' + user,
+                    user: user,
+                    key: 'unique key for ' + user     // TODO : generate a GUID here
                 }));
                 sendMessage('ADMIN',user + ' joined','chat_activity');
             } else {
@@ -103,35 +105,13 @@ http.createServer(function (req, res) {
                 res.writeHead(200, { 'Content-type': 'text/html'});
                 res.end(JSON.stringify( {
                     returncode: 'ko',
-                    returnmessage: 'Sorry, ' + user + ' is already used. Please pick another name.'
+                    returnmessage: 'Sorry, ' + user + ' is already used. Please pick another name.',
+                    user: user
                 }));
             }
             LOGCONNECT && console.log(currTime() + ' [CONNEC] ... current users : ' + users);
         });
     } 
-
-
-//
-// STATIC FILES SERVING
-//
-    if(url_parts.pathname.substr(0, 7) == '/client' || url_parts.pathname == '/' || url_parts.pathname.substr(0, 8) == '/favicon') {
-        // file serving
-        LOGSTATIC && console.log(currTime() + ' [STATIC] client file request');
-        var file='';
-        if(url_parts.pathname == '/' || url_parts.pathname == '/client' || url_parts.pathname == '/client/') {
-            file = 'index.html';
-        }  else if(url_parts.pathname.substr(0, 8) == '/favicon') {
-            // serving the favicon
-            file = 'img/favicon.ico';
-        }  else {
-            file = escape(url_parts.pathname.substr(8));
-        }
-        LOGSTATIC && console.log(currTime() + ' [STATIC] ... serving ../client/' + file);
-        fs.readFile('../client/'+file, function(err, data) {
-         res.end(data);
-        });
-    } 
-
 
     
     else if(url_parts.pathname.substr(0, 5) == '/poll') {
@@ -171,7 +151,7 @@ http.createServer(function (req, res) {
             LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user);
             sendMessage(user, msg);
             res.writeHead(200, { 'Content-type': 'text/html'});
-            res.end();
+            res.end(JSON.stringify({0:'OK'}));
         });
     }
     
@@ -187,5 +167,42 @@ http.createServer(function (req, res) {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end(currTime() + ' Objects dumped to console');
     }
+
+//
+// STATIC FILES SERVING
+//
+    else {
+        // file serving
+        LOGSTATIC && console.log(currTime() + ' [STATIC] client file request');
+        var file='';
+        if(url_parts.pathname == '/' || url_parts.pathname == '/client' || url_parts.pathname == '/client/') {
+            file = 'main.html';
+        }  else if(url_parts.pathname.substr(0, 8) == '/favicon') {
+            // serving the favicon
+            file = 'img/favicon.ico';
+        }  else {
+            if(url_parts.pathname.substr(0,7) == "/client") {   // remove the potential "/client" reference
+                file = escape(url_parts.pathname.substr(8)); 
+            } else {
+                file = escape(url_parts.pathname); 
+            }
+        }
+        LOGSTATIC && console.log(currTime() + ' [STATIC] ... serving ../client/' + file);
+        fs.readFile('../client/'+file, function(err, data) {
+            if(err) {
+                console.log(currTime() + ' [STATIC] ... ' + err);
+                if(err.code == "ENOENT") {      // file is simply missing
+                    res.writeHead(404, { 'Content-type': 'text/txt'});
+                    res.end();
+                } else {                        // other error; could be EACCES or anything
+                    res.writeHead(503, { 'Content-type': 'text/txt'});
+                    res.end();
+                }
+            }
+            res.end(data);
+        });
+    } 
+
+
 }).listen(PORT,ADDRESS);
 console.log(currTime() + ' [START ] Server running on port ' + PORT);

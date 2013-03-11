@@ -4,19 +4,17 @@
     <meta charset="utf-8">
     <title>Welcome to Chess Hub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="lib/jquery/jquery.mobile-1.3.0.min.css"></script>
+    <link rel="stylesheet" href="css/common.css"></link>
+    <link rel="stylesheet" href="lib/jquery/jquery.mobile-1.3.0.min.css"></link>
     <script src="js/chessHubClient-0.1.js"></script>
     <script src="lib/jquery/jquery-1.9.1.js"></script>
     <script src="lib/jquery/jquery.mobile-1.3.0.min.js"></script>
   <script>
 
     ;CONTEXT = {
-		lasterror: {
-			code:"",
-			message:""
-		},
         credentials: {
-            user:""
+            user:"",
+            key:""
         }
     };
 
@@ -32,20 +30,67 @@
     function connect(user) {
         $.mobile.loading('show');
         CHESSHUB.connect(user,
-                function(response) {
-                    $('#login_returnmessage').text(response.returnmessage);
+                function(response) {                    // callback function for success event
+                    $('#login_returnmessage').text(response.returnmessage); // display returned message, be it "welcome" or "keep out"
                     $.mobile.loading('hide');
-                    if(response.returncode == 'ok'){
-                        CHESSHUB.poll();
+                    if(response.returncode == 'ok'){    // user is connected; start polling for messaging and switch to main page
+                        CONTEXT.user = response.user;
+                        CONTEXT.key = response.key;
+                        console.log(CONTEXT.user + ' connected; key : ' + CONTEXT.key);
+                        CHESSHUB.listen(CONTEXT, 'MAIN');
+                        $.mobile.changePage($("#mainpage"));
                     }
 				},
-                function(error) {
+                function(error) {                       // callback function for error event
                     $.mobile.loading('hide');
                     $('#login_returnmessage').text("Error connecting you to the server :(");
                 }
         );
     }
     
+    function addMessage(message) {
+        // adds a message to the chat_output div of the current page
+        var output = $('#chat_output');
+        console.log(message);
+        if (message.category == "chat_sys") {
+            output.html(
+                output.html()
+                + '<p class="chat_sys">'
+                + message.user + " > "
+                + message.msg
+                + '</p>' );
+        } else {
+            output.html(
+                output.html()
+                + '<p class="'
+                + message.category
+                + '"><span class="chat_time">'
+                + message.time
+                + '</span><span class="chat_user">'
+                + message.user + " > "
+                + '</span><span class="chat_msg">'
+                + message.msg
+                + '</span></p>' );
+        }
+    }
+
+    function sendMessage(text) {
+        // sends a message on the main channel
+        if (!text) return;
+        var output = $('#chat_output');
+        CHESSHUB.sendMessage(
+                CONTEXT,
+                text,
+                function(){
+                    $('#input').val('');
+                    console.log('message sent');
+                },
+                function(){
+                    output.html(output.html() + "<p class='chat_sys'>Error connecting you to the server :(</p>");
+                }
+        );
+    }
+
   </script>
 </head>
 <body>

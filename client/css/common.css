@@ -47,15 +47,9 @@ label {
     color:#000000;  
 }
 input[type='text'],textarea, #chat_output {
-    background-color : transparent;
-    border:1px solid #888888;
-    border-radius:4px;
-    color:#000000;
 }
 
 input[type='text']:focus,textarea:focus { 
-    outline:none;
-    box-shadow:0 0 3px #000000;
 }
 
 p.chat_msg, p.chat_sys, p.chat_activity, p.chat_me {
