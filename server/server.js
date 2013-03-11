@@ -5,7 +5,8 @@
 //                                              //
 //////////////////////////////////////////////////
 
-var PORT = 8080;
+var PORT = process.env.PORT;
+var ADDRESS = process.env.IP;
 var http = require('http'),
     url = require('url'),
     fs = require('fs');
@@ -186,5 +187,5 @@ http.createServer(function (req, res) {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end(currTime() + ' Objects dumped to console');
     }
-}).listen(PORT);
+}).listen(PORT,ADDRESS);
 console.log(currTime() + ' [START ] Server running on port ' + PORT);
