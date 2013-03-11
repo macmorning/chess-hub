@@ -2,114 +2,73 @@
 <html lang="en" manifest="cache.manifest">
 <head>
     <meta charset="utf-8">
-    <title>Chess Hub - The attic</title>
-    <meta name=viewport content="width=device-width, initial-scale=1.0, minimum-scale=0.5 maximum-scale=1.0">
-    <link rel="stylesheet" media="all" href="css/common.css"/>
-    <link rel="stylesheet" media="all" href="css/main_layout.css"/>
-<!--    <link rel="stylesheet" media="only screen and (max-width: 800px)" href="css/app_mobile.css"/> -->
-  <script src="lib/zepto.min.js"></script>
+    <title>Welcome to Chess Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="lib/jquery/jquery.mobile-1.3.0.min.css"></script>
+    <script src="js/chessHubClient-0.1.js"></script>
+    <script src="lib/jquery/jquery-1.9.1.js"></script>
+    <script src="lib/jquery/jquery.mobile-1.3.0.min.js"></script>
   <script>
-    var user = window.location.href.substr(window.location.href.indexOf("=")+1);
 
-    var counter = 0;
-    var poll = function() {
-        $.getJSON('/poll/'+counter, function(response) {
-            counter = response.count;
-            if($.isArray(response.append)) { 
-                response.append.forEach(function(message) { addMessage(message); });
-            } else {
-                addMessage(response.append);
-            }
-            poll();
-        });
-    }
-
-    function connect(user) {
-        $('#returnmessage').innerHTML = "Connecting you to the server.";
-            var data = { user: user } ;
-            $.ajax({
-                type: 'POST',
-                url : '/connect',
-                contentType: 'application/json; charset=utf-8',
-                dataType: 'json',
-                data: JSON.stringify(data),
-                success: function(response) {
-                    $('#login_returnmessage').text(response.returnmessage);
-                    if(response.returncode == 'ok'){
-                        poll();
-                    }
-                },
-                error: function() { $('#login_resturnmessage').text("Error connecting you to the server :("); }
-             });
-    }
-
-    function addMessage(message) {
-        // adds a message to the chat_output div of the current page
-        var output = $('#output');
-        console.log(message);
-        if (message.category == "chat_sys") {
-            output.html(
-                output.html()
-                + '<p class="chat_sys">'
-                + message.user + " > "
-                + message.msg
-                + '</p>' );
-        } else {
-            output.html(
-                output.html()
-                + '<p class="'
-                + message.category
-                + '"><span class="chat_time">'
-                + message.time
-                + '</span><span class="chat_user">'
-                + message.user + " > "
-                + '</span><span class="chat_msg">'
-                + message.msg
-                + '</span></p>' );
+    ;CONTEXT = {
+		lasterror: {
+			code:"",
+			message:""
+		},
+        credentials: {
+            user:""
         }
+    };
+
+    if ( ! window.console ) console = { log: function(){} };
+    
+    $(document).ready(function() {
+        $("#login_submit").click(function(event) {
+                event.preventDefault();
+                connect($("#login_username").val());
+        });
+    });
+    
+    function connect(user) {
+        $.mobile.loading('show');
+        CHESSHUB.connect(user,
+                function(response) {
+                    $('#login_returnmessage').text(response.returnmessage);
+                    $.mobile.loading('hide');
+                    if(response.returncode == 'ok'){
+                        CHESSHUB.poll();
+                    }
+				},
+                function(error) {
+                    $.mobile.loading('hide');
+                    $('#login_returnmessage').text("Error connecting you to the server :(");
+                }
+        );
     }
     
-    function sendMessage(text) {
-        if (!text) return;
-        var data = { user: user, msg: text } ;
-        var output = $('#output');
-        $.ajax({
-            type: 'POST',
-            url : '/msg',
-            contentType: 'application/json; charset=utf-8',
-            dataType: 'json',
-            data: JSON.stringify(data),
-            success: function() {$('#input').val('');},
-            error: function() { output.text(output.text() + "Error connecting you to the server :(\n"); }
-         });
-    }
-
   </script>
 </head>
 <body>
-    <div id="wrap">
-        <div id="header"></div>
-        <div id="left"></div>
-        <div id="right"> 
-            <div id="inner">
-                <div id="output" class="chat_output" style="width: 100%; height: 300px;"></div>
-                <input type='text' id="input" class="chat_input" style="width: 100%;" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">
-            </div>
-        </div>
-        <div id="footer"></div>
-    </div>
 
-		<input type="button" onclick="javascript:$('#modalCheck').attr('checked')=true;">Voir la fenêtre modale</input>
+<!--############### Login Page ###############-->
+<div data-role="page" id="loginpage"> <!-- identification -->
+    <header data-role="header">
+		<h1>Login</h1>
+	</header>
+        <h2>Please enter a username</h2>
+        <input type='text' id="login_username" onkeypress="{if (event.keyCode==13 && this.value !== '') connect(this.value)}">
+        <span class="info" id="login_returnmessage"></span>
+        <button id="login_submit" type="submit" data-theme="a">Submit</button>
+</div>
 
-		<label class="button" for="modalCheck">Voir la fenêtre modale</label>
-	<input type="checkbox" id="modalCheck" />
-	<div class="modalLayer" id="modalContent">
-        <div class="popup_block">
-	        <label for="modalCheck"><img alt="Close" title="Close" class="btn_close" src="./img/close_pop.png"></label>
-	        <h2>Please enter a username</h2>
-            <input type='text' id="login_username" style="width: 90%;" onkeypress="{if (event.keyCode==13 && this.value !== '') connect(this.value)}">
-            <span class="info" id="login_returnmessage"></span>
-        </div>
+
+<!--############### Main Page ###############-->
+<div data-role="page" id="mainpage">
+    <div id="chat_output"></div>
+    <div id="chat_input_container">
+        <input type='text' id="chat_input" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">
     </div>
+</div>
+
 </body>
 </html>

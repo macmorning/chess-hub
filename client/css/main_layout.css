@@ -4,83 +4,118 @@ html, body { height:100%; margin:0; padding:0; }
 #wrap {
     position:relative;
     height:100%;
+    min-height:500px;
 }
 
-#header {
-    position:absolute;
-    left:0;
-    width:100%;
-    top:0;
-    height:50px;
-    background-color: #ffa9a9;
-}
-
-#footer {
-    position:absolute;
-    left:0;
-    width:100%;
-    bottom:0;
-    height:50px;
-    background-color: #ffa9a9;
-}
-
-#left {
-    position:absolute;
-    left:0;
-    width:200px;
-    top:50px;
-    bottom:50px;
-    background-color: #ffa9a9;
-}
-
-#right {
-    position:absolute;
-    left:200px;
-    right:0;
-    top:50px;
-    bottom:50px;
-    overflow-y:scroll;
-    background-color: #bde5ff;
-}
-
-#inner {
-    min-height:500px;   
-}
-
-/* Thanks http://dmouronval.developpez.com/tutoriels/css/fenetre-modale-css3 */
-#modalCheck{
-	display: none;
-}
-.modalLayer{
-	display: none;
-	position: fixed;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	background-color: rgba(0, 0, 0, 0.5);
-}
-#modalCheck:checked + .modalLayer, #modalContent:target{
-	display: block;
-}
-.popup_block{
-	background: #fff;
-	padding: 20px;
-	border: 20px solid #ddd;
-	position: relative;
-	margin: 10% auto;
-	width: 40%;
-	box-shadow: 0px 0px 20px #000;
-	border-radius: 10px;
-}
-img.btn_close {
-	float: right;
-	margin: -55px -55px 0 0;
-	cursor: pointer;
-}
-.button{
-	cursor: pointer;
-	color: blue;
-	text-decoration: underline;
-}
+    #header {
+        position:absolute;
+        left:0;
+        width:100%;
+        top:0;
+        height:50px;
+        background-color: #cccccc;
+    }
+    
+    #footer {
+        position:absolute;
+        left:0;
+        width:100%;
+        bottom:0;
+        height:50px;
+        background-color: #cccccc;
+    }
+    
+    #left {
+        position:absolute;
+        left: 0;
+        right:200px;
+        top:50px;
+        bottom:50px;
+        background-color: #bde5ff;
+        overflow-y:scroll;
+    }
+    
+    #right {
+        position:absolute;
+        width:200px;
+        right:0;
+        top:50px;
+        bottom:50px;
+        background-color: #cccccc;
+    }
+    
+        #chat_users, #chat_channel {
+            position:relative;
+            float:left;
+            width: 100%;
+        }
+        
+        #chat_users {
+            background-color: red;
+            height:50%;
+            min-height:100px;
+            max-height:70%;
+        }
+        
+        #chat_channel {
+            height:50%;
+            min-height:100px;
+        }
+            #chat_output {
+                top:0;
+                width:99%;
+                overflow:auto;
+                float:left;
+                height:90%;
+                background-color:green;
+            }
+            #chat_input_container {
+                float:left;
+                width:100%;
+                background-color:yellow;
+            }
+                #chat_input {
+                    width:99%;
+                }
+                
+    #inner {
+        min-height:500px;   
+    }
+    
+    /* Thanks http://dmouronval.developpez.com/tutoriels/css/fenetre-modale-css3 */
+    #modalCheck{
+    	display: none;
+    }
+    .modalLayer{
+    	display: none;
+    	position: fixed;
+    	top: 0;
+    	bottom: 0;
+    	left: 0;
+    	right: 0;
+    	background-color: rgba(0, 0, 0, 0.5);
+    }
+    #modalCheck:checked + .modalLayer, #modalContent:target{
+    	display: block;
+    }
+    .popup_block{
+    	background: #fff;
+    	padding: 20px;
+    	border: 20px solid #ddd;
+    	position: relative;
+    	margin: 10% auto;
+    	width: 40%;
+    	box-shadow: 0px 0px 20px #000;
+    	border-radius: 10px;
+    }
+    img.btn_close {
+    	float: right;
+    	margin: -55px -55px 0 0;
+    	cursor: pointer;
+    }
+    .button{
+    	cursor: pointer;
+    	color: blue;
+    	text-decoration: underline;
+    }
 
