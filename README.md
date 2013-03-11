@@ -28,7 +28,7 @@ Built with NodeJS. In a first version at least without framework.
 client
 =========
 
-Built in HTML/CSS/JS, using jQuery. Maybe angularJS if needed.
+Built in HTML/CSS/JS, using jQuery Mobile. Maybe angularJS if needed.
 
 1st version Goals :
 - as simple as possible
