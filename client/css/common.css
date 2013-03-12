@@ -7,9 +7,9 @@
 /************************
         LAYOUT
 *************************/
+body { font-family: Helvetica, san-serif; }
 body {
   background-color : #eeeeee;
-  font-size : 9pt;
 }
 
 div#maincontainer {
@@ -50,6 +50,10 @@ input[type='text'],textarea, #chat_output {
 }
 
 input[type='text']:focus,textarea:focus { 
+}
+
+#chat_output {
+    height:100%;
 }
 
 p.chat_msg, p.chat_sys, p.chat_activity, p.chat_me {

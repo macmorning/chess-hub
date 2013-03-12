@@ -1,11 +1,12 @@
 <!doctype html>
-<html lang="en" manifest="cache.manifest">
+<html lang="en" manifest="">
 <head>
     <meta charset="utf-8">
     <title>Welcome to Chess Hub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/common.css"></link>
     <link rel="stylesheet" href="lib/jquery/jquery.mobile-1.3.0.min.css"></link>
+    <link rel="stylesheet" href="css/common.css"></link>
+    <link rel="stylesheet" href="css/main_layout.css"></link>
     <script src="js/chessHubClient-0.1.js"></script>
     <script src="lib/jquery/jquery-1.9.1.js"></script>
     <script src="lib/jquery/jquery.mobile-1.3.0.min.js"></script>
@@ -54,15 +55,14 @@
         console.log(message);
         if (message.category == "chat_sys") {
             output.html(
-                output.html()
-                + '<p class="chat_sys">'
+                '<p class="chat_sys">'
                 + message.user + " > "
                 + message.msg
-                + '</p>' );
+                + '</p>'
+                + output.html() );
         } else {
             output.html(
-                output.html()
-                + '<p class="'
+                '<p class="'
                 + message.category
                 + '"><span class="chat_time">'
                 + message.time
@@ -70,7 +70,8 @@
                 + message.user + " > "
                 + '</span><span class="chat_msg">'
                 + message.msg
-                + '</span></p>' );
+                + '</span></p>'
+                + output.html() );
         }
     }
 
@@ -82,11 +83,11 @@
                 CONTEXT,
                 text,
                 function(){
-                    $('#input').val('');
+                    $('#chat_input').val('');
                     console.log('message sent');
                 },
                 function(){
-                    output.html(output.html() + "<p class='chat_sys'>Error connecting you to the server :(</p>");
+                    output.html("<p class='chat_sys'>Error connecting you to the server :(</p>" + output.html());
                 }
         );
     }
@@ -109,9 +110,40 @@
 
 <!--############### Main Page ###############-->
 <div data-role="page" id="mainpage">
-    <div id="chat_output"></div>
-    <div id="chat_input_container">
+    <header data-role="header">
+        <h1>Chess Hub lobby</h1>
+		<a href="#loginpage" data-icon="delete" data-iconpos="notext">Exit</a>
+		<a href="#configpage" data-icon="gear" data-iconpos="notext">Configuration</a>
+	</header>
+    <div id="mainpage_side">
+	    <form method="POST" action="" data-ajax="false">
+            <div data-role="fieldcontain">
+                <fieldset data-role="controlgroup">
+                    <legend>Your self-estimated skill:</legend>
+                    <input type="radio" name="game_user_level" id="game_user_level_GM">
+                    <label for="game_user_level_GM">Grand Master</label>
+                    <input type="radio" name="game_user_level" id="game_user_level_M">
+                    <label for="game_user_level_M">Medium</label>
+                    <input type="radio" name="game_user_level" id="game_user_level_B">
+                    <label for="game_user_level_B">Beginner</label>
+                    <label for="game_lower_ok">Allow lower level opponents ?</label>
+                        <select name="game_lower_ok" id="game_lower_ok" data-role="slider">
+                            <option value="on">Yes</option>
+                            <option value="off">No</option>
+                        </select>                
+                    <label for="game_lower_ok">Allow higher level opponents ?</label>
+                        <select name="game_higher_ok" id="game_higher_ok" data-role="slider">
+                            <option value="on">Yes</option>
+                            <option value="off">No</option>
+                        </select>                
+                    </fieldset>
+    		    <button id="game_search" type="submit" data-theme="a">search</button>
+		    </div>
+	    </form>	
+    </div>
+    <div id="mainpage_main">
         <input type='text' id="chat_input" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">
+        <div id="chat_output"></div>
     </div>
 </div>
 
