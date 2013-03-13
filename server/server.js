@@ -104,7 +104,7 @@ http.createServer(function (req, res) {
             LOGCONNECT && console.log(currTime() + ' [CONNEC] ... connect ' + user);
 
             if (users.indexOf(user) == -1) {
-                LOGCONNECT && console.log(currTime() + ' [CONNEC] ... adding ' + user);
+                console.log(currTime() + ' [CONNEC] user: ' + user + ' connected, client: ' + json.clientLib + ', version: ' + json.clientVersion);
                 users.push(user);
                 res.writeHead(200, { 'Content-type': 'text/html'});
                 res.end(JSON.stringify( {

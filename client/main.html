@@ -92,6 +92,12 @@
                 }
         );
     }
+    
+    function logoff() {
+        CHESSHUB.stopPoll();
+        $('#login_returnmessage').text("");
+        $.mobile.changePage($('#loginpage'));
+    }
 
   </script>
 </head>
@@ -113,7 +119,7 @@
 <div data-role="page" id="mainpage">
     <header data-role="header">
         <h1>Chess Hub lobby</h1>
-		<a href="#loginpage" data-icon="delete" data-iconpos="notext">Exit</a>
+		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();">Exit</a>
 		<a href="#configpage" data-icon="gear" data-iconpos="notext">Configuration</a>
 	</header>
         <div data-role="popup" id="mainpage_popupElo" class="ui-content">

@@ -11,11 +11,19 @@
 */
 ;CHESSHUB = {
 	name: 'chessHubClient', // client name
-	version: 0.1,           // client lib version
+	version: '0.1',         // client lib version
     user: '',               // user name
     key:'',                 // unique key provided at login time
     channels:[],            // list of polled channels
     counter: 0,             // current polling counter
+    ajaxCall: {},
+    //
+    //  function : addChannel()
+    //  adds a channel to poll
+    //
+    stopPoll: function() {
+        ajaxCall.abort();
+    },
     //
     //  function : addChannel()
     //  adds a channel to poll
@@ -43,7 +51,7 @@
     poll: function() {
         console.log('polling ... ' + CHESSHUB.counter);
         var data = { user: CHESSHUB.user, key: CHESSHUB.key, counter: CHESSHUB.counter, channels: CHESSHUB.channels } ;
-        $.ajax({
+        ajaxCall = $.ajax({
             type: 'POST',
             url : '/poll',
             contentType: 'application/json; charset=utf-8',
@@ -64,12 +72,11 @@
                 CHESSHUB.poll();
             },
             error: function(data,status,error) {
-                if (status == "error" && !error) { // this is a simple time out; poll again
-                    CHESSHUB.poll();
-                } else {
                     console.log('poll error - ' + status);
                     console.log(error);
-                }
+                    if (status == 'error') {
+                        setTimeout(function() {CHESSHUB.poll();},3000); // retry after 3 seconds
+                    }
             }
         });
     },
@@ -85,7 +92,7 @@
     //  
     //
     connect: function(user, successCallBack, errorCallBack) {
-            var data = { user: user } ;
+            var data = { user: user, clientLib: CHESSHUB.name, clientVersion: CHESSHUB.version } ;
             $.ajax({
                 type: 'POST',
                 url : '/connect',
