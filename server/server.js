@@ -7,6 +7,10 @@
 
 var PORT = process.env.PORT || 8080;
 var ADDRESS = process.env.IP;
+var SERVERDIR = "";
+if (process.env.C9_PID) {
+    SERVERDIR = process.env.HOME + '/' + process.env.C9_PID + '/server/';
+}
 var http = require('http'),
     url = require('url'),
     fs = require('fs');
@@ -225,7 +229,7 @@ http.createServer(function (req, res) {
             }
         }
         LOGSTATIC && console.log(currTime() + ' [STATIC] ... serving ../client/' + file);
-        fs.readFile('../client/'+file, function(err, data) {
+        fs.readFile(SERVERDIR+'../client/'+file, function(err, data) {
             if(err) {
                 console.log(currTime() + ' [STATIC] ... ' + err);
                 if(err.code == "ENOENT") {      // file is simply missing
