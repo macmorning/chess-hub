@@ -38,7 +38,8 @@
                         CONTEXT.user = response.user;
                         CONTEXT.key = response.key;
                         console.log(CONTEXT.user + ' connected; key : ' + CONTEXT.key);
-                        CHESSHUB.listen(CONTEXT, 'MAIN');
+                        CHESSHUB.addChannel("MAIN");
+                        CHESSHUB.listen(CONTEXT.user,CONTEXT.key,CONTEXT.channels);
                         $.mobile.changePage($("#mainpage"));
                     }
 				},
@@ -80,8 +81,8 @@
         if (!text) return;
         var output = $('#chat_output');
         CHESSHUB.sendMessage(
-                CONTEXT,
                 text,
+                'MAIN',
                 function(){
                     $('#chat_input').val('');
                     console.log('message sent');
@@ -115,17 +116,41 @@
 		<a href="#loginpage" data-icon="delete" data-iconpos="notext">Exit</a>
 		<a href="#configpage" data-icon="gear" data-iconpos="notext">Configuration</a>
 	</header>
+        <div data-role="popup" id="mainpage_popupElo" class="ui-content">
+            This is an estimation of your level. You can use the table below if you have an Elo rank.
+            <table>
+                <tr>        <td>Category</td><td>Rating range</td>
+                </tr><tr>   <td>Grandmaster</td><td>2600 and up</td>
+                </tr><tr>   <td>Senior Master</td><td>2400–2599</td>
+                </tr><tr>   <td>Master</td><td>2200–2399</td>
+                </tr><tr>   <td>Expert</td><td>2000–2199</td>
+                </tr><tr>   <td>Class A</td><td>1800–1999</td>
+                </tr><tr>   <td>Class B</td><td>1600–1799</td>
+                </tr><tr>   <td>Class C</td><td>under 1600</td>
+                </tr>
+            </table>
+        </div>
     <div id="mainpage_side">
+        <h3>To search for a game, fill this form and press "search".</h3>
+                    <span>Your self-estimated skill:
+                        <span style="float:right;"><a href="#mainpage_popupElo" data-wrapperels="span" data-mini="true" data-rel="popup" data-theme='c' data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a></span>
+                    </span>
 	    <form method="POST" action="" data-ajax="false">
-            <div data-role="fieldcontain">
-                <fieldset data-role="controlgroup">
-                    <legend>Your self-estimated skill:</legend>
+                <fieldset data-role="controlgroup" data-mini="true">
                     <input type="radio" name="game_user_level" id="game_user_level_GM">
                     <label for="game_user_level_GM">Grand Master</label>
+                    <input type="radio" name="game_user_level" id="game_user_level_SM">
+                    <label for="game_user_level_SM">Senior Master</label>
                     <input type="radio" name="game_user_level" id="game_user_level_M">
-                    <label for="game_user_level_M">Medium</label>
+                    <label for="game_user_level_M">Master</label>
+                    <input type="radio" name="game_user_level" id="game_user_level_E">
+                    <label for="game_user_level_E">Expert</label>
+                    <input type="radio" name="game_user_level" id="game_user_level_A">
+                    <label for="game_user_level_A">Class A</label>
                     <input type="radio" name="game_user_level" id="game_user_level_B">
-                    <label for="game_user_level_B">Beginner</label>
+                    <label for="game_user_level_B">Class B</label>
+                    <input type="radio" name="game_user_level" id="game_user_level_C">
+                    <label for="game_user_level_C">Class C</label>
                     <label for="game_lower_ok">Allow lower level opponents ?</label>
                         <select name="game_lower_ok" id="game_lower_ok" data-role="slider">
                             <option value="on">Yes</option>
@@ -138,8 +163,7 @@
                         </select>                
                     </fieldset>
     		    <button id="game_search" type="submit" data-theme="a">search</button>
-		    </div>
-	    </form>	
+	    </form>
     </div>
     <div id="mainpage_main">
         <input type='text' id="chat_input" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">

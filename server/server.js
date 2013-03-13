@@ -23,11 +23,21 @@ var channels = [];                                  // init the channels array
 //var chan_main = new Channel('Main channel',true);   // create the main chat channel
 //channels.push(chan_main);       // push the main chat channel to the channels array
 
-
+var MAXMESSAGES = 20;           // maximum number of messages sent at once
 var LOGSTATIC = false;          // enable or disable static files serving logs
 var LOGCONNECT = true;          // enable or disable connections logs
 var LOGMESSAGING = true;        // enable or disable messaging logs
 var LOGPOLLING = true;          // enable or disable polling logs
+
+function escapeHtml(unsafe) {
+    // escapes Html characters
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 function sendMessage(from, msg, category, to ) {
     // adds a message to the messages array and send it to polling clients
@@ -45,7 +55,7 @@ function sendMessage(from, msg, category, to ) {
     message = {time: currTime(), user: from, msg: msg, category: category, to: to };
     LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... sendMessage : ' + message.msg);
     messages.push(message);
-    var json = JSON.stringify( { count: messages.length, append: message });
+    var json = JSON.stringify( { counter: messages.length, append: message });
     var i = 0;
     while(clients.length > 0) {
         var client = clients.pop();
@@ -86,7 +96,7 @@ http.createServer(function (req, res) {
         });
         req.on('end', function() {
             var json = JSON.parse(data);
-            user = json.user;
+            user = escapeHtml(json.user);
             LOGCONNECT && console.log(currTime() + ' [CONNEC] ... connect ' + user);
 
             if (users.indexOf(user) == -1) {
@@ -102,7 +112,7 @@ http.createServer(function (req, res) {
                 sendMessage('ADMIN',user + ' joined','chat_activity');
             } else {
                 LOGCONNECT && console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved');
-                res.writeHead(200, { 'Content-type': 'text/html'});
+                res.writeHead(200, { 'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
                     returncode: 'ko',
                     returnmessage: 'Sorry, ' + user + ' is already used. Please pick another name.',
@@ -114,24 +124,49 @@ http.createServer(function (req, res) {
     } 
 
     
+//
+// POLLING SERVICE
+//
     else if(url_parts.pathname.substr(0, 5) == '/poll') {
         // polling
+        var data="";
         LOGPOLLING && console.log(currTime() + ' [POLLIN] polling')
-        var count = url_parts.pathname.replace(/[^0-9]*/, '');
-        LOGPOLLING && console.log(currTime() + ' [POLLIN] ... count = ' + count);
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        if(messages.length > count) {
-            LOGPOLLING && console.log(currTime() + ' [POLLIN] ... sending ' + (messages.length - count) + ' new message(s)');
-            res.end(JSON.stringify( {
-            count: messages.length,
-            append: messages.slice(count)
-          }));
-        } else {
-            clients.push(res);
-        }
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
+        req.on('end', function() {
+            var json = JSON.parse(data);
+            if (isNaN(json.counter))  {   // no counter provided, send Bad Request HTTP code
+                LOGPOLLING && console.log(currTime() + ' [POLLIN] ... error, dumping data below')
+                LOGPOLLING && console.log(json)
+                res.writeHead(400, { 'Content-type': 'text/txt'});
+                res.end('Bad request');
+            }
+            LOGPOLLING && console.log(currTime() + ' [POLLIN] ... counter = ' + json.counter + ' from user = ' + json.user);
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            var n = messages.length - json.counter;
+            if(n > 0) {
+                var lastMessages = {};
+                if ( n <= MAXMESSAGES ) {
+                    lastMessages = messages.slice(json.counter)
+                } else if ( n > MAXMESSAGES ) {       // if there are too many messages to send
+                    lastMessages = messages.slice(messages.length - MAXMESSAGES);
+                }
+                LOGPOLLING && console.log(currTime() + ' [POLLIN] ... sending ' + lastMessages.length + ' new message(s)');
+                res.writeHead(200, { 'Content-type': 'application/json'});
+                res.end(JSON.stringify( {
+                    counter: messages.length,
+                    append: lastMessages
+                }));
+            } else {
+                clients.push(res);  // if there is no message to push, keep the client in the clients array (long polling)
+            }
+        });
     } 
     
-    
+//
+// INBOUND MESSAGES SERVICE
+//
     else if(url_parts.pathname.substr(0, 4) == '/msg') {
         // message receiving via JSON POST request
         // user : user issuing the messages
@@ -145,8 +180,8 @@ http.createServer(function (req, res) {
         });
         req.on('end', function() {
             var json = JSON.parse(data);
-            msg = json.msg;
-            user = json.user;
+            msg = escapeHtml(json.msg);         // escape html chars
+            user = escapeHtml(json.user);
             
             LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user);
             sendMessage(user, msg);
@@ -155,7 +190,9 @@ http.createServer(function (req, res) {
         });
     }
     
-
+//
+// ADMIN SERVICE
+//
     else if(url_parts.pathname.substr(0) == '/admin') {
         console.log(currTime() + ' [ADMIN ] dumping objects to console');
         console.log(currTime() + ' [ADMIN ] ... users');
@@ -182,9 +219,9 @@ http.createServer(function (req, res) {
             file = 'img/favicon.ico';
         }  else {
             if(url_parts.pathname.substr(0,7) == "/client") {   // remove the potential "/client" reference
-                file = escape(url_parts.pathname.substr(8)); 
+                file = escapeHtml(url_parts.pathname.substr(8)); 
             } else {
-                file = escape(url_parts.pathname); 
+                file = escapeHtml(url_parts.pathname); 
             }
         }
         LOGSTATIC && console.log(currTime() + ' [STATIC] ... serving ../client/' + file);
@@ -193,10 +230,10 @@ http.createServer(function (req, res) {
                 console.log(currTime() + ' [STATIC] ... ' + err);
                 if(err.code == "ENOENT") {      // file is simply missing
                     res.writeHead(404, { 'Content-type': 'text/txt'});
-                    res.end();
+                    res.end('file not found');
                 } else {                        // other error; could be EACCES or anything
                     res.writeHead(503, { 'Content-type': 'text/txt'});
-                    res.end();
+                    res.end('Unhandled server error (' + err.code + ')');
                 }
             }
             res.end(data);

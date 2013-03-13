@@ -1,15 +1,18 @@
 /* Stack the two content containers */
-#mainpage_main,
-#mainpage_side { display:block; width:100%; }
 
-/* First breakpoint at 320px */
-@media all and (min-width: 20em){
-	.mainpage_side { float: left; width:40%; }
-	.mainpage_main { float: left; width:60%; }
+#mainpage_main,
+#mainpage_side { display:block; width:98%; padding: 0 1% 0 1%;}
+
+/* First breakpoint at 480px */
+@media all and (min-width: 30em){
+	#mainpage_side,#mainpage_main { margin: 1em 0px; float:left; }
+	#mainpage_side { width:30%; padding: 0 1% 0 2%;}
+	#mainpage_main { width:66%; padding: 0 1% 0 0; }
 }
 
 /* Second breakpoint at 800px */
 @media all and (min-width: 50em){
-	.mainpage_side { width:30%; }
-	.mainpage_main { width:70%; }
+	#mainpage_side,#mainpage_main { margin: 1em 0px; float:left; }
+	#mainpage_side { width:20%; padding: 0 2% 0 2%;}
+	#mainpage_main { width:74%; padding: 0 2% 0 0; }
 }

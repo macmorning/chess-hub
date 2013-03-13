@@ -10,32 +10,74 @@
 *
 */
 ;CHESSHUB = {
-	name: 'chessHubClient',
-	version: 0.1,
-    user: '',
-    key:'',
-    counter: 0,    
+	name: 'chessHubClient', // client name
+	version: 0.1,           // client lib version
+    user: '',               // user name
+    key:'',                 // unique key provided at login time
+    channels:[],            // list of polled channels
+    counter: 0,             // current polling counter
+    //
+    //  function : addChannel()
+    //  adds a channel to poll
+    //
+    addChannel: function(channel) {
+        if (channel && CHESSHUB.channels.indexOf(channel)<0) {
+            CHESSHUB.channels.push(channel);
+            console.log('list of channels : ' + CHESSHUB.channels);
+        }
+    },   
+    //
+    //  function : removeChannel()
+    //  removes a channel to poll
+    //
+    removeChannel: function(channel) {
+        if (channel && CHESSHUB.channels.indexOf(channel)>=0) {
+            CHESSHUB.channels.splice(CHESSHUB.channels.indexOf(channel));
+            console.log('list of channels : ' + CHESSHUB.channels);
+        }
+    },   
     //
     //  function : poll()
     //  private recursive function
     //
     poll: function() {
         console.log('polling ... ' + CHESSHUB.counter);
-        $.getJSON('/poll/'+ CHESSHUB.counter, function(response) {
-            CHESSHUB.counter = response.count;
-            if($.isArray(response.append)) { 
-                response.append.forEach(function(message) { addMessage(message); });
-            } else {
-                addMessage(response.append);
+        var data = { user: CHESSHUB.user, key: CHESSHUB.key, counter: CHESSHUB.counter, channels: CHESSHUB.channels } ;
+        $.ajax({
+            type: 'POST',
+            url : '/poll',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify(data),
+            success: function (response) {              // jquery automatically parses the json answer
+                if (isNaN(response.counter)) {
+                    console.log('poll error - unexpected answer');
+                    console.log(response);
+                } else {
+                    CHESSHUB.counter = response.counter;
+                }
+                if($.isArray(response.append)) { 
+                    response.append.forEach(function(message) { addMessage(message); });
+                } else {
+                    addMessage(response.append);
+                }
+                CHESSHUB.poll();
+            },
+            error: function(data,status,error) {
+                if (status == "error" && !error) { // this is a simple time out; poll again
+                    CHESSHUB.poll();
+                } else {
+                    console.log('poll error - ' + status);
+                    console.log(error);
+                }
             }
-            CHESSHUB.poll();
         });
     },
     //
     //  function : listen(context, channel)
     //  
     //
-    listen: function(context, channel) {
+    listen: function() {
         this.poll();
     },
     //
@@ -50,7 +92,13 @@
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
                 data: JSON.stringify(data),
-                success: function (response) { successCallBack(response);},
+                success: function (response) { 
+                        if (response.returncode == 'ok') {
+                            CHESSHUB.user = response.user;
+                            CHESSHUB.key = response.key;
+                        }
+                        successCallBack(response);
+                    },
                 error: errorCallBack()
              });
     },
@@ -58,8 +106,12 @@
     //  function : sendMessage(context, text, successCallBack, errorCallBack)
     //  
     //
-    sendMessage: function (context, text, successCallBack, errorCallBack) {
-        var data = { user: context.user, msg: text } ;
+    sendMessage: function (text, to, successCallBack, errorCallBack) {
+        if(!CHESSHUB.user) {
+            console.log('sendMessage error - Not connected');
+            return;
+        }
+        var data = { user: CHESSHUB.user, to: to, key: CHESSHUB.key, msg: text } ;
         $.ajax({
             type: 'POST',
             url : '/msg',
