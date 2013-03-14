@@ -73,20 +73,27 @@
         console.log(message);
         if (message.category == "chat_sys") {
             output.html(
-                '<p class="chat_sys">'
-                + message.user + " > "
+                '<p class="chat_sys"> == ['
+                + message.time + "] " 
                 + message.msg
                 + '</p>'
                 + output.html() );
-        } else {
+        } else if (message.category == "chat_activity") {
+            output.html(
+                '<p class="chat_activity"> == ['
+                + message.time + "] "
+                + message.msg
+                + '</p>'
+                + output.html() );
+        } else {            
             output.html(
                 '<p class="'
                 + message.category
-                + '"><span class="chat_time">'
+                + '"><span class="chat_time">['
                 + message.time
-                + '</span><span class="chat_user"><a href="javascript:void(0)" class="chat_user" onclick="copyUserName(\'' + message.user + '\');">'
-                + message.user + "</a> &gt;"
-                + '</span><span class="chat_msg">'
+                + ']</span> <span class="chat_user">&lt;<a href="javascript:void(0)" class="chat_user" onclick="copyUserName(\'' + message.user + '\');">'
+                + message.user + "</a>&gt;"
+                + '</span> <span class="chat_msg">'
                 + message.msg
                 + '</span></p>'
                 + output.html() );

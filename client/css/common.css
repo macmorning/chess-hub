@@ -65,14 +65,20 @@ p.chat_sys {
     color: #AA0000;
 }
 
+p.chat_activity {
+    font-style:italic;
+    color: #908ED1;
+}
+
 span.chat_time {
     color: #AA0000;
-    margin-right: 0.3em;
 }
 span.chat_user, a.chat_user {
     color: #00AA00;
-    margin-right: 0.3em;
     text-decoration:none;
+}
+a.chat_user:hover {
+    text-decoration:underline;
 }
 span.chat_msg {
 }
