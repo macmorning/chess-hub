@@ -14,8 +14,8 @@ if (process.env.C9_PID) {
 var http = require('http'),
     url = require('url'),
     fs = require('fs');
-var client = require('./client');
-var channel = require('./channel');
+var client = require('./client.js');
+var channel = require('./channel.js');
 
 
 var messages = [
@@ -24,8 +24,9 @@ var messages = [
 var clients = [];                                   // init the clients array
 var users = [];                                     // init the users array
 var channels = [];                                  // init the channels array
-//var chan_main = new Channel('Main channel',true);   // create the main chat channel
-//channels.push(chan_main);       // push the main chat channel to the channels array
+var chan_main = new channel('Main channel','MAIN');   // create the main chat channel
+chan_main.switchOpen(true);
+channels.push(chan_main);       // push the main chat channel to the channels array
 
 var MAXMESSAGES = 20;           // maximum number of messages sent at once
 var LOGSTATIC = false;          // enable or disable static files serving logs
