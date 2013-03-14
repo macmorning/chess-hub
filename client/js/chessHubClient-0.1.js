@@ -126,7 +126,11 @@
                         }
                         successCallBack(response);
                     },
-                error: errorCallBack()
+                error: function(data,status,error) {
+                        console.log('connect error - ' + status);
+                        console.log(error);
+                        errorCallBack();
+                    }
              });
     },
     //

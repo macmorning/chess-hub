@@ -16,7 +16,9 @@
         credentials: {
             user:"",
             key:""
-        }
+        },
+        history: [],
+        currentHistoryIndex: 0
     };
 
     if ( ! window.console ) console = { log: function(){} };
@@ -26,6 +28,12 @@
                 event.preventDefault();
                 connect($("#login_username").val());
         });
+        $("#game_search").click(function(event) {
+                event.preventDefault();
+                alert('not implemented yet ;)');
+        });
+        logoff();
+        $('#login_username').focus();
     });
     
     function connect(user) {
@@ -43,7 +51,7 @@
                         $.mobile.changePage($("#mainpage"));
                     }
 				},
-                function(error) {                       // callback function for error event
+                function() {                       // callback function for error event
                     $.mobile.loading('hide');
                     $('#login_returnmessage').text("Error connecting you to the server :(");
                 }
@@ -76,7 +84,7 @@
                 + message.category
                 + '"><span class="chat_time">'
                 + message.time
-                + '</span><span class="chat_user"><a href="javascript:void(0)" class="implicit" onclick="copyUserName(\'' + message.user + '\');">'
+                + '</span><span class="chat_user"><a href="javascript:void(0)" class="chat_user" onclick="copyUserName(\'' + message.user + '\');">'
                 + message.user + "</a> &gt;"
                 + '</span><span class="chat_msg">'
                 + message.msg
@@ -95,6 +103,8 @@
                 'MAIN',
                 function(){
                     $('#chat_input').val('');
+                    CONTEXT.history.push(text);
+                    CONTEXT.currentHistoryIndex=CONTEXT.history.length;
                     console.log('message sent');
                 },
                 function(){
@@ -108,10 +118,30 @@
         $('#chat_input').val("");
         $('#chat_output').html("");
         $('#login_returnmessage').text("");
+        CONTEXT.credentials.user = '';
+        CONTEXT.credentials.key = '';
+        CONTEXT.history = [];
+        CONTEXT.currentHistoryIndex = 0;
         $.mobile.changePage($('#loginpage'));
         return 0;
     }
 
+    function chatSpecialKeys(event) {
+        var key = window.event ? event.keyCode : event.which;
+        if (key==13) sendMessage($('#chat_input').val()); // user pressed enter
+        if (key==38) {                        // user pressed "up"
+            if (CONTEXT.currentHistoryIndex > 0) {
+                CONTEXT.currentHistoryIndex--;
+                $('#chat_input').val(CONTEXT.history[CONTEXT.currentHistoryIndex]);
+            }
+        }
+        if (key==40) {                        // user pressed "down"
+            if (CONTEXT.currentHistoryIndex < CONTEXT.history.length) {
+                CONTEXT.currentHistoryIndex++;
+                $('#chat_input').val(CONTEXT.history[CONTEXT.currentHistoryIndex]);
+            }
+        }
+    }
   </script>
 </head>
 <body>
@@ -121,10 +151,12 @@
     <header data-role="header">
 		<h1>Login</h1>
 	</header>
-        <h2>Please enter a username</h2>
-        <input type='text' id="login_username" onkeypress="{if (event.keyCode==13 && this.value !== '') connect(this.value)}">
-        <span class="info" id="login_returnmessage"></span>
-        <button id="login_submit" type="submit" data-theme="a">Submit</button>
+        <div id='loginpage_main'>
+            <h2>Please enter a username</h2>
+                <input type='text' id="login_username" onkeypress="{if (event.keyCode==13 && this.value !== '') connect(this.value)}">
+                <span class="info" id="login_returnmessage"></span>
+                <button id="login_submit" type="submit" data-theme="a">Submit</button>
+            </div>
 </div>
 
 
@@ -185,11 +217,12 @@
 	    </form>
     </div>
     <div id="mainpage_main">
-        <input type='text' id="chat_input" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">
+        <input type='text' id="chat_input" onkeyup="chatSpecialKeys(event);">
         <div id="chat_output"></div>
     </div>
     <div id="mainpage_userslist">
         <h3>Who is online ?</h3>
+        <p>users list goes here</p>
     </div>
 </div>
 

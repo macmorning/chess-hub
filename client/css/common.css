@@ -69,9 +69,10 @@ span.chat_time {
     color: #AA0000;
     margin-right: 0.3em;
 }
-span.chat_user {
+span.chat_user, a.chat_user {
     color: #00AA00;
     margin-right: 0.3em;
+    text-decoration:none;
 }
 span.chat_msg {
 }

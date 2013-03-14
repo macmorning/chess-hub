@@ -1,21 +1,29 @@
 /* Stack the two content containers */
 
+#loginpage_main { display:block; width:98%; max-width:20em; margin: 15% 1% 0 1%;margin:auto;}
+
 #mainpage_main,
-#mainpage_side { display:block; width:98%; padding: 0 1% 0 1%;}
-#mainpage_userslist { display:none; width:0%; }
+#mainpage_side { display:block; width:98%; margin: 0 1% 0 1%;}
+#mainpage_userslist { display:none; }
+
+#mainpage_main { height:100%; background-color: #eeeeee;}
 
 /* First breakpoint at 480px */
 @media all and (min-width: 30em){
-	#mainpage_side,#mainpage_main { margin: 1em 0px; float:left; }
-	#mainpage_side { width:30%; padding: 0 1% 0 2%;}
-	#mainpage_main { width:66%; padding: 0 1% 0 0; }
-    #mainpage_userslist { float:right; display:block; width:66%; padding: 0 1% 0 0; }
+    #loginpage_main { width:20em; margin:auto;}
+
+    #mainpage_side,#mainpage_main { float:left; }
+	#mainpage_side { width:30%; margin: 0 1% 0 2%;}
+	#mainpage_main { width:66%; margin: 0 1% 0 0; }
+    #mainpage_userslist { float:right; display:block; width:66%; margin: 0 1% 0 0; }
 }
 
 /* Second breakpoint at 800px */
 @media all and (min-width: 50em){
-	#mainpage_userslist,#mainpage_side,#mainpage_main { margin: 1em 0px; float:left; }
-	#mainpage_side { width:20%; padding: 0 2% 0 2%;}
-	#mainpage_main { width:54%; padding: 0 2% 0 0; }
-    #mainpage_userslist { display:block; width:19%; padding: 0 1% 0 0; }
+    #loginpage_main { width:25em; margin:auto;}
+
+    #mainpage_userslist,#mainpage_side,#mainpage_main { float:left; }
+	#mainpage_side { width:20%; margin: 0 2% 0 2%;}
+	#mainpage_main { width:54%; margin: 0 2% 0 0; }
+    #mainpage_userslist { display:block; width:19%; margin: 0 1% 0 0; }
 }
