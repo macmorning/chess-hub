@@ -4,11 +4,17 @@
 //  http://www.github.com/macmorning/chess-hub  //
 //                                              //
 //////////////////////////////////////////////////
+/*
+*    Copyright (C) 2013
+*	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+*	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+*	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 var PORT = process.env.PORT || 8080;
 var ADDRESS = process.env.IP;
 var SERVERDIR = "";
-if (process.env.C9_PID) {
+if (process.env.C9_PID) {       // for running the server on c9.io
     SERVERDIR = process.env.HOME + '/' + process.env.C9_PID + '/server/';
 }
 var http = require('http'),
@@ -27,6 +33,8 @@ var chan_main = new Channel('Main','MAIN');         // create the main chat chan
 chan_main.switchOpen(true);                         // mark the main chat channel as open for all
 channels.push(chan_main);                           // push the main chat channel to the channels array
 
+var MAXCLIENTS_2 = 70;           // absolute maximum number of clients; any request will be dropped once this number is reached
+var MAXCLIENTS_1 = 50;           // maximum number of clients before refusing new connections
 var MAXMESSAGES = 20;           // maximum number of messages sent at once
 var LOGSTATIC = false;          // enable or disable static files serving logs
 var LOGCONNECT = true;          // enable or disable connections logs
@@ -35,13 +43,15 @@ var LOGPOLLING = true;          // enable or disable polling logs
 var LOGCHANNEL = true;          // enable or disable channel activity logs
 
 function escapeHtml(unsafe) {
-    // escapes Html characters
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    if(unsafe) {// escapes Html characters
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+    return false;
 }
 
 function sendMessage(from, msg, category, to ) {
@@ -83,6 +93,11 @@ function currTime() {
 
 http.createServer(function (req, res) {
 
+    if(clients.length > MAXCLIENTS_2) {
+          res.writeHead(500, { 'Content-type': 'text/txt'});
+          res.end('Sorry, there are too many users right now ! Please try again later.');
+    }
+
 //
 // ROUTING
 //
@@ -90,10 +105,42 @@ http.createServer(function (req, res) {
    //console.log(url_parts);
 
 //
+// DISCONNECTION SERVICE
+//
+    if(url_parts.pathname.substr(0, 11) == '/disconnect') {
+        LOGCONNECT && console.log(currTime() + ' [CONNEC] disconnect');
+        var user = "";
+        var data = "";
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
+        req.on('end', function() {
+            var json = JSON.parse(data);
+            user = escapeHtml(json.user);
+            LOGCONNECT && console.log(currTime() + ' [CONNEC] ... disconnect user ' + user);
+            res.writeHead(200, { 'Content-Type': 'application/json'});
+            res.end('ok');
+            channels.forEach(function(currChan) {       // search for the channels where the user was active
+                if(currChan.users.indexOf(user)) {
+                    currChan.users.splice(currChan.users.indexOf(user),1);
+                    LOGCONNECT && console.log(currTime() + ' [CONNEC] ... removed user ' + user + ' from ' + currChan.name);                    
+                }
+            });
+        });
+    }
+//
 // CONNECTION SERVICE
 //
     if(url_parts.pathname.substr(0, 8) == '/connect') {
         LOGCONNECT && console.log(currTime() + ' [CONNEC] connect');
+        if(clients.length > MAXCLIENTS_1) {
+                res.writeHead(200, { 'Content-Type': 'application/json'});
+                res.end(JSON.stringify( {
+                    returncode: 'ko',
+                    returnmessage: 'Sorry, there are too many users right now. Please try again in a few minutes.',
+                    user: user
+                }));
+        }
         var user = "";
         var data = "";
         req.on('data', function(chunk) {
@@ -107,14 +154,13 @@ http.createServer(function (req, res) {
             if (users.indexOf(user) == -1) {
                 console.log(currTime() + ' [CONNEC] user: ' + user + ' connected, client: ' + json.clientLib + ', version: ' + json.clientVersion);
                 users.push(user);
-                res.writeHead(200, { 'Content-type': 'text/html'});
+                res.writeHead(200, { 'Content-type': 'application/json'});
                 res.end(JSON.stringify( {
                     returncode: 'ok',
                     returnmessage: 'Welcome ' + user,
                     user: user,
                     key: 'unique key for ' + user     // TODO : generate a GUID here
                 }));
-                sendMessage('ADMIN',user + ' joined','chat_activity');
             } else {
                 LOGCONNECT && console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved');
                 res.writeHead(200, { 'Content-Type': 'application/json'});
@@ -175,21 +221,28 @@ http.createServer(function (req, res) {
     else if(url_parts.pathname.substr(0, 4) == '/msg') {
         // message receiving via JSON POST request
         // user : user issuing the messages
+        // key : user's key
+        // channel : channel to dispatch the message to
+        // category : message category; either chat_msg or game
         // msg : message
         LOGMESSAGING && console.log(currTime() + ' [MESSAG] new message');
         var user = "";
         var msg = "";
+        var chan = "";
         var data = "";
+        var category = "";
         req.on('data', function(chunk) {
             data += chunk;
         });
         req.on('end', function() {
             var json = JSON.parse(data);
-            msg = escapeHtml(json.msg);         // escape html chars
+            msg = escapeHtml(json.msg);         // escaping html chars
             user = escapeHtml(json.user);
+            category = escapeHtml(json.category) || 'chat_msg' ;        // default : chat message
+            chan = escapeHtml(json.channel) || 'MAIN';                  // default : main channel
             
-            LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user);
-            sendMessage(user, msg);
+            LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user + " / channel = " + chan + " / category = " + category);
+            sendMessage(user, msg, category, chan);
             res.writeHead(200, { 'Content-type': 'text/html'});
             res.end(JSON.stringify({0:'OK'}));
         });
@@ -213,25 +266,25 @@ http.createServer(function (req, res) {
             var user = escapeHtml(json.user);
             
             LOGCHANNEL && console.log(currTime() + ' [CHAN  ] ... user = ' + user + " / channel = " + chan);
-            channels.forEach(function(currChan) {
+            channels.forEach(function(currChan) {       // search for the channel
                 console.log(currChan);
                 if(currChan.id == chan)
                     {
                         if (currChan.addUser(user)) {
                             res.writeHead(200, { 'Content-type': 'text/html'});
-                            res.end(JSON.stringify({0:'OK'}));
+                            res.end(JSON.stringify({0:'ok'}));
                             LOGCHANNEL && console.log(currTime() + ' [CHAN  ] ... complete: current users in channel : ');
                             LOGCHANNEL && console.log(currChan.users);
                             sendMessage(user, user + ' joined channel ' + currChan.name, 'chat_activity', chan );
                         } else {
                             res.writeHead(200, { 'Content-type': 'text/html'});
-                            res.end(JSON.stringify({0:'KO; user is already in channel'}));
+                            res.end(JSON.stringify({0:'ko; user is already in channel'}));
                         }
                     }
             });
             if (res) {
                 res.writeHead(200, { 'Content-type': 'text/html'});
-                res.end(JSON.stringify({0:'KO; unknown channel'}));                
+                res.end(JSON.stringify({0:'ko; unknown channel'}));                
             }
         });
     }

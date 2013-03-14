@@ -13,10 +13,8 @@
   <script>
 
     ;CONTEXT = {
-        credentials: {
-            user:"",
-            key:""
-        },
+        user:"",
+        key:"",
         history: [],
         currentHistoryIndex: 0
     };
@@ -71,8 +69,11 @@
     
     function addMessage(message) {
         // adds a message to the chat_output div of the current page
+        var directMessage = false;
         var output = $('#chat_output');
-        console.log(message);
+        if (message.msg.indexOf("@" + CONTEXT.user + " ") >= 0) {
+            directMessage = true;
+        }
         if (message.category == "chat_sys") {
             output.html(
                 '<p class="chat_sys"> == ['
@@ -95,7 +96,7 @@
                 + message.time
                 + ']</span> <span class="chat_user">&lt;<a href="javascript:void(0)" class="chat_user" onclick="copyUserName(\'' + message.user + '\');">'
                 + message.user + "</a>&gt;"
-                + '</span> <span class="chat_msg">'
+                + '</span> <span class="chat_msg'  + (directMessage ? ' chat_direct':'') + '">'
                 + message.msg
                 + '</span></p>'
                 + output.html() );
@@ -127,8 +128,8 @@
         $('#chat_input').val("");
         $('#chat_output').html("");
         $('#login_returnmessage').text("");
-        CONTEXT.credentials.user = '';
-        CONTEXT.credentials.key = '';
+        CONTEXT.user = '';
+        CONTEXT.key = '';
         CONTEXT.history = [];
         CONTEXT.currentHistoryIndex = 0;
         $.mobile.changePage($('#loginpage'));
@@ -163,8 +164,8 @@
         <div id='loginpage_main'>
             <h2>Please enter a username</h2>
                 <input type='text' id="login_username" onkeypress="{if (event.keyCode==13 && this.value !== '') connect(this.value)}">
-                <span class="info" id="login_returnmessage"></span>
                 <button id="login_submit" type="submit" data-theme="a">Submit</button>
+                <span class="info" id="login_returnmessage"></span>
             </div>
 </div>
 
@@ -225,13 +226,13 @@
     		    <button id="game_search" type="submit" data-theme="a">search</button>
 	    </form>
     </div>
-    <div id="mainpage_main">
-        <input type='text' id="chat_input" onkeyup="chatSpecialKeys(event);">
-        <div id="chat_output"></div>
-    </div>
     <div id="mainpage_userslist">
         <h3>Who is online ?</h3>
         <p>users list goes here</p>
+    </div>
+    <div id="mainpage_main">
+        <input type='text' id="chat_input" onkeyup="chatSpecialKeys(event);">
+        <div id="chat_output"></div>
     </div>
 </div>
 

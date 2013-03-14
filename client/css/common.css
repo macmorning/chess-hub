@@ -77,6 +77,9 @@ span.chat_user, a.chat_user {
     color: #00AA00;
     text-decoration:none;
 }
+span.chat_direct {
+    font-weight: bold;
+}
 a.chat_user:hover {
     text-decoration:underline;
 }

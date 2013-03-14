@@ -6,10 +6,10 @@
 #mainpage_side { display:block; width:98%; margin: 0 1% 0 1%;}
 #mainpage_userslist { display:none; }
 
-#mainpage_main { height:100%; background-color: #eeeeee;}
+#mainpage_main { background-color: #eeeeee;}
 
-/* First breakpoint at 480px */
-@media all and (min-width: 30em){
+/* First breakpoint at 512px */
+@media all and (min-width: 32em){
     #loginpage_main { width:20em; margin:auto;}
 
     #mainpage_side,#mainpage_main { float:left; }

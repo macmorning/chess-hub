@@ -22,6 +22,14 @@
     //  initialize the CHESSHUB namespace
     //
     init: function() {
+        if(CHESSHUB.user) {
+            CHESSHUB.disconnect(function(){
+                    // nothing to do
+                },
+                function() {
+                    //nothing to do
+                } );
+        }
         CHESSHUB._stopPoll();
         CHESSHUB.counter = 0;
         CHESSHUB.user = '';
@@ -158,15 +166,37 @@
              });
     },
     //
+    //  function : disconnect(user, successCallBack, errorCallBack)
+    //  disconnects a user from to the chesshub server
+    //
+    disconnect: function(successCallBack, errorCallBack) {
+            var data = { user: CHESSHUB.user, key: CHESSHUB.key } ;
+            $.ajax({
+                type: 'POST',
+                url : '/disconnect',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify(data),
+                success: function () { 
+                        successCallBack();
+                    },
+                error: function(data,status,error) {
+                        console.log('connect error - ' + status);
+                        console.log(error);
+                        errorCallBack();
+                    }
+             });
+    },
+    //
     //  function : sendMessage(context, text, successCallBack, errorCallBack)
     //  
     //
-    sendMessage: function (text, to, successCallBack, errorCallBack) {
+    sendMessage: function (text, channel, successCallBack, errorCallBack) {
         if(!CHESSHUB.user) {
             console.log('sendMessage error - Not connected');
             return;
         }
-        var data = { user: CHESSHUB.user, to: to, key: CHESSHUB.key, msg: text } ;
+        var data = { user: CHESSHUB.user, channel: channel, key: CHESSHUB.key, msg: text } ;
         $.ajax({
             type: 'POST',
             url : '/msg',
