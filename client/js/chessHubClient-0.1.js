@@ -45,19 +45,43 @@
     //  function : addChannel()
     //  adds a channel to poll
     //
-    addChannel: function(channel) {
+    addChannel: function(channel,successCallBack,errorCallBack) {
         if (channel && CHESSHUB.channels.indexOf(channel)<0) {
-            CHESSHUB.channels.push(channel);
+            var data = { user: CHESSHUB.user, key: CHESSHUB.key, channel:channel } ;
+            ajaxCall = $.ajax({
+                type: 'POST',
+                url : '/chanJoin',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify(data),
+                success: function() {
+                        CHESSHUB.channels.push(channel);
+                        successCallBack();
+                    },
+                error: function() {errorCallBack();}
+            });
             console.log('list of channels : ' + CHESSHUB.channels);
         }
     },   
     //
     //  function : removeChannel()
-    //  removes a channel to poll
+    //  removes the user from a channel
     //
-    removeChannel: function(channel) {
+    removeChannel: function(channel,successCallBack,errorCallBack) {
         if (channel && CHESSHUB.channels.indexOf(channel)>=0) {
-            CHESSHUB.channels.splice(CHESSHUB.channels.indexOf(channel));
+            var data = { user: CHESSHUB.user, key: CHESSHUB.key, channel:channel } ;
+            ajaxCall = $.ajax({
+                type: 'POST',
+                url : '/chanQuit',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify(data),
+                success: function() {
+                        CHESSHUB.channels.splice(CHESSHUB.channels.indexOf(channel));
+                        successCallBack();
+                    },
+                error: function() {errorCallBack();}
+            });
             console.log('list of channels : ' + CHESSHUB.channels);
         }
     },   

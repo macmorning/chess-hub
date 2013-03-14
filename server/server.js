@@ -14,7 +14,7 @@ if (process.env.C9_PID) {
 var http = require('http'),
     url = require('url'),
     fs = require('fs');
-var channel = require('./channel.js');
+var Channel = require('./channel.js');
 
 
 var messages = [
@@ -23,15 +23,16 @@ var messages = [
 var clients = [];                                   // init the clients array
 var users = [];                                     // init the users array
 var channels = [];                                  // init the channels array
-var chan_main = new channel('Main channel','MAIN');   // create the main chat channel
-chan_main.switchOpen(true);
-channels.push(chan_main);       // push the main chat channel to the channels array
+var chan_main = new Channel('Main','MAIN');         // create the main chat channel
+chan_main.switchOpen(true);                         // mark the main chat channel as open for all
+channels.push(chan_main);                           // push the main chat channel to the channels array
 
 var MAXMESSAGES = 20;           // maximum number of messages sent at once
 var LOGSTATIC = false;          // enable or disable static files serving logs
 var LOGCONNECT = true;          // enable or disable connections logs
 var LOGMESSAGING = true;        // enable or disable messaging logs
 var LOGPOLLING = true;          // enable or disable polling logs
+var LOGCHANNEL = true;          // enable or disable channel activity logs
 
 function escapeHtml(unsafe) {
     // escapes Html characters
@@ -191,6 +192,47 @@ http.createServer(function (req, res) {
             sendMessage(user, msg);
             res.writeHead(200, { 'Content-type': 'text/html'});
             res.end(JSON.stringify({0:'OK'}));
+        });
+    }
+
+//
+// CHANNEL JOIN SERVICE
+//
+    else if(url_parts.pathname.substr(0, 9) == '/chanJoin') {
+        // Join request via JSON POST request
+        // user : user joining
+        // channel : channel to join
+        var data = "";
+        LOGCHANNEL && console.log(currTime() + ' [CHAN  ] user joins a channel');
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
+        req.on('end', function() {
+            var json = JSON.parse(data);
+            var chan = escapeHtml(json.channel);         // escape html chars
+            var user = escapeHtml(json.user);
+            
+            LOGCHANNEL && console.log(currTime() + ' [CHAN  ] ... user = ' + user + " / channel = " + chan);
+            channels.forEach(function(currChan) {
+                console.log(currChan);
+                if(currChan.id == chan)
+                    {
+                        if (currChan.addUser(user)) {
+                            res.writeHead(200, { 'Content-type': 'text/html'});
+                            res.end(JSON.stringify({0:'OK'}));
+                            LOGCHANNEL && console.log(currTime() + ' [CHAN  ] ... complete: current users in channel : ');
+                            LOGCHANNEL && console.log(currChan.users);
+                            sendMessage(user, user + ' joined channel ' + currChan.name, 'chat_activity', chan );
+                        } else {
+                            res.writeHead(200, { 'Content-type': 'text/html'});
+                            res.end(JSON.stringify({0:'KO; user is already in channel'}));
+                        }
+                    }
+            });
+            if (res) {
+                res.writeHead(200, { 'Content-type': 'text/html'});
+                res.end(JSON.stringify({0:'KO; unknown channel'}));                
+            }
         });
     }
     

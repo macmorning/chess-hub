@@ -46,7 +46,9 @@
                         CONTEXT.user = response.user;
                         CONTEXT.key = response.key;
                         console.log(CONTEXT.user + ' connected; key : ' + CONTEXT.key);
-                        CHESSHUB.addChannel("MAIN");
+                        CHESSHUB.addChannel("MAIN",
+                            function(){},
+                            function(){ console.log('error joining the channel');});
                         CHESSHUB.listen(CONTEXT.user,CONTEXT.key,CONTEXT.channels);
                         $.mobile.changePage($("#mainpage"));
                     }
