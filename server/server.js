@@ -14,7 +14,6 @@ if (process.env.C9_PID) {
 var http = require('http'),
     url = require('url'),
     fs = require('fs');
-var client = require('./client.js');
 var channel = require('./channel.js');
 
 
