@@ -48,6 +48,15 @@
                     $('#login_returnmessage').text("Error connecting you to the server :(");
                 }
         );
+        return 0;
+    }
+    
+    function copyUserName(user) {
+        if (user) {
+            $('#chat_input').val("@" + user + " " + $('#chat_input').val());
+            $('#chat_input').focus();
+        }
+        return 0;
     }
     
     function addMessage(message) {
@@ -67,13 +76,14 @@
                 + message.category
                 + '"><span class="chat_time">'
                 + message.time
-                + '</span><span class="chat_user">'
-                + message.user + " > "
+                + '</span><span class="chat_user"><a href="javascript:void(0)" class="implicit" onclick="copyUserName(\'' + message.user + '\');">'
+                + message.user + "</a> &gt;"
                 + '</span><span class="chat_msg">'
                 + message.msg
                 + '</span></p>'
                 + output.html() );
         }
+        return 0;
     }
 
     function sendMessage(text) {
@@ -91,12 +101,15 @@
                     output.html("<p class='chat_sys'>Error connecting you to the server :(</p>" + output.html());
                 }
         );
+        return 0;
     }
     
     function logoff() {
-        CHESSHUB.stopPoll();
+        $('#chat_input').val("");
+        $('#chat_output').html("");
         $('#login_returnmessage').text("");
         $.mobile.changePage($('#loginpage'));
+        return 0;
     }
 
   </script>
@@ -174,6 +187,9 @@
     <div id="mainpage_main">
         <input type='text' id="chat_input" onkeypress="{if (event.keyCode==13) sendMessage(this.value)}">
         <div id="chat_output"></div>
+    </div>
+    <div id="mainpage_userslist">
+        <h3>Who is online ?</h3>
     </div>
 </div>
 

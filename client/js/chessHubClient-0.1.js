@@ -18,11 +18,28 @@
     counter: 0,             // current polling counter
     ajaxCall: {},
     //
-    //  function : addChannel()
-    //  adds a channel to poll
+    //  function : init()
+    //  initialize the CHESSHUB namespace
     //
-    stopPoll: function() {
-        ajaxCall.abort();
+    init: function() {
+        CHESSHUB._stopPoll();
+        CHESSHUB.counter = 0;
+        CHESSHUB.user = '';
+        CHESSHUB.key = '';
+        CHESSHUB.channels = [];
+    },
+    //
+    //  private function : _stopPoll()
+    //  attempts to stop the current ajaxCall
+    //
+    _stopPoll: function() {
+        try {
+            ajaxCall.abort();   // try to abort latest ajax polling request
+        }
+        catch(err)      // if no polling has to be aborted
+        {
+            //nothing to do
+        }
     },
     //
     //  function : addChannel()
@@ -45,10 +62,10 @@
         }
     },   
     //
-    //  function : poll()
-    //  private recursive function
+    //  private function : _poll()
+    //  recursive long polling function
     //
-    poll: function() {
+    _poll: function() {
         console.log('polling ... ' + CHESSHUB.counter);
         var data = { user: CHESSHUB.user, key: CHESSHUB.key, counter: CHESSHUB.counter, channels: CHESSHUB.channels } ;
         ajaxCall = $.ajax({
@@ -69,29 +86,32 @@
                 } else {
                     addMessage(response.append);
                 }
-                CHESSHUB.poll();
+                CHESSHUB._poll();
             },
             error: function(data,status,error) {
+                    // the error event can be triggered because the node server is down (status = error)
+                    // or if the request is aborted (status = abort)
                     console.log('poll error - ' + status);
                     console.log(error);
                     if (status == 'error') {
-                        setTimeout(function() {CHESSHUB.poll();},3000); // retry after 3 seconds
+                        setTimeout(function() {CHESSHUB._poll();},3000); // retry after 3 seconds
                     }
             }
         });
     },
     //
-    //  function : listen(context, channel)
-    //  
+    //  function : listen()
+    //  starts polling for the current subscribed channels
     //
     listen: function() {
-        this.poll();
+        this._poll();
     },
     //
     //  function : connect(user, successCallBack, errorCallBack)
-    //  
+    //  connects a user to the chesshub server
     //
     connect: function(user, successCallBack, errorCallBack) {
+            CHESSHUB.init();
             var data = { user: user, clientLib: CHESSHUB.name, clientVersion: CHESSHUB.version } ;
             $.ajax({
                 type: 'POST',
