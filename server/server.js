@@ -23,7 +23,6 @@ var http = require('http'),
 var Channel = require('./channel.js');
 
 
-var clients = [];                                   // init the clients array
 var users = [];                                     // init the users array
 var channels = [];                                  // init the channels array
 channels['MAIN'] = new Channel('Main','MAIN');      // create the main chat channel
@@ -69,8 +68,8 @@ function sendMessage(from, msg, category, to ) {
     channels[to].messages.push(message);
     var json = JSON.stringify( { counter: channels[to].messages.length, append: message });
     var i = 0;
-    while(clients.length > 0) {
-        var client = clients.pop();
+    while(channels[to].clients.length > 0) {
+        var client = channels[to].clients.pop();
         client.end(json);
         i++;
     }
@@ -90,7 +89,7 @@ function currTime() {
 
 http.createServer(function (req, res) {
 
-    if(clients.length > MAXCLIENTS_2) {
+    if(channels['MAIN'].clients.length > MAXCLIENTS_2) {
           res.writeHead(500, { 'Content-type': 'text/txt'});
           res.end('Sorry, there are too many users right now ! Please try again later.');
     }
@@ -106,7 +105,7 @@ http.createServer(function (req, res) {
 //
     if(url_parts.pathname.substr(0, 8) == '/connect') {
         LOGCONNECT && console.log(currTime() + ' [CONNEC] connect');
-        if(clients.length > MAXCLIENTS_1) {
+        if(channels['MAIN'].clients.length > MAXCLIENTS_1) {
                 res.writeHead(200, { 'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
                     returncode: 'ko',
@@ -173,36 +172,44 @@ http.createServer(function (req, res) {
     else if(url_parts.pathname.substr(0, 5) == '/poll') {
         // polling
         var data="";
+        var channel="";
+        var user = "";
+        var key = "";
+        var counter = 0;
         LOGPOLLING && console.log(currTime() + ' [POLLIN] polling')
         req.on('data', function(chunk) {
             data += chunk;
         });
         req.on('end', function() {
             var json = JSON.parse(data);
-            if (isNaN(json.counter) || !json.channel)  {   // no counter provided or no channel id, send Bad Request HTTP code
+            channel = escapeHtml(json.channel);
+            user = escapeHtml(json.user);
+            key = escapeHtml(json.key);
+            counter = json.counter;
+            if (isNaN(counter) || !channel)  {   // no counter provided or no channel id, send Bad Request HTTP code
                 LOGPOLLING && console.log(currTime() + ' [POLLIN] ... error, dumping data below')
                 LOGPOLLING && console.log(json)
                 res.writeHead(400, { 'Content-type': 'text/txt'});
                 res.end('Bad request');
             }
-            LOGPOLLING && console.log(currTime() + ' [POLLIN] ... counter = ' + json.counter + ' from user = ' + json.user + ' for channel = ' + json.channel);
+            LOGPOLLING && console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel);
             res.writeHead(200, {'Content-Type': 'application/json'});
-            var n = channels[json.channel].messages.length - json.counter;
+            var n = channels[channel].messages.length - counter;
             if(n > 0) {
                 var lastMessages = {};
                 if ( n <= MAXMESSAGES ) {
-                    lastMessages = channels[json.channel].messages.slice(json.counter)
+                    lastMessages = channels[channel].messages.slice(counter)
                 } else if ( n > MAXMESSAGES ) {       // if there are too many messages to send
-                    lastMessages = channels[json.channel].messages.slice(messages.length - MAXMESSAGES);
+                    lastMessages = channels[channel].messages.slice(messages.length - MAXMESSAGES);
                 }
                 LOGPOLLING && console.log(currTime() + ' [POLLIN] ... sending ' + lastMessages.length + ' new message(s)');
                 res.writeHead(200, { 'Content-type': 'application/json'});
                 res.end(JSON.stringify( {
-                    counter: channels[json.channel].messages.length,
+                    counter: channels[channel].messages.length,
                     append: lastMessages
                 }));
             } else {
-                clients.push(res);  // if there is no message to push, keep the client in the clients array (long polling)
+                channels[channel].clients.push(res);  // if there is no message to push, keep the client in the clients array (long polling)
             }
         });
     } 

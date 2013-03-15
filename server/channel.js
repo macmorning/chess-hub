@@ -13,11 +13,12 @@ var Channel = function(name,id) {
 };
 
 Channel.prototype = {
-    name: '',            // displayed name of the channel (char)
-    open: false,           // is the channel open for watchers ? (true or false)
-    id: '',        // id of the channel (char)
-    users: [],             // current users    
-    messages: [],
+    name: '',               // displayed name of the channel (char)
+    open: false,            // is the channel open for watchers ? (true or false)
+    id: '',                 // id of the channel (char)
+    users: [],              // current users    
+    messages: [],           // list of messages
+    clients: [],            // list of clients currently long-polling the channel
     switchOpen: function(bool) {
             if(bool === true) {
                 this.open = true;
