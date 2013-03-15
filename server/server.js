@@ -29,14 +29,16 @@ channels['MAIN'] = new Channel('Main','MAIN');      // create the main chat chan
 channels['MAIN'].messages.push({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
 channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
 
-var MAXCLIENTS_2 = 70;           // absolute maximum number of clients; any request will be dropped once this number is reached
-var MAXCLIENTS_1 = 50;           // maximum number of clients before refusing new connections
+var MAXCLIENTS_2 = 70;          // absolute maximum number of clients; any request will be dropped once this number is reached
+var MAXCLIENTS_1 = 50;          // maximum number of clients before refusing new connections
 var MAXMESSAGES = 20;           // maximum number of messages sent at once
+
 var LOGSTATIC = false;          // enable or disable static files serving logs
 var LOGCONNECT = true;          // enable or disable connections logs
 var LOGMESSAGING = true;        // enable or disable messaging logs
-var LOGPOLLING = true;          // enable or disable polling logs
+var LOGPOLLING = false;         // enable or disable polling logs
 var LOGCHANNEL = true;          // enable or disable channel activity logs
+var LOGSEARCHING = true;        // enable or disable game searches logs
 
 function escapeHtml(unsafe) {
     if(unsafe) {// escapes Html characters
@@ -211,6 +213,36 @@ http.createServer(function (req, res) {
             } else {
                 channels[channel].clients.push(res);  // if there is no message to push, keep the client in the clients array (long polling)
             }
+        });
+    } 
+
+//
+// SEARCH GAME SERVICE
+//
+    else if(url_parts.pathname.substr(0, 11) == '/searchGame') {
+        var player="";
+        var player_level="";
+        var player_accept_lower=false;
+        var player_accept_higher=true;
+        LOGSEARCHING && console.log(currTime() + ' [SEARCH] search a game')
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
+        req.on('end', function() {
+            var json = JSON.parse(data);
+            player = escapeHtml(json.user);
+            player_level = escapeHtml(json.player_level);
+            player_accept_lower = escapeHtml(json.player_accept_lower);
+            player_accept_higher = escapeHtml(json.player_accept_higher);
+            if (!player)  {   // no username, send Bad Request HTTP code
+                LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... error, dumping data below')
+                LOGSEARCHING && console.log(json)
+                res.writeHead(400, { 'Content-type': 'text/txt'});
+                res.end('Bad request');
+            }
+            LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + player_level);
+            res.writeHead(200, {'Content-Type': 'text/txt'});
+            res.end();      // TODO : enable a long polling for games
         });
     } 
     
