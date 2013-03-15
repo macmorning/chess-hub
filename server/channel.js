@@ -17,6 +17,7 @@ Channel.prototype = {
     open: false,           // is the channel open for watchers ? (true or false)
     id: '',        // id of the channel (char)
     users: [],             // current users    
+    messages: [],
     switchOpen: function(bool) {
             if(bool === true) {
                 this.open = true;

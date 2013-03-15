@@ -44,10 +44,7 @@
                         CONTEXT.user = response.user;
                         CONTEXT.key = response.key;
                         console.log(CONTEXT.user + ' connected; key : ' + CONTEXT.key);
-                        CHESSHUB.addChannel("MAIN",
-                            function(){},
-                            function(){ console.log('error joining the channel');});
-                        CHESSHUB.listen(CONTEXT.user,CONTEXT.key,CONTEXT.channels);
+                        CHESSHUB.listen('MAIN');
                         $.mobile.changePage($("#mainpage"));
                     }
 				},
@@ -128,6 +125,7 @@
         $('#chat_input').val("");
         $('#chat_output').html("");
         $('#login_returnmessage').text("");
+        CHESSHUB.disconnect();
         CONTEXT.user = '';
         CONTEXT.key = '';
         CONTEXT.history = [];

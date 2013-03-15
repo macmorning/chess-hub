@@ -14,8 +14,7 @@
 	version: '0.1',         // client lib version
     user: '',               // user name
     key:'',                 // unique key provided at login time
-    channels:[],            // list of polled channels
-    counter: 0,             // current polling counter
+    channels:[],            // list of polled channels; each channel is an object : { counter: last message count, name : display name, history: messages history }
     ajaxCall: {},
     //
     //  function : init()
@@ -31,7 +30,6 @@
                 } );
         }
         CHESSHUB._stopPoll();
-        CHESSHUB.counter = 0;
         CHESSHUB.user = '';
         CHESSHUB.key = '';
         CHESSHUB.channels = [];
@@ -49,57 +47,19 @@
             //nothing to do
         }
     },
-    //
-    //  function : addChannel()
-    //  adds a channel to poll
-    //
-    addChannel: function(channel,successCallBack,errorCallBack) {
-        if (channel && CHESSHUB.channels.indexOf(channel)<0) {
-            var data = { user: CHESSHUB.user, key: CHESSHUB.key, channel:channel } ;
-            ajaxCall = $.ajax({
-                type: 'POST',
-                url : '/chanJoin',
-                contentType: 'application/json; charset=utf-8',
-                dataType: 'json',
-                data: JSON.stringify(data),
-                success: function() {
-                        CHESSHUB.channels.push(channel);
-                        successCallBack();
-                    },
-                error: function() {errorCallBack();}
-            });
-            console.log('list of channels : ' + CHESSHUB.channels);
-        }
-    },   
-    //
-    //  function : removeChannel()
-    //  removes the user from a channel
-    //
-    removeChannel: function(channel,successCallBack,errorCallBack) {
-        if (channel && CHESSHUB.channels.indexOf(channel)>=0) {
-            var data = { user: CHESSHUB.user, key: CHESSHUB.key, channel:channel } ;
-            ajaxCall = $.ajax({
-                type: 'POST',
-                url : '/chanQuit',
-                contentType: 'application/json; charset=utf-8',
-                dataType: 'json',
-                data: JSON.stringify(data),
-                success: function() {
-                        CHESSHUB.channels.splice(CHESSHUB.channels.indexOf(channel));
-                        successCallBack();
-                    },
-                error: function() {errorCallBack();}
-            });
-            console.log('list of channels : ' + CHESSHUB.channels);
-        }
-    },   
+
     //
     //  private function : _poll()
     //  recursive long polling function
     //
-    _poll: function() {
-        console.log('polling ... ' + CHESSHUB.counter);
-        var data = { user: CHESSHUB.user, key: CHESSHUB.key, counter: CHESSHUB.counter, channels: CHESSHUB.channels } ;
+    _poll: function(channel) {
+        if(CHESSHUB.channels[channel].counter.isNaN)
+        {
+            console.log('_poll : ' + channel + ' is not a known channel');
+            return false;
+        }
+        console.log('polling ... ' + CHESSHUB.channels[channel].counter);
+        var data = { user: CHESSHUB.user, key: CHESSHUB.key, counter: CHESSHUB.channels[channel].counter, channel: channel } ;
         ajaxCall = $.ajax({
             type: 'POST',
             url : '/poll',
@@ -111,14 +71,14 @@
                     console.log('poll error - unexpected answer');
                     console.log(response);
                 } else {
-                    CHESSHUB.counter = response.counter;
+                    CHESSHUB.channels[channel].counter = response.counter;
                 }
                 if($.isArray(response.append)) { 
                     response.append.forEach(function(message) { addMessage(message); });
                 } else {
                     addMessage(response.append);
                 }
-                CHESSHUB._poll();
+                CHESSHUB._poll(channel);
             },
             error: function(data,status,error) {
                     // the error event can be triggered because the node server is down (status = error)
@@ -126,17 +86,28 @@
                     console.log('poll error - ' + status);
                     console.log(error);
                     if (status == 'error') {
-                        setTimeout(function() {CHESSHUB._poll();},3000); // retry after 3 seconds
+                        setTimeout(function() {CHESSHUB._poll(channel);},3000); // retry after 3 seconds
                     }
             }
         });
     },
     //
-    //  function : listen()
-    //  starts polling for the current subscribed channels
+    //  function : listen(channel)
+    //  starts polling for the specified channel
     //
-    listen: function() {
-        this._poll();
+    listen: function(channel) {
+        console.log('listen : adding ' + channel + ' to the channels list : ');
+        CHESSHUB.channels[channel] = { counter : 0, name : channel, history : [] };
+        console.log(CHESSHUB.channels[channel]);
+        this._poll(channel);
+    },
+    //
+    //  function : leave(channel)
+    //  stops polling for the specified channel
+    //
+    leave: function(channel) {
+        CHESSHUB.channels[channel] = { counter : 0, name : channel, history : [] };
+        this._poll(channel);
     },
     //
     //  function : connect(user, successCallBack, errorCallBack)
@@ -166,11 +137,16 @@
              });
     },
     //
-    //  function : disconnect(user, successCallBack, errorCallBack)
+    //  function : disconnect()
     //  disconnects a user from to the chesshub server
     //
-    disconnect: function(successCallBack, errorCallBack) {
+    disconnect: function() {
+            if (!CHESSHUB.user) {
+                return false;
+            }
             var data = { user: CHESSHUB.user, key: CHESSHUB.key } ;
+            console.log('disconnect : leaving all channels');
+            CHESSHUB.channels = [];
             $.ajax({
                 type: 'POST',
                 url : '/disconnect',
@@ -178,12 +154,11 @@
                 dataType: 'json',
                 data: JSON.stringify(data),
                 success: function () { 
-                        successCallBack();
+                        console.log('disconnect : ... ok');
                     },
                 error: function(data,status,error) {
-                        console.log('connect error - ' + status);
+                        console.log('disconnect error - ' + status);
                         console.log(error);
-                        errorCallBack();
                     }
              });
     },

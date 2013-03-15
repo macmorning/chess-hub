@@ -23,15 +23,12 @@ var http = require('http'),
 var Channel = require('./channel.js');
 
 
-var messages = [
-        { time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  }
-        ];
 var clients = [];                                   // init the clients array
 var users = [];                                     // init the users array
 var channels = [];                                  // init the channels array
-var chan_main = new Channel('Main','MAIN');         // create the main chat channel
-chan_main.switchOpen(true);                         // mark the main chat channel as open for all
-channels.push(chan_main);                           // push the main chat channel to the channels array
+channels['MAIN'] = new Channel('Main','MAIN');      // create the main chat channel
+channels['MAIN'].messages.push({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
+channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
 
 var MAXCLIENTS_2 = 70;           // absolute maximum number of clients; any request will be dropped once this number is reached
 var MAXCLIENTS_1 = 50;           // maximum number of clients before refusing new connections
@@ -69,8 +66,8 @@ function sendMessage(from, msg, category, to ) {
     if (!category) category = "chat_msg";
     message = {time: currTime(), user: from, msg: msg, category: category, to: to };
     LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... sendMessage : ' + message.msg);
-    messages.push(message);
-    var json = JSON.stringify( { counter: messages.length, append: message });
+    channels[to].messages.push(message);
+    var json = JSON.stringify( { counter: channels[to].messages.length, append: message });
     var i = 0;
     while(clients.length > 0) {
         var client = clients.pop();
@@ -104,30 +101,6 @@ http.createServer(function (req, res) {
    var url_parts = url.parse(req.url);
    //console.log(url_parts);
 
-//
-// DISCONNECTION SERVICE
-//
-    if(url_parts.pathname.substr(0, 11) == '/disconnect') {
-        LOGCONNECT && console.log(currTime() + ' [CONNEC] disconnect');
-        var user = "";
-        var data = "";
-        req.on('data', function(chunk) {
-            data += chunk;
-        });
-        req.on('end', function() {
-            var json = JSON.parse(data);
-            user = escapeHtml(json.user);
-            LOGCONNECT && console.log(currTime() + ' [CONNEC] ... disconnect user ' + user);
-            res.writeHead(200, { 'Content-Type': 'application/json'});
-            res.end('ok');
-            channels.forEach(function(currChan) {       // search for the channels where the user was active
-                if(currChan.users.indexOf(user)) {
-                    currChan.users.splice(currChan.users.indexOf(user),1);
-                    LOGCONNECT && console.log(currTime() + ' [CONNEC] ... removed user ' + user + ' from ' + currChan.name);                    
-                }
-            });
-        });
-    }
 //
 // CONNECTION SERVICE
 //
@@ -174,6 +147,25 @@ http.createServer(function (req, res) {
         });
     } 
 
+//
+// DISCONNECTION SERVICE
+//
+    else if(url_parts.pathname.substr(0, 11) == '/disconnect') {
+        LOGCONNECT && console.log(currTime() + ' [CONNEC] disconnect');
+        var user = "";
+        var data = "";
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
+        req.on('end', function() {
+            var json = JSON.parse(data);
+            user = escapeHtml(json.user);
+            LOGCONNECT && console.log(currTime() + ' [CONNEC] ... disconnect user ' + user);
+            res.writeHead(200, { 'Content-Type': 'application/json'});
+            res.end(JSON.stringify([]));
+            users.splice(users.indexOf(user),1);
+        });
+    }
     
 //
 // POLLING SERVICE
@@ -187,26 +179,26 @@ http.createServer(function (req, res) {
         });
         req.on('end', function() {
             var json = JSON.parse(data);
-            if (isNaN(json.counter))  {   // no counter provided, send Bad Request HTTP code
+            if (isNaN(json.counter) || !json.channel)  {   // no counter provided or no channel id, send Bad Request HTTP code
                 LOGPOLLING && console.log(currTime() + ' [POLLIN] ... error, dumping data below')
                 LOGPOLLING && console.log(json)
                 res.writeHead(400, { 'Content-type': 'text/txt'});
                 res.end('Bad request');
             }
-            LOGPOLLING && console.log(currTime() + ' [POLLIN] ... counter = ' + json.counter + ' from user = ' + json.user);
+            LOGPOLLING && console.log(currTime() + ' [POLLIN] ... counter = ' + json.counter + ' from user = ' + json.user + ' for channel = ' + json.channel);
             res.writeHead(200, {'Content-Type': 'application/json'});
-            var n = messages.length - json.counter;
+            var n = channels[json.channel].messages.length - json.counter;
             if(n > 0) {
                 var lastMessages = {};
                 if ( n <= MAXMESSAGES ) {
-                    lastMessages = messages.slice(json.counter)
+                    lastMessages = channels[json.channel].messages.slice(json.counter)
                 } else if ( n > MAXMESSAGES ) {       // if there are too many messages to send
-                    lastMessages = messages.slice(messages.length - MAXMESSAGES);
+                    lastMessages = channels[json.channel].messages.slice(messages.length - MAXMESSAGES);
                 }
                 LOGPOLLING && console.log(currTime() + ' [POLLIN] ... sending ' + lastMessages.length + ' new message(s)');
                 res.writeHead(200, { 'Content-type': 'application/json'});
                 res.end(JSON.stringify( {
-                    counter: messages.length,
+                    counter: channels[json.channel].messages.length,
                     append: lastMessages
                 }));
             } else {
@@ -228,7 +220,7 @@ http.createServer(function (req, res) {
         LOGMESSAGING && console.log(currTime() + ' [MESSAG] new message');
         var user = "";
         var msg = "";
-        var chan = "";
+        var channel = "";
         var data = "";
         var category = "";
         req.on('data', function(chunk) {
@@ -239,53 +231,12 @@ http.createServer(function (req, res) {
             msg = escapeHtml(json.msg);         // escaping html chars
             user = escapeHtml(json.user);
             category = escapeHtml(json.category) || 'chat_msg' ;        // default : chat message
-            chan = escapeHtml(json.channel) || 'MAIN';                  // default : main channel
+            channel = escapeHtml(json.channel) || 'MAIN';                  // default : main channel
             
-            LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user + " / channel = " + chan + " / category = " + category);
-            sendMessage(user, msg, category, chan);
+            LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user + " / channel = " + channel + " / category = " + category);
+            sendMessage(user, msg, category, channel);
             res.writeHead(200, { 'Content-type': 'text/html'});
             res.end(JSON.stringify({0:'OK'}));
-        });
-    }
-
-//
-// CHANNEL JOIN SERVICE
-//
-    else if(url_parts.pathname.substr(0, 9) == '/chanJoin') {
-        // Join request via JSON POST request
-        // user : user joining
-        // channel : channel to join
-        var data = "";
-        LOGCHANNEL && console.log(currTime() + ' [CHAN  ] user joins a channel');
-        req.on('data', function(chunk) {
-            data += chunk;
-        });
-        req.on('end', function() {
-            var json = JSON.parse(data);
-            var chan = escapeHtml(json.channel);         // escape html chars
-            var user = escapeHtml(json.user);
-            
-            LOGCHANNEL && console.log(currTime() + ' [CHAN  ] ... user = ' + user + " / channel = " + chan);
-            channels.forEach(function(currChan) {       // search for the channel
-                console.log(currChan);
-                if(currChan.id == chan)
-                    {
-                        if (currChan.addUser(user)) {
-                            res.writeHead(200, { 'Content-type': 'text/html'});
-                            res.end(JSON.stringify({0:'ok'}));
-                            LOGCHANNEL && console.log(currTime() + ' [CHAN  ] ... complete: current users in channel : ');
-                            LOGCHANNEL && console.log(currChan.users);
-                            sendMessage(user, user + ' joined channel ' + currChan.name, 'chat_activity', chan );
-                        } else {
-                            res.writeHead(200, { 'Content-type': 'text/html'});
-                            res.end(JSON.stringify({0:'ko; user is already in channel'}));
-                        }
-                    }
-            });
-            if (res) {
-                res.writeHead(200, { 'Content-type': 'text/html'});
-                res.end(JSON.stringify({0:'ko; unknown channel'}));                
-            }
         });
     }
     
