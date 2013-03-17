@@ -1,29 +1,25 @@
 /* Stack the two content containers */
 
-#loginpage_main { display:block; width:98%; max-width:20em; margin: 15% 1% 0 1%;margin:auto;}
+#loginpage_main { display:block; width:98%; max-width:25em; margin-top: 15%;margin:auto;}
 
-#mainpage_main,
+#mainpage_chat,
 #mainpage_side { display:block; width:98%; margin: 0 1% 0 1%;}
-#mainpage_userslist { display:none; }
 
-#mainpage_main { background-color: #eeeeee;}
 
 /* First breakpoint at 512px */
 @media all and (min-width: 32em){
-    #loginpage_main { width:20em; margin:auto;}
+    #loginpage_main { width:25em; margin:auto;}
 
-    #mainpage_side,#mainpage_main { float:left; }
-	#mainpage_side { width:30%; margin: 0 1% 0 2%;}
-	#mainpage_main { width:66%; margin: 0 1% 0 0; }
-    #mainpage_userslist { float:right; display:block; width:66%; margin: 0 1% 0 0; }
+    #mainpage_side,#mainpage_chat { float:left; }
+	#mainpage_side { width:48%; max-width: 20em; margin: 0 1% 0 2%;}
+	#mainpage_chat { width:48%; margin: 0 1% 0 0; }
 }
 
 /* Second breakpoint at 800px */
 @media all and (min-width: 50em){
     #loginpage_main { width:25em; margin:auto;}
 
-    #mainpage_userslist,#mainpage_side,#mainpage_main { float:left; }
-	#mainpage_side { width:20%; margin: 0 2% 0 2%;}
-	#mainpage_main { width:54%; margin: 0 2% 0 0; }
-    #mainpage_userslist { display:block; width:19%; margin: 0 1% 0 0; }
+    #mainpage_side,#mainpage_chat { float:left; }
+	#mainpage_side { width:39%; margin: 0 1% 0 2%;}
+	#mainpage_chat { width:57%; margin: 0 1% 0 0; }
 }

@@ -175,24 +175,28 @@
 		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();">Exit</a>
 		<a href="#configpage" data-icon="gear" data-iconpos="notext">Configuration</a>
 	</header>
-        <div data-role="popup" id="mainpage_popupElo" class="ui-content">
-            This is an estimation of your level. You can use the table below if you have an Elo rank.
-            <table>
-                <tr>        <td>Category</td><td>Rating range</td>
-                </tr><tr>   <td>Grandmaster</td><td>2600 and up</td>
-                </tr><tr>   <td>Senior Master</td><td>2400–2599</td>
-                </tr><tr>   <td>Master</td><td>2200–2399</td>
-                </tr><tr>   <td>Expert</td><td>2000–2199</td>
-                </tr><tr>   <td>Class A</td><td>1800–1999</td>
-                </tr><tr>   <td>Class B</td><td>1600–1799</td>
-                </tr><tr>   <td>Class C</td><td>under 1600</td>
-                </tr>
-            </table>
-        </div>
+
+    <div data-role="popup" id="mainpage_popupElo" class="ui-content">
+        This is an estimation of your level. You can use the table below if you have an Elo rank.
+        <table>
+            <tr>        <td>Category</td><td>Rating range</td>
+            </tr><tr>   <td>Grandmaster</td><td>2600 and up</td>
+            </tr><tr>   <td>Senior Master</td><td>2400–2599</td>
+            </tr><tr>   <td>Master</td><td>2200–2399</td>
+            </tr><tr>   <td>Expert</td><td>2000–2199</td>
+            </tr><tr>   <td>Class A</td><td>1800–1999</td>
+            </tr><tr>   <td>Class B</td><td>1600–1799</td>
+            </tr><tr>   <td>Class C</td><td>under 1600</td>
+            </tr>
+        </table>
+    </div>
+
     <div id="mainpage_side">
         <h3>To search for a game, fill this form and press "search".</h3>
                     <span>Your self-estimated skill:
-                        <span style="float:right;"><a href="#mainpage_popupElo" data-wrapperels="span" data-mini="true" data-rel="popup" data-theme='c' data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a></span>
+                        <span style="float:right;">
+                            <a href="#mainpage_popupElo" data-wrapperels="span" data-mini="true" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
+                        </span>
                     </span>
 	    <form method="POST" action="" data-ajax="false">
                 <fieldset data-role="controlgroup" data-mini="true">
@@ -224,11 +228,7 @@
     		    <button id="game_search" type="submit" data-theme="a">search</button>
 	    </form>
     </div>
-    <div id="mainpage_userslist">
-        <h3>Who is online ?</h3>
-        <p>users list goes here</p>
-    </div>
-    <div id="mainpage_main">
+    <div id="mainpage_chat">
         <input type='text' id="chat_input" onkeyup="chatSpecialKeys(event);">
         <div id="chat_output"></div>
     </div>

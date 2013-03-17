@@ -92,6 +92,13 @@
         });
     },
     //
+    //  function : listUsers(channel)
+    //  queries the server for the users list for the specified channel
+    //
+    listUsers: function(channel) {
+        console.log('list users');
+    },
+    //
     //  function : listen(channel)
     //  starts polling for the specified channel
     //
