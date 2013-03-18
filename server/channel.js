@@ -19,6 +19,11 @@ Channel.prototype = {
     users: [],              // current users    
     messages: [],           // list of messages
     clients: [],            // list of clients currently long-polling the channel
+    playerA: '',            // username of the game creator
+    playerB: '',            // username of the game joiner
+    gameLevel: '',          // level of the game
+    gameAllowUpper: false,  // allow player B to join even if his level is > to the game level
+    gameAllowLower: false,  // allow player B to join even if his level is < to the game level
     switchOpen: function(bool) {
             if(bool === true) {
                 this.open = true;

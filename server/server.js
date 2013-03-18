@@ -29,6 +29,11 @@ channels['MAIN'] = new Channel('Main','MAIN');      // create the main chat chan
 channels['MAIN'].messages.push({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
 channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
 
+channels['TESTA'] = new Channel('Test A','TEST A');
+channels['TESTA'].gameLevel = 3;
+channels['TESTA'].playerA= 'admin';
+
+
 var MAXCLIENTS_2 = 70;          // absolute maximum number of clients; any request will be dropped once this number is reached
 var MAXCLIENTS_1 = 50;          // maximum number of clients before refusing new connections
 var MAXMESSAGES = 20;           // maximum number of messages sent at once
@@ -221,28 +226,52 @@ http.createServer(function (req, res) {
 //
     else if(url_parts.pathname.substr(0, 11) == '/searchGame') {
         var player="";
-        var player_level="";
-        var player_accept_lower=false;
-        var player_accept_higher=true;
+        var playerLevel=0;
+        var playerAcceptLower=0;
+        var playerAcceptHigher=0;
+        var data="";
         LOGSEARCHING && console.log(currTime() + ' [SEARCH] search a game')
         req.on('data', function(chunk) {
             data += chunk;
         });
         req.on('end', function() {
-            var json = JSON.parse(data);
+            try { var json = JSON.parse(data); }
+            catch(err) { console.log(err); console.log(data); var json= {};}
             player = escapeHtml(json.user);
-            player_level = escapeHtml(json.player_level);
-            player_accept_lower = escapeHtml(json.player_accept_lower);
-            player_accept_higher = escapeHtml(json.player_accept_higher);
-            if (!player)  {   // no username, send Bad Request HTTP code
+            playerLevel = json.playerLevel;
+            playerAcceptLower = json.playerAcceptLower;
+            playerAcceptHigher = json.playerAcceptHigher;
+            if (!player || isNaN(playerLevel))  {   // no username, no level => send Bad Request HTTP code
                 LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... error, dumping data below')
                 LOGSEARCHING && console.log(json)
                 res.writeHead(400, { 'Content-type': 'text/txt'});
                 res.end('Bad request');
+                return 1;
             }
-            LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + player_level);
-            res.writeHead(200, {'Content-Type': 'text/txt'});
-            res.end();      // TODO : enable a long polling for games
+            LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + playerLevel);
+            
+            // searching for an existing game
+            for (var i in channels) {
+                var channel = channels[i];
+                if(channel.playerA && !channel.playerB      // this is a game channel with only a player A
+                        && (playerAcceptLower || channel.gameLevel >= playerLevel - 1)
+                        && (playerAcceptHigher || channel.gameLevel <= playerLevel + 1)) {
+                    LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA);
+                    channel.addUser(player);
+                    channel.playerB = player;
+                    LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... playerB = ' + channel.playerB);
+                    res.writeHead(200, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify( {
+                            returncode: 'ok',
+                            returnmessage: 'game found',
+                        }));
+                }
+            };
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify( {
+                    returncode: 'ko',
+                    returnmessage: 'No game found',
+                }));      // TODO : enable a long polling for games
         });
     } 
     
@@ -266,7 +295,8 @@ http.createServer(function (req, res) {
             data += chunk;
         });
         req.on('end', function() {
-            var json = JSON.parse(data);
+            try { var json = JSON.parse(data); }
+            catch(err) { console.log(err); console.log(data); var json= {};}
             msg = escapeHtml(json.msg);         // escaping html chars
             user = escapeHtml(json.user);
             category = escapeHtml(json.category) || 'chat_msg' ;        // default : chat message
