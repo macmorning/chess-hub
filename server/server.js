@@ -23,27 +23,33 @@ var http = require('http'),
 var Channel = require('./channel.js');
 
 
+var GAMEINDEX=0;        // IDs for newly created games
 var users = [];                                     // init the users array
 var channels = [];                                  // init the channels array
 channels['MAIN'] = new Channel('Main','MAIN');      // create the main chat channel
 channels['MAIN'].messages.push({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
 channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
 
-channels['TESTA'] = new Channel('Test A','TEST A');
-channels['TESTA'].gameLevel = 3;
-channels['TESTA'].playerA= 'admin';
+channels['TESTA'] = new Channel('Test A','TESTA');
+channels['TESTA'].gameLevel = 6;
+channels['TESTA'].playerA= 'kaspa';
+
+channels['TESTB'] = new Channel('Test B','TESTB');
+channels['TESTB'].gameLevel = 1;
+channels['TESTB'].playerA= 'kaspa';
 
 
-var MAXCLIENTS_2 = 70;          // absolute maximum number of clients; any request will be dropped once this number is reached
-var MAXCLIENTS_1 = 50;          // maximum number of clients before refusing new connections
-var MAXMESSAGES = 20;           // maximum number of messages sent at once
+var MAXCLIENTS_2    = 70;          // absolute maximum number of clients; any request will be dropped once this number is reached
+var MAXCLIENTS_1    = 50;          // maximum number of clients before refusing new connections
+var MAXGAMES        = 20;          // maximum number of games
+var MAXMESSAGES     = 20;          // maximum number of messages sent at once
 
-var LOGSTATIC = false;          // enable or disable static files serving logs
-var LOGCONNECT = true;          // enable or disable connections logs
-var LOGMESSAGING = true;        // enable or disable messaging logs
-var LOGPOLLING = false;         // enable or disable polling logs
-var LOGCHANNEL = true;          // enable or disable channel activity logs
-var LOGSEARCHING = true;        // enable or disable game searches logs
+var LOGSTATIC       = false;       // enable or disable static files serving logs
+var LOGCONNECT      = true;        // enable or disable connections logs
+var LOGMESSAGING    = true;        // enable or disable messaging logs
+var LOGPOLLING      = false;       // enable or disable polling logs
+var LOGCHANNEL      = true;        // enable or disable channel activity logs
+var LOGSEARCHING    = true;        // enable or disable game searches logs
 
 function escapeHtml(unsafe) {
     if(unsafe) {// escapes Html characters
@@ -97,6 +103,7 @@ function currTime() {
 http.createServer(function (req, res) {
 
     if(channels['MAIN'].clients.length > MAXCLIENTS_2) {
+          console.log(currTime() + ' [LIMIT ] Cannot accept request, MAXCLIENT_2 reached !(' + MAXCLIENTS_2 + ')');
           res.writeHead(500, { 'Content-type': 'text/txt'});
           res.end('Sorry, there are too many users right now ! Please try again later.');
     }
@@ -113,6 +120,7 @@ http.createServer(function (req, res) {
     if(url_parts.pathname.substr(0, 8) == '/connect') {
         LOGCONNECT && console.log(currTime() + ' [CONNEC] connect');
         if(channels['MAIN'].clients.length > MAXCLIENTS_1) {
+                console.log(currTime() + ' [LIMIT ] Cannot accept connection, MAXCLIENT_1 reached !(' + MAXCLIENTS_1 + ')');
                 res.writeHead(200, { 'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
                     returncode: 'ko',
@@ -239,8 +247,8 @@ http.createServer(function (req, res) {
             catch(err) { console.log(err); console.log(data); var json= {};}
             player = escapeHtml(json.user);
             playerLevel = json.playerLevel;
-            playerAcceptLower = json.playerAcceptLower;
-            playerAcceptHigher = json.playerAcceptHigher;
+            playerAcceptLower = json.playerAcceptLower+0;
+            playerAcceptHigher = json.playerAcceptHigher+0;
             if (!player || isNaN(playerLevel))  {   // no username, no level => send Bad Request HTTP code
                 LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... error, dumping data below')
                 LOGSEARCHING && console.log(json)
@@ -248,30 +256,55 @@ http.createServer(function (req, res) {
                 res.end('Bad request');
                 return 1;
             }
-            LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + playerLevel);
+            LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + playerLevel, ' accepter higher/lower = ' + playerAcceptHigher + '/' + playerAcceptLower);
             
             // searching for an existing game
+            var count = 0;  // count the number of channels
             for (var i in channels) {
+                count++;
                 var channel = channels[i];
-                if(channel.playerA && !channel.playerB      // this is a game channel with only a player A
-                        && (playerAcceptLower || channel.gameLevel >= playerLevel - 1)
-                        && (playerAcceptHigher || channel.gameLevel <= playerLevel + 1)) {
-                    LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA);
+                if(channel.playerA && !channel.playerB && channel.playerA != player     // this is a game channel with only a player A, who is not the user who searches for a game
+                        && ((playerAcceptLower == 1 && channel.gameAcceptHigher == 1) || channel.gameLevel >= playerLevel - 1)      // this game allows lower level players to join, or is wihtin accepted range
+                        && ((playerAcceptHigher == 1 && channel.gameAcceptLower == 1) || channel.gameLevel <= playerLevel + 1)) {  // this game allows higher level players to join, or is wihtin accepted range
+                    LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);
                     channel.addUser(player);
                     channel.playerB = player;
                     LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... playerB = ' + channel.playerB);
                     res.writeHead(200, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify( {
                             returncode: 'ok',
-                            returnmessage: 'game found',
+                            channelid: channel.id,
+                            channelname: channel.name,
                         }));
+                    return 0;   // found a game, exit the loop
                 }
             };
-            res.writeHead(200, {'Content-Type': 'application/json'});
-            res.end(JSON.stringify( {
-                    returncode: 'ko',
-                    returnmessage: 'No game found',
-                }));      // TODO : enable a long polling for games
+
+            // no game found, create one if MAXGAMES has not been reached yet
+            if(count > MAXGAMES) {      // there are too many games, send http/500 and return
+                console.log(currTime() + ' [LIMIT ] Cannot create a new game, MAXGAMES reached !(' + MAXGAMES + ')');
+                res.writeHead(500, {'Content-Type': 'application/json'});
+                res.end('Sorry, too many games are running. Please try again later');
+                return 0;
+            } else {
+                // create the new game channel and push it
+                GAMEINDEX++;
+                channels[GAMEINDEX] = new Channel(GAMEINDEX,player + "'s table");
+                channels[GAMEINDEX].gameLevel = playerLevel;
+                channels[GAMEINDEX].playerA = player;
+                channels[GAMEINDEX].gameAcceptHigher = playerAcceptHigher;
+                channels[GAMEINDEX].gameAcceptLower = playerAcceptLower;
+                channels[GAMEINDEX].addUser(player);
+                console.log(currTime() + ' [SEARCH] New game created, see details below.');
+                console.log(channels[GAMEINDEX]);
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify( {
+                        returncode: 'ok',
+                        channelid: GAMEINDEX,
+                        channelname: channels[GAMEINDEX].name,
+                    }));
+                return 0;
+            }
         });
     } 
     
