@@ -104,7 +104,7 @@
     //  function : searchGame(playerLevel,playerAcceptLower,playerAcceptHigher)
     //  asks for a game
     //
-    searchGame: function(playerLevel,playerAcceptLower,playerAcceptHigher) {
+    searchGame: function(playerLevel,playerAcceptLower,playerAcceptHigher,successCallBack,errorCallBack) {
         console.log('CHESSHUB.searchGame');
         var data = {};
         data = { user: CHESSHUB.user, key: CHESSHUB.key, playerLevel: playerLevel, playerAcceptLower: playerAcceptLower, playerAcceptHigher: playerAcceptHigher } ;
@@ -118,12 +118,14 @@
             success: function (response) {              // jquery automatically parses the json answer
                     console.log('CHESSHUB.searchGame : answer : ');
                     console.log(response);
+                    successCallBack(response.gameDetails);
             },
             error: function(data,status,error) {
                     // the error event can be triggered because the node server is down (status = error)
                     // or if the request is aborted (status = abort)
                     console.log('CHESSHUB.searchGame : error - ' + status);
                     console.log(error);
+                    errorCallBack();
             }
         });
     },

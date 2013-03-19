@@ -57,8 +57,17 @@
     }
     
     function searchGame(playerLevel,playerAllowLower,playerAllowHigher) {
-        console.log('searchGame - level : ' + playerLevel + ' / allow lower level : ' + playerAllowLower + ' / allow higher level : ' + playerAllowHigher);
-        CHESSHUB.searchGame(playerLevel,playerAllowLower,playerAllowHigher);
+        $('#game_search').text('searching');
+        $('#game_search').button('disable');
+        var output = $('#chat_output');
+        CHESSHUB.searchGame(playerLevel,playerAllowLower,playerAllowHigher,
+                function(gameDetails) {
+                    console.log(gameDetails);
+                    output.html("<p class='chat_sys'>Found a game ! ID : " + gameDetails.id + "</p>"+ output.html());
+                },
+                function() {                       // callback function for error event
+                    output.html("<p class='chat_sys'>Error connecting you to the server :(</p>" + output.html());
+                });
     }
     function copyUserName(user) {
         if (user) {

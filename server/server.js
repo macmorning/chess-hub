@@ -247,8 +247,8 @@ http.createServer(function (req, res) {
             catch(err) { console.log(err); console.log(data); var json= {};}
             player = escapeHtml(json.user);
             playerLevel = json.playerLevel;
-            playerAcceptLower = json.playerAcceptLower+0;
-            playerAcceptHigher = json.playerAcceptHigher+0;
+            playerAcceptLower = json.playerAcceptLower;
+            playerAcceptHigher = json.playerAcceptHigher;
             if (!player || isNaN(playerLevel))  {   // no username, no level => send Bad Request HTTP code
                 LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... error, dumping data below')
                 LOGSEARCHING && console.log(json)
@@ -273,8 +273,7 @@ http.createServer(function (req, res) {
                     res.writeHead(200, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify( {
                             returncode: 'ok',
-                            channelid: channel.id,
-                            channelname: channel.name,
+                            gameDetails: channel
                         }));
                     return 0;   // found a game, exit the loop
                 }
@@ -289,19 +288,18 @@ http.createServer(function (req, res) {
             } else {
                 // create the new game channel and push it
                 GAMEINDEX++;
-                channels[GAMEINDEX] = new Channel(GAMEINDEX,player + "'s table");
-                channels[GAMEINDEX].gameLevel = playerLevel;
-                channels[GAMEINDEX].playerA = player;
-                channels[GAMEINDEX].gameAcceptHigher = playerAcceptHigher;
-                channels[GAMEINDEX].gameAcceptLower = playerAcceptLower;
-                channels[GAMEINDEX].addUser(player);
+                    channels[GAMEINDEX] = new Channel(player + "'s table",GAMEINDEX);
+                    channels[GAMEINDEX].gameLevel = playerLevel;
+                    channels[GAMEINDEX].playerA = player;
+                    channels[GAMEINDEX].gameAcceptHigher = playerAcceptHigher;
+                    channels[GAMEINDEX].gameAcceptLower = playerAcceptLower;
+                    channels[GAMEINDEX].addUser(player);
                 console.log(currTime() + ' [SEARCH] New game created, see details below.');
                 console.log(channels[GAMEINDEX]);
                 res.writeHead(200, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
                         returncode: 'ok',
-                        channelid: GAMEINDEX,
-                        channelname: channels[GAMEINDEX].name,
+                        gameDetails: channels[GAMEINDEX]
                     }));
                 return 0;
             }
