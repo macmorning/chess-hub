@@ -57,16 +57,17 @@
     }
     
     function searchGame(playerLevel,playerAllowLower,playerAllowHigher) {
-        $('#game_search').text('searching');
         $('#game_search').button('disable');
         var output = $('#chat_output');
         CHESSHUB.searchGame(playerLevel,playerAllowLower,playerAllowHigher,
                 function(gameDetails) {
                     console.log(gameDetails);
                     output.html("<p class='chat_sys'>Found a game ! ID : " + gameDetails.id + "</p>"+ output.html());
+                    $('#game_search').button('enable');
                 },
                 function() {                       // callback function for error event
                     output.html("<p class='chat_sys'>Error connecting you to the server :(</p>" + output.html());
+                    $('#game_search').button('enable');
                 });
     }
     function copyUserName(user) {

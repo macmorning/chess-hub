@@ -30,13 +30,13 @@ channels['MAIN'] = new Channel('Main','MAIN');      // create the main chat chan
 channels['MAIN'].messages.push({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
 channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
 
-channels['TESTA'] = new Channel('Test A','TESTA');
-channels['TESTA'].gameLevel = 6;
-channels['TESTA'].playerA= 'kaspa';
+//channels['TESTA'] = new Channel('Test A','TESTA');
+//channels['TESTA'].gameLevel = 6;
+//channels['TESTA'].playerA= 'kaspa';
 
-channels['TESTB'] = new Channel('Test B','TESTB');
-channels['TESTB'].gameLevel = 1;
-channels['TESTB'].playerA= 'kaspa';
+//channels['TESTB'] = new Channel('Test B','TESTB');
+//channels['TESTB'].gameLevel = 1;
+//channels['TESTB'].playerA= 'kaspa';
 
 
 var MAXCLIENTS_2    = 70;          // absolute maximum number of clients; any request will be dropped once this number is reached
