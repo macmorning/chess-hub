@@ -60,14 +60,21 @@
         $('#game_search').button('disable');
         var output = $('#chat_output');
         CHESSHUB.searchGame(playerLevel,playerAllowLower,playerAllowHigher,
-                function(gameDetails) {
-                    console.log(gameDetails);
-                    output.html("<p class='chat_sys'>Found a game ! ID : " + gameDetails.id + "</p>"+ output.html());
+                function(response) {
+                    console.log(response);
+                    if(!isNaN(response.gameDetails.gameLevel) && response.returncode == "new") {
+                        output.html('<p class="chat_sys">A new game was created : "' + response.gameDetails.name + '". Waiting for another player...</p>'+ output.html());
+                    } else if(!isNaN(response.gameDetails.gameLevel) && response.returncode != "new") {
+                        output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '"</p>'+ output.html());
+                    }
                     $('#game_search').button('enable');
+                    CHESSHUB.listen(response.gameDetails.id);
+                    return 0;
                 },
                 function() {                       // callback function for error event
                     output.html("<p class='chat_sys'>Error connecting you to the server :(</p>" + output.html());
                     $('#game_search').button('enable');
+                    return 1;
                 });
     }
     function copyUserName(user) {
@@ -191,11 +198,12 @@
 	</header>
 
     <div data-role="popup" id="mainpage_popupElo" class="ui-content">
-        This is an estimation of your level. You can use the table below if you have an Elo rank.
+        <p>This is an estimation of your level.<br/>
+        You can use the table below if you have an Elo rank.</p>
         <table>
             <tr>        <td>Category</td><td>Rating range</td>
             </tr><tr>   <td>Grandmaster</td><td>2600 and up</td>
-            </tr><tr>   <td>Senior Master</td><td>2400–2599</td>
+            </tr><tr>   <td>Senior Master </td><td>2400–2599</td>
             </tr><tr>   <td>Master</td><td>2200–2399</td>
             </tr><tr>   <td>Expert</td><td>2000–2199</td>
             </tr><tr>   <td>Class A</td><td>1800–1999</td>

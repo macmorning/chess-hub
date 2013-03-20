@@ -47,12 +47,12 @@ var MAXMESSAGES     = 20;          // maximum number of messages sent at once
 var LOGSTATIC       = false;       // enable or disable static files serving logs
 var LOGCONNECT      = true;        // enable or disable connections logs
 var LOGMESSAGING    = true;        // enable or disable messaging logs
-var LOGPOLLING      = false;       // enable or disable polling logs
+var LOGPOLLING      = true;       // enable or disable polling logs
 var LOGCHANNEL      = true;        // enable or disable channel activity logs
 var LOGSEARCHING    = true;        // enable or disable game searches logs
 
 function escapeHtml(unsafe) {
-    if(unsafe) {// escapes Html characters
+    if(unsafe && isNaN(unsafe)) {// escapes Html characters
         return unsafe
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
@@ -201,7 +201,7 @@ http.createServer(function (req, res) {
             user = escapeHtml(json.user);
             key = escapeHtml(json.key);
             counter = json.counter;
-            if (isNaN(counter) || !channel)  {   // no counter provided or no channel id, send Bad Request HTTP code
+            if (isNaN(counter) || !channel || !channels[channel])  {   // no counter provided or no channel id, send Bad Request HTTP code
                 LOGPOLLING && console.log(currTime() + ' [POLLIN] ... error, dumping data below')
                 LOGPOLLING && console.log(json)
                 res.writeHead(400, { 'Content-type': 'text/txt'});
@@ -210,6 +210,8 @@ http.createServer(function (req, res) {
             LOGPOLLING && console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel);
             res.writeHead(200, {'Content-Type': 'application/json'});
             var n = channels[channel].messages.length - counter;
+            console.log('messages in channel :');
+            if(channel=="GAME1") {console.log(channels['GAME1'].messages);}
             if(n > 0) {
                 var lastMessages = {};
                 if ( n <= MAXMESSAGES ) {
@@ -246,9 +248,17 @@ http.createServer(function (req, res) {
             try { var json = JSON.parse(data); }
             catch(err) { console.log(err); console.log(data); var json= {};}
             player = escapeHtml(json.user);
-            playerLevel = json.playerLevel;
-            playerAcceptLower = json.playerAcceptLower;
-            playerAcceptHigher = json.playerAcceptHigher;
+            try {
+                playerLevel = parseInt(json.playerLevel);
+                playerAcceptLower = parseInt(json.playerAcceptLower);
+                playerAcceptHigher = parseInt(json.playerAcceptHigher);
+            } catch(err) {
+                LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... error, incorrect format, dumping data below')
+                LOGSEARCHING && console.log(json)
+                res.writeHead(400, { 'Content-type': 'text/txt'});
+                res.end('Bad request');
+                return 1;                
+            }
             if (!player || isNaN(playerLevel))  {   // no username, no level => send Bad Request HTTP code
                 LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... error, dumping data below')
                 LOGSEARCHING && console.log(json)
@@ -272,7 +282,7 @@ http.createServer(function (req, res) {
                     LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... playerB = ' + channel.playerB);
                     res.writeHead(200, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify( {
-                            returncode: 'ok',
+                            returncode: 'joined',
                             gameDetails: channel
                         }));
                     return 0;   // found a game, exit the loop
@@ -283,23 +293,24 @@ http.createServer(function (req, res) {
             if(count > MAXGAMES) {      // there are too many games, send http/500 and return
                 console.log(currTime() + ' [LIMIT ] Cannot create a new game, MAXGAMES reached !(' + MAXGAMES + ')');
                 res.writeHead(500, {'Content-Type': 'application/json'});
-                res.end('Sorry, too many games are running. Please try again later');
+                res.end('Sorry, there are to many games right now. Please try again later');
                 return 0;
             } else {
                 // create the new game channel and push it
                 GAMEINDEX++;
-                    channels[GAMEINDEX] = new Channel(player + "'s table",GAMEINDEX);
-                    channels[GAMEINDEX].gameLevel = playerLevel;
-                    channels[GAMEINDEX].playerA = player;
-                    channels[GAMEINDEX].gameAcceptHigher = playerAcceptHigher;
-                    channels[GAMEINDEX].gameAcceptLower = playerAcceptLower;
-                    channels[GAMEINDEX].addUser(player);
+                var gameId = "GAME" + GAMEINDEX
+                    channels[gameId] = new Channel(player + "'s table",gameId);
+                    channels[gameId].gameLevel = playerLevel;
+                    channels[gameId].playerA = player;
+                    channels[gameId].gameAcceptHigher = playerAcceptHigher;
+                    channels[gameId].gameAcceptLower = playerAcceptLower;
+                    channels[gameId].addUser(player);
                 console.log(currTime() + ' [SEARCH] New game created, see details below.');
-                console.log(channels[GAMEINDEX]);
+                console.log(channels[gameId]);
                 res.writeHead(200, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
-                        returncode: 'ok',
-                        gameDetails: channels[GAMEINDEX]
+                        returncode: 'new',
+                        gameDetails: channels[gameId]
                     }));
                 return 0;
             }

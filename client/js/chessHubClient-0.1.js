@@ -86,7 +86,7 @@
                     console.log('CHESSHUB._poll : error - ' + status);
                     console.log(error);
                     if (status == 'error') {
-                        setTimeout(function() {CHESSHUB._poll(channel);},3000); // retry after 3 seconds
+                        setTimeout(function() {CHESSHUB._poll(channel);},10000); // retry after 10 seconds
                     }
             }
         });
@@ -118,7 +118,7 @@
             success: function (response) {              // jquery automatically parses the json answer
                     console.log('CHESSHUB.searchGame : answer : ');
                     console.log(response);
-                    successCallBack(response.gameDetails);
+                    successCallBack(response);
             },
             error: function(data,status,error) {
                     // the error event can be triggered because the node server is down (status = error)
