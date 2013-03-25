@@ -1,0 +1,160 @@
+/************************
+        CHESSBOARD
+*************************/
+#chessBoardHidden {
+    display:block;
+    margin:auto;
+}
+#chessBoard {
+    display:none;
+    border: 0.3em solid black;
+}
+#wGraveyard,#bGraveyard {
+    display:none;
+    border: 0.1em solid #000000;
+}
+#wGraveyard {
+    background-color:black;
+}
+#bGraveyard {
+    background-color:white;
+}
+.chessBoardRow {
+    float:left;
+    display:block;
+    width:100%;
+}
+
+.chessBoardSquare {
+    float:left;
+    display:block;
+    text-align:center;
+}
+
+
+.chessBoardSquare0 {
+    background-image: url('/client/img/blackSq49x49.png');
+}
+    #chessBoardSquare0.overOk {
+        border: 0.1em solid #8fef77;
+    }
+    #chessBoardSquare0.overKo {
+        border: 0.1em solid #ef2929;
+    }
+    
+.chessBoardSquare1 {
+    background-image: url('/client/img/whiteSq49x49.png');
+}
+    #chessBoardSquare1.overOk {
+        border: 0.1em solid #4e9a06;
+    }
+    #chessBoardSquare1.overKo {
+        border: 0.1em solid #a40000;
+    }
+
+img.piece {
+    width: 70%;
+    background-size: 100%;
+    cursor: move;
+}
+
+
+/* breakpoint at 256px */
+@media all and (min-width: 16em){
+    #chessBoardHidden {
+        display:none;
+    }
+    #chessBoard {
+        display:block;
+        width:16em; 
+        height:16em; 
+        margin:auto;
+    }
+    .chessBoardRow {
+        height:2em;
+    }
+    .chessBoardSquare {
+        width:2em;
+        height:2em;
+    }
+    #wGraveyard, #bGraveyard {
+        display:block;
+        width:16em; 
+        margin:auto;
+    }
+}
+
+/* breakpoint at 384px */
+@media all and (min-width: 24em){
+    #chessBoard {
+        width:24em; 
+        height:24em; 
+        margin:auto;
+    }
+    .chessBoardRow {
+        height:3em;
+    }
+    .chessBoardSquare {
+        width:3em;
+        height:3em;
+    }
+    #wGraveyard, #bGraveyard {
+        display:block;
+        width:24em; 
+        margin:auto;
+    }
+}
+
+/* breakpoint at 512px */
+@media all and (min-width: 32em){
+    #chessBoard {
+        width:32em; 
+        height:32em; 
+        margin:auto;
+    }
+    .chessBoardRow {
+        height:4em;
+    }
+    .chessBoardSquare {
+        width:4em;
+        height:4em;
+    }
+    #wGraveyard, #bGraveyard {
+        display:block;
+        width:32em; 
+        margin:auto;
+    }
+}
+
+/* breakpoint at 650px */
+@media all and (min-width: 40em){
+    #chessBoard {
+        width:40em; 
+        height:40em; 
+        margin:auto;
+    }
+    .chessBoardRow {
+        height:5em;
+    }
+    .chessBoardSquare {
+        width:5em;
+        height:5em;
+    }
+    #wGraveyard, #bGraveyard {
+        display:block;
+        width:40em;
+        margin:auto;
+    }
+}
+
+/* breakpoint at 800px */
+@media all and (min-width: 50em){
+    #wGraveyard, #bGraveyard {
+        margin:0;
+        float:left;
+        display:block;
+        width:5em;
+        height:40em;
+    }
+}
+

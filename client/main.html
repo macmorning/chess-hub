@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="lib/jquery/jquery.mobile-1.3.0.min.css"></link>
     <link rel="stylesheet" href="css/main_layout.css"></link>
+    <link rel="stylesheet" href="css/chessboard.css"></link>
     <link rel="stylesheet" href="css/common.css"></link>
     <script src="js/chessHubClient-0.1.js"></script>
     <script src="js/chessHubBoard-0.1.js"></script>
@@ -31,8 +32,8 @@
                 event.preventDefault();
                 searchGame($('input[type=radio][name=game_user_level]:checked').attr('value'),$('#game_lower_ok').val(),$('#game_higher_ok').val());
         });
-        logoff();
-        $('#login_username').focus();
+        //logoff();
+        //$('#login_username').focus();
     });
     
     function connect(user) {
@@ -265,20 +266,20 @@
 
 <!--############### Board Page ###############-->
 <div data-role="page" id="boardpage">
-    <header data-role="header">
-		<h1 id="boardpage_header"></h1>
-	</header>
-          <div id="chessBoardContainer">
-                      <div id="chessBoard">   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
-                      </div>
+<!--    <header data-role="header">-->
+<!--		<h1 id="boardpage_header"></h1>-->
+<!--	</header>-->
+          <div id="chessBoardHidden">
+                Sorry, this game requires a higher resolution. 
+                Width must be at least 256px.
+          </div>
+          <div id='wGraveyard'>
+          </div>
+          <div id='bGraveyard'>
+          </div>
+          <div id="chessBoard">   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
           </div>
           <input type="button" value="init chessboard" id="initButton" onclick="CHESSBOARD.initChessBoard()"></input>
-          <div id='graveyards'>
-                  <div id='wGraveyard'>
-                  </div>
-                  <div id='bGraveyard'>
-                  </div>
-          </div>
 </div>
 
 </body>
