@@ -89,10 +89,12 @@
                     return 1;
                 });
     }
-    function copyUserName(user) {
+    
+    function copyUserName(user,to) {
         if (user) {
-            $('#chat_input').val("@" + user + " " + $('#chat_input').val());
-            $('#chat_input').focus();
+            var input = $('#'+to);
+            input.val("@" + user + " " + input.val());
+            input.focus();
         }
         return 0;
     }
@@ -130,7 +132,7 @@
                 + message.category
                 + '"><span class="chat_time">['
                 + message.time
-                + ']</span> <span class="chat_user">&lt;<a href="javascript:void(0)" class="chat_user" onclick="copyUserName(\'' + message.user + '\');">'
+                + ']</span> <span class="chat_user">&lt;<a href="javascript:void(0)" class="chat_user" onclick="copyUserName(\'' + message.user + '\',\''+(message.to == "MAIN" ? "chat_input" : "board_chat_input")+'\');">'
                 + message.user + "</a>&gt;"
                 + '</span> <span class="chat_msg'  + (directMessage ? ' chat_direct':'') + '">'
                 + message.msg

@@ -151,6 +151,8 @@
     //  stops polling for the specified channel
     //
     leave: function(channel) {
+        console.log('leaving channel ' + channel);
+        CHESSHUB._abortAjaxCalls();
         CHESSHUB.channels[channel] = {};
     },
 
