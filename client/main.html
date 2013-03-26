@@ -32,6 +32,7 @@
                 event.preventDefault();
                 searchGame($('input[type=radio][name=game_user_level]:checked').attr('value'),$('#game_lower_ok').val(),$('#game_higher_ok').val());
         });
+        CHESSBOARD.initChessBoard();
         //logoff();
         //$('#login_username').focus();
     });
@@ -91,10 +92,11 @@
         return 0;
     }
     
-    function addMessage(message) {
+    function addMessage(message,outputDiv) {
         // adds a message to the chat_output div of the current page
         var directMessage = false;
-        var output = $('#chat_output');
+        if(!outputDiv) { outputDiv = 'chat_output';}
+        var output = $('#'+outputDiv);
         if (message.msg.indexOf("@" + CONTEXT.user + " ") >= 0) {
             directMessage = true;
         }
@@ -266,20 +268,20 @@
 
 <!--############### Board Page ###############-->
 <div data-role="page" id="boardpage">
-<!--    <header data-role="header">-->
-<!--		<h1 id="boardpage_header"></h1>-->
-<!--	</header>-->
+    <header data-role="header">
+		<h1 id="boardpage_header"></h1>
+	</header>
           <div id="chessBoardHidden">
                 Sorry, this game requires a higher resolution. 
                 Width must be at least 256px.
           </div>
-          <div id='wGraveyard'>
+          <div id="chessBoard">   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
           </div>
           <div id='bGraveyard'>
           </div>
-          <div id="chessBoard">   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
+          <div id='wGraveyard'>
           </div>
-          <input type="button" value="init chessboard" id="initButton" onclick="CHESSBOARD.initChessBoard()"></input>
+<!--          <input type="button" value="init chessboard" id="initButton" onclick="CHESSBOARD.initChessBoard()"></input>-->
 </div>
 
 </body>

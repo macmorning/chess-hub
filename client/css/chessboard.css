@@ -6,12 +6,14 @@
     margin:auto;
 }
 #chessBoard {
-    display:none;
-    border: 0.3em solid black;
+        width:16em; 
+        height:16em; 
 }
-#wGraveyard,#bGraveyard {
+#chessBoard,#wGraveyard,#bGraveyard {
+    margin:auto;
     display:none;
-    border: 0.1em solid #000000;
+    border: 0.2em solid black;
+    margin-top:0.2em;
 }
 #wGraveyard {
     background-color:black;
@@ -53,7 +55,7 @@
     }
 
 img.piece {
-    width: 70%;
+    width: 90%;
     background-size: 100%;
     cursor: move;
 }
@@ -66,9 +68,6 @@ img.piece {
     }
     #chessBoard {
         display:block;
-        width:16em; 
-        height:16em; 
-        margin:auto;
     }
     .chessBoardRow {
         height:2em;
@@ -80,7 +79,7 @@ img.piece {
     #wGraveyard, #bGraveyard {
         display:block;
         width:16em; 
-        margin:auto;
+        height:2em;
     }
 }
 
@@ -89,7 +88,6 @@ img.piece {
     #chessBoard {
         width:24em; 
         height:24em; 
-        margin:auto;
     }
     .chessBoardRow {
         height:3em;
@@ -99,9 +97,8 @@ img.piece {
         height:3em;
     }
     #wGraveyard, #bGraveyard {
-        display:block;
+        height:3em;
         width:24em; 
-        margin:auto;
     }
 }
 
@@ -110,7 +107,6 @@ img.piece {
     #chessBoard {
         width:32em; 
         height:32em; 
-        margin:auto;
     }
     .chessBoardRow {
         height:4em;
@@ -120,9 +116,8 @@ img.piece {
         height:4em;
     }
     #wGraveyard, #bGraveyard {
-        display:block;
         width:32em; 
-        margin:auto;
+        height:4em;
     }
 }
 
@@ -131,7 +126,7 @@ img.piece {
     #chessBoard {
         width:40em; 
         height:40em; 
-        margin:auto;
+        margin-top: 0.3em;
     }
     .chessBoardRow {
         height:5em;
@@ -141,16 +136,33 @@ img.piece {
         height:5em;
     }
     #wGraveyard, #bGraveyard {
-        display:block;
+        margin-top: 0.3em;
         width:40em;
-        margin:auto;
+        height:5em;
     }
 }
 
-/* breakpoint at 800px */
-@media all and (min-width: 50em){
+/* breakpoint at 864px : Graveyards are moved to the right side of the board */
+@media all and (min-width: 54em){
+    #chessBoard {
+        margin: 0.5em 0.5em 0 0.5em;
+        float:left;
+        display:block;
+        width:40em; 
+    }
     #wGraveyard, #bGraveyard {
-        margin:0;
+        margin: 0.5em 0.2em 0 0;
+        float:left;
+        display:block;
+        width:5em;
+        height:40em;
+    }
+}
+
+/* breakpoint at 1008px : Chat is moved to the right side of the screen */
+@media all and (min-width: 63em){
+    #wGraveyard, #bGraveyard {
+        margin: 0.5em 0.2em 0 0;
         float:left;
         display:block;
         width:5em;

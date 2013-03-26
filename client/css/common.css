@@ -12,32 +12,6 @@ body {
   background-color : #eeeeee;
 }
 
-div#maincontainer {
-    width: 750px; /*Width of main container*/
-    margin: 0 auto; /*Center container on page*/
-}
-
-div#contentwrapper {
-    float: left;
-    width: 100%;
-}
-
-div#chessBoardColumn {
-    margin: 0 130px 0 130px; /*Margins for content column. Should be "0 RightColumnWidth 0 LeftColumnWidth*/
-    text-align: center;
-}
-
-div#wGraveyard {
-    float: left;
-    width: 130px; /*Width of left column in pixel*/
-    margin-left: -750px; /*Set margin to that of -(MainContainerWidth)*/
-}
-
-div#bGraveyard {
-    float: left;
-    width: 130px; /*Width of right column*/
-    margin-left: -130px; /*Set left margin to -(RightColumnWidth)*/
-}
 
 /************************
         CHAT
