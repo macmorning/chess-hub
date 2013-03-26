@@ -1,15 +1,8 @@
 /* app css stylesheet */
 
-/************************
-        VARIABLES
-*************************/
-
-/************************
-        LAYOUT
-*************************/
-body { font-family: Helvetica, san-serif; }
 body {
-  background-color : #eeeeee;
+    font-family: Helvetica, san-serif; 
+    background-color : #eeeeee;
 }
 
 
@@ -19,11 +12,6 @@ body {
 
 label {
     color:#000000;  
-}
-input[type='text'],textarea, #chat_output {
-}
-
-input[type='text']:focus,textarea:focus { 
 }
 
 #chat_output {

@@ -5,13 +5,17 @@
     display:block;
     margin:auto;
 }
+#chessBoardContainer {
+    display: none;
+    width:100%;
+}
 #chessBoard {
         width:16em; 
         height:16em; 
 }
 #chessBoard,#wGraveyard,#bGraveyard {
     margin:auto;
-    display:none;
+    display:block;
     border: 0.2em solid black;
     margin-top:0.2em;
 }
@@ -21,6 +25,17 @@
 #bGraveyard {
     background-color:white;
 }
+
+#boardpage_chat {
+    width:100%;
+    display:block;
+}
+#board_chat_output,
+#board_chat_input {
+    display:block;
+    width:100%;
+}
+
 .chessBoardRow {
     float:left;
     display:block;
@@ -66,7 +81,7 @@ img.piece {
     #chessBoardHidden {
         display:none;
     }
-    #chessBoard {
+    #chessBoardContainer {
         display:block;
     }
     .chessBoardRow {
@@ -80,6 +95,9 @@ img.piece {
         display:block;
         width:16em; 
         height:2em;
+    }
+    #boardpage_chat {
+        display:block;
     }
 }
 
@@ -157,16 +175,17 @@ img.piece {
         width:5em;
         height:40em;
     }
+    #boardpage_chat {
+        float:left;
+    }
 }
 
-/* breakpoint at 1008px : Chat is moved to the right side of the screen */
-@media all and (min-width: 63em){
-    #wGraveyard, #bGraveyard {
-        margin: 0.5em 0.2em 0 0;
-        float:left;
-        display:block;
-        width:5em;
-        height:40em;
+/* breakpoint at 1024px : Chat is moved to the right side of the screen */
+@media all and (min-width: 64em){
+    #boardpage_chat {
+        margin: 0.5em 0.2em 0 54em;
+        width:auto;
+        float:none;
     }
 }
 

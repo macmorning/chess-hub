@@ -47,7 +47,9 @@
                         CONTEXT.user = response.user;
                         CONTEXT.key = response.key;
                         console.log(CONTEXT.user + ' connected; key : ' + CONTEXT.key);
-                        CHESSHUB.listen('MAIN');
+                        CHESSHUB.listen('MAIN',
+                                function(message) { addMessage(message); }
+                            );
                         $.mobile.changePage($("#mainpage"));
                     }
 				},
@@ -71,10 +73,11 @@
                         output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '"</p>'+ output.html());
                     }
                     CHESSHUB.leave('MAIN');
-                    CHESSHUB.listen(response.gameDetails.id);
+                    CHESSHUB.listen(response.gameDetails.id,
+                                function(message) { addMessage(message); }
+                            );
                     $('#game_search').button('enable');
                     $('#boardpage_header').text(response.gameDetails.name);
-                    //CHESSBOARD.initChessBoard();                // initialize the board (TODO : allow multiple boards; problem : means multiple polls ?)
                     $.mobile.changePage($("#boardpage"));
                     return 0;
                 },
@@ -92,10 +95,11 @@
         return 0;
     }
     
-    function addMessage(message,outputDiv) {
+    function addMessage(message) {
         // adds a message to the chat_output div of the current page
         var directMessage = false;
-        if(!outputDiv) { outputDiv = 'chat_output';}
+        var outputDiv = 'chat_output'; // defaulting to the main chat
+        if (message.to != 'MAIN') { outputDiv = 'board_chat_output';}
         var output = $('#'+outputDiv);
         if (message.msg.indexOf("@" + CONTEXT.user + " ") >= 0) {
             directMessage = true;
@@ -165,14 +169,14 @@
 
     function chatSpecialKeys(event) {
         var key = window.event ? event.keyCode : event.which;
-        if (key==13) sendMessage($('#chat_input').val()); // user pressed enter
-        if (key==38) {                        // user pressed "up"
+        if (key==13) sendMessage($('#chat_input').val());       // user pressed enter
+        if (key==38) {                                          // user pressed "up"
             if (CONTEXT.currentHistoryIndex > 0) {
                 CONTEXT.currentHistoryIndex--;
                 $('#chat_input').val(CONTEXT.history[CONTEXT.currentHistoryIndex]);
             }
         }
-        if (key==40) {                        // user pressed "down"
+        if (key==40) {                                          // user pressed "down"
             if (CONTEXT.currentHistoryIndex < CONTEXT.history.length) {
                 CONTEXT.currentHistoryIndex++;
                 $('#chat_input').val(CONTEXT.history[CONTEXT.currentHistoryIndex]);
@@ -271,16 +275,23 @@
     <header data-role="header">
 		<h1 id="boardpage_header"></h1>
 	</header>
-          <div id="chessBoardHidden">
+          <div id='chessBoardHidden'>
                 Sorry, this game requires a higher resolution. 
                 Width must be at least 256px.
           </div>
-          <div id="chessBoard">   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
+          <div id='chessBoardContainer'>
+              <div id='chessBoard'>   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
+              </div>
+              <div id='bGraveyard'>
+              </div>
+              <div id='wGraveyard'>
+              </div>
+              <div id='boardpage_chat'>
+                    <input type='text' id="board_chat_input" onkeyup="chatSpecialKeys(event);">
+                    <div id="board_chat_output"></div>
+              </div>
           </div>
-          <div id='bGraveyard'>
-          </div>
-          <div id='wGraveyard'>
-          </div>
+
 <!--          <input type="button" value="init chessboard" id="initButton" onclick="CHESSBOARD.initChessBoard()"></input>-->
 </div>
 
