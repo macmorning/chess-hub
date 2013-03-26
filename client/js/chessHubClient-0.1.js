@@ -53,7 +53,7 @@
     //  recursive long polling function
     //
     _poll: function(channel,newMessageCallBack) {
-        if(CHESSHUB.channels[channel].counter.isNaN)
+        if(!CHESSHUB.channels[channel] || CHESSHUB.channels[channel].counter.isNaN)
         {
             console.log('CHESSHUB._poll : ' + channel + ' is not a known channel');
             return false;
@@ -218,6 +218,7 @@
             console.log('CHESSHUB.sendMessage error - Not connected');
             return;
         }
+        if(!channel) { channel = 'MAIN';}
         var data = { user: CHESSHUB.user, channel: channel, key: CHESSHUB.key, msg: text } ;
         $.ajax({
             type: 'POST',
