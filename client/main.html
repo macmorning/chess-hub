@@ -101,6 +101,8 @@
     
     function addMessage(message) {
         // adds a message to the chat_output div of the current page
+        console.log('addMessage : ') ;
+        console.log(message);
         var directMessage = false;
         
         if (message.to == 'MAIN' || !message.to) { 
@@ -165,6 +167,8 @@
     function logoff() {
         $('#chat_input').val("");
         $('#chat_output').html("");
+        $('#board_chat_input').val("");
+        $('#board_chat_output').html("");
         $('#login_returnmessage').text("");
         CHESSHUB.disconnect();
         CONTEXT.user = '';

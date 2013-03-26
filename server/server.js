@@ -47,7 +47,7 @@ var MAXMESSAGES     = 20;          // maximum number of messages sent at once
 var LOGSTATIC       = false;       // enable or disable static files serving logs
 var LOGCONNECT      = true;        // enable or disable connections logs
 var LOGMESSAGING    = true;        // enable or disable messaging logs
-var LOGPOLLING      = true;       // enable or disable polling logs
+var LOGPOLLING      = true;        // enable or disable polling logs
 var LOGCHANNEL      = true;        // enable or disable channel activity logs
 var LOGSEARCHING    = true;        // enable or disable game searches logs
 
@@ -210,12 +210,14 @@ http.createServer(function (req, res) {
             LOGPOLLING && console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel);
             res.writeHead(200, {'Content-Type': 'application/json'});
             var n = channels[channel].messages.length - counter;
+            console.log(channels[channel]);
+            console.log(channels[channel].messages);
             if(n > 0) {
                 var lastMessages = {};
                 if ( n <= MAXMESSAGES ) {
                     lastMessages = channels[channel].messages.slice(counter)
                 } else if ( n > MAXMESSAGES ) {       // if there are too many messages to send
-                    lastMessages = channels[channel].messages.slice(messages.length - MAXMESSAGES);
+                    lastMessages = channels[channel].messages.slice(channels[channel].messages.length - MAXMESSAGES);
                 }
                 LOGPOLLING && console.log(currTime() + ' [POLLIN] ... sending ' + lastMessages.length + ' new message(s)');
                 res.writeHead(200, { 'Content-type': 'application/json'});
