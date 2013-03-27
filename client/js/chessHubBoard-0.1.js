@@ -21,32 +21,47 @@
     handleDrop: function(ev) {
         ev.preventDefault();
         var target = ev.target;
-        while(target.tagName != 'TD'){
-             target=target.parentNode;
+        var pieceSelector = $("#" + ev.dataTransfer.getData("srcId"));
+        while(target.tagName != 'DIV'){
+             target=target.parentNode;      // if we take a piece, chances are the user has dropped his own piece over another piece object
         }
-        console.log('target square : ' + target.title);
         document.getElementById(target.id).classList.remove('overOk');
         var child = target.childNodes[0] || '';
         for(var i=0; i<target.childNodes.length; i++) {
-            if (target.childNodes[i].tagName == 'IMG') {
+            if (target.childNodes[i].tagName == 'IMG' && target.childNodes[i].id != pieceSelector.id) {
                 var p = target.childNodes[i];
                 console.log('piece taken : ' + p.title);
-                document.getElementById(p.id[0]+'Graveyard').appendChild(p);
+                CHESSBOARD._move(p.id,p.id[0]+'Graveyard');
                 break;
             }
         }
-        target.appendChild(document.getElementById(ev.dataTransfer.getData("srcId")));
+        CHESSBOARD._move(pieceSelector.attr('id'),target.id);
     },
 
     handleDragEnter: function(ev) {
         document.getElementById(ev.target.id).classList.add('overOk');
     },
 
-    handleDragLeave: function(ev)
-    {
+    handleDragLeave: function(ev) {
         document.getElementById(ev.target.id).classList.remove('overOk');
     },
+
     
+    _move: function(piece,destination) {
+    // moves a piece "piece" from its current position to a target square "destination"
+    // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
+            var pieceSelector = $("#" + piece);
+            var destinationSelector = $("#" + destination);
+            pieceSelector.animate({ top: "+=" + (destinationSelector.position().top - pieceSelector.position().top) +"px" , left : "+=" + (destinationSelector.position().left - pieceSelector.position().left) +"px" }, 
+                        "slow", 
+                        undefined, 
+                        function () {
+                            pieceSelector.prependTo(destinationSelector);
+                            pieceSelector.css( { top : "0px", left : "0px"} );
+                        }
+                    );
+    },
+        
     _createPieces: function() {
         for (var c in CHESSBOARD.colors) {
             CHESSBOARD.pieces[c+'king'] = {
