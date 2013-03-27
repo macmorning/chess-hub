@@ -297,7 +297,12 @@
           <div id='chessBoardContainer'>
               <div id='chessBoard'>   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
               </div>
-              <div id='bGraveyard'>
+              <div id='bGraveyard' onclick='var des = $("#sqd4").position();
+            var el = $("#wking");
+            el.css("position", "absolute");
+            el.animate({ top: des.top+"px" ,left :des.left+"px"}, 2000, undefined, function () {
+                el.remove().appendTo(".destnation").css("position", "static");});
+                $("#sqd4").append(el)'>
               </div>
               <div id='wGraveyard'>
               </div>

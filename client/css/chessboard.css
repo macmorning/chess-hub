@@ -69,8 +69,7 @@
         border: 0.1em solid #a40000;
     }
 
-img.piece {
-    width: 90%;
+.piece {
     background-size: 100%;
     cursor: move;
 }
@@ -90,6 +89,9 @@ img.piece {
     .chessBoardSquare {
         width:2em;
         height:2em;
+    }
+    .piece {
+        width: 1.8em;
     }
     #wGraveyard, #bGraveyard {
         display:block;
@@ -114,6 +116,9 @@ img.piece {
         width:3em;
         height:3em;
     }
+    .piece {
+        width: 2.7em;
+    }
     #wGraveyard, #bGraveyard {
         height:3em;
         width:24em; 
@@ -132,6 +137,9 @@ img.piece {
     .chessBoardSquare {
         width:4em;
         height:4em;
+    }
+    .piece {
+        width: 3.6em;
     }
     #wGraveyard, #bGraveyard {
         width:32em; 
@@ -152,6 +160,9 @@ img.piece {
     .chessBoardSquare {
         width:5em;
         height:5em;
+    }
+    .piece {
+        width: 4.5em;
     }
     #wGraveyard, #bGraveyard {
         margin-top: 0.3em;
