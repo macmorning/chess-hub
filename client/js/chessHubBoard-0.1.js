@@ -10,58 +10,61 @@
     colors: {'w':'white','b':'black'},
     pieces: [],
     gameID: '',
-    playerA: '',
-    playerB: '',
-    blackPlayer: '',
-    whitePlayer: '',
-    blackHasRoocked: '',
-    whiteHasRoocked: '',
+    selectedPiece: '',      // selector for the piece held by the user
+    playerA: '',            // playerA username
+    playerB: '',            // playerB username
+    blackPlayer: '',        // blackPlayer username
+    blackCanCastleKingSide: true,
+    blackCanCastleQueenSide: true,
+    whitePlayer: '',        // whitePlayer username
+    whiteCanCastleKingSide: true,
+    whiteCanCastleQueenSide: true,
     currentGameTurn: '', // 'white' or 'black'
-    
 
-    handleDragOver: function(ev) {
-        ev.preventDefault();
-    },
-
-    handleDragStart: function(ev) {
-        ev.dataTransfer.setData("srcId",ev.target.id);
-    },
-
-    handleDrop: function(ev) {
-        ev.preventDefault();
-        var target = ev.target;
-        var pieceSelector = $("#" + ev.dataTransfer.getData("srcId"));
-        while(target.tagName != 'DIV'){
-             target=target.parentNode;      // if we take a piece, chances are the user has dropped his own piece over another piece object
+    mouseDownHandler: function(ev) {            // using a mouse down event here : it's more user friendly than drag&drop when you are using a touch-enabled device
+        ev.stopPropagation();   // stop propagation : we don't want the click event to bubble
+        if (ev.target.tagName == 'IMG' && !CHESSBOARD.selectedPiece) {          // user is not holding a piece yet and is clicking on one
+            CHESSBOARD.selectedPiece = $("#" + ev.target.id);
+            $("#"+CHESSBOARD.pieces[ev.target.id].sqId).addClass("selected");
+        } else if(ev.target.tagName == 'IMG'                                    // user is holding a piece and is selecting another one
+                    && CHESSBOARD.selectedPiece 
+                    && CHESSBOARD.selectedPiece.attr('id') != ev.target.id
+                    && CHESSBOARD.selectedPiece.attr('id')[0] == ev.target.id[0]) {     
+            $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
+            CHESSBOARD.selectedPiece = $("#" + ev.target.id);
+            $("#"+CHESSBOARD.pieces[ev.target.id].sqId).addClass("selected");
+        } else if(ev.target.tagName == 'IMG'                                    // user is holding a piece and is selecting the same piece again
+                    && CHESSBOARD.selectedPiece 
+                    && CHESSBOARD.selectedPiece.attr('id') == ev.target.id) {
+            $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
+            CHESSBOARD.selectedPiece = '';
+        } else if((ev.target.tagName == 'DIV' || ev.target.tagName == 'IMG' && CHESSBOARD.selectedPiece.attr('id')[0] != ev.target.id[0]) 
+                            && CHESSBOARD.selectedPiece) {     // user is holding a piece and is clicking on a square or a piece of different color
+                            // TODO : call a function to check that the user can move the target piece at this moment
+                    var target = ev.target;
+                    while(target.tagName != 'DIV'){     // if the target was not a DIV, go up in the DOM to find the first DIV
+                        target=target.parentNode;
+                    }
+                    for(var i=0; i<target.childNodes.length; i++) {
+                        if (target.childNodes[i].tagName == 'IMG' && target.childNodes[i].id != CHESSBOARD.selectedPiece.attr('id')) {
+                            var p = target.childNodes[i];
+                            console.log('piece taken : ' + p.title);
+                            CHESSBOARD.pieces[p.id].sqId = '';
+                            CHESSBOARD._move($('#'+p.id),$('#'+p.id[0]+'Graveyard'));
+                            break;
+                        }
+                    }
+                    CHESSBOARD._move(CHESSBOARD.selectedPiece,$('#' + target.id));
+                    $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
+                    CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId = target.id;
+                    CHESSBOARD.selectedPiece='';
+        } else {
+            CHESSBOARD.selectedPiece.attr('id');
         }
-        document.getElementById(target.id).classList.remove('overOk');
-        var child = target.childNodes[0] || '';
-        for(var i=0; i<target.childNodes.length; i++) {
-            if (target.childNodes[i].tagName == 'IMG' && target.childNodes[i].id != pieceSelector.attr('id')) {
-                var p = target.childNodes[i];
-                console.log('piece taken : ' + p.title);
-                CHESSBOARD.pieces[p.id].sqId = '';
-                CHESSBOARD._move(p.id,p.id[0]+'Graveyard');
-                break;
-            }
-        }
-        CHESSBOARD._move(pieceSelector.attr('id'),target.id);
-        CHESSBOARD.pieces[pieceSelector.attr('id')].sqId = target.id;
     },
-
-    handleDragEnter: function(ev) {
-        document.getElementById(ev.target.id).classList.add('overOk');
-    },
-
-    handleDragLeave: function(ev) {
-        document.getElementById(ev.target.id).classList.remove('overOk');
-    },
-
-    _move: function(piece,destination) {
+        _move: function(pieceSelector,destinationSelector) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
-            var pieceSelector = $("#" + piece);
-            var destinationSelector = $("#" + destination);
             pieceSelector.animate({ top: "+=" + (destinationSelector.position().top - pieceSelector.position().top) +"px" , left : "+=" + (destinationSelector.position().left - pieceSelector.position().left) +"px" }, 
                         "slow", 
                         undefined, 
@@ -168,9 +171,7 @@
                         src="img/transparent.png" \
                         alt="' + CHESSBOARD.pieces[piece].name + '" \
                         title="' + CHESSBOARD.pieces[piece].name + '" \
-                        id="' + CHESSBOARD.pieces[piece].id + '" \
-                        draggable="true" \
-                        ondragstart="CHESSBOARD.handleDragStart(event)"> \
+                        id="' + CHESSBOARD.pieces[piece].id + '"> \
                   </img>';
                if (CHESSBOARD.pieces[piece].id[0] == 'w' && CHESSBOARD.pieces[piece].sqId == '' ) {   // piece is white and captured
                     wGraveyard.append(pieceRepresentation);
@@ -180,6 +181,7 @@
                     $('#' + CHESSBOARD.pieces[piece].sqId).append(pieceRepresentation);
                }
         }
+        $(".piece").bind('vmousedown',function(event) { CHESSBOARD.mouseDownHandler(event); });
     },
 
     _drawBoard:function() {
@@ -189,15 +191,12 @@
              for (var column in CHESSBOARD.chessBoardColumns) {
                 htmlRow += '<div title="' + CHESSBOARD.chessBoardColumns[column] + CHESSBOARD.chessBoardRows[row] + '" \
                             id="sq' + CHESSBOARD.chessBoardColumns[column] + CHESSBOARD.chessBoardRows[row] +'" \
-                            class="chessBoardSquare chessBoardSquare'+ ((parseInt(column)+parseInt(row))%2) +'" \
-                            ondrop="CHESSBOARD.handleDrop(event)" \
-                            ondragover="CHESSBOARD.handleDragOver(event)" \
-                            ondragleave="CHESSBOARD.handleDragLeave(event)" \
-                            ondragenter="CHESSBOARD.handleDragEnter(event)"></div>';
+                            class="chessBoardSquare chessBoardSquare'+ ((parseInt(column)+parseInt(row))%2) +'"></div>';
             }
             htmlRow += '</div>';
             board.append(htmlRow);
          }
+         $(".chessBoardSquare").bind('vmousedown',function(event) { CHESSBOARD.mouseDownHandler(event); });
     },
     
     flip: function() {
@@ -213,6 +212,8 @@
         CHESSBOARD.chessBoardColumns = tmpchessBoardColumns;
         CHESSBOARD.chessBoardRows.reverse();
         $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
+        $('#wGraveyard').empty();
+        $('#bGraveyard').empty();
         CHESSBOARD._drawBoard(); 
         CHESSBOARD._spawnPieces();
     },
@@ -220,6 +221,8 @@
     initChessBoard: function() {
         CHESSBOARD.pieces=[];
         $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
+        $('#wGraveyard').empty();
+        $('#bGraveyard').empty();
         CHESSBOARD._drawBoard(); 
         CHESSBOARD._createPieces();
         CHESSBOARD._spawnPieces();

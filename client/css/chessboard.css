@@ -10,21 +10,24 @@
     width:100%;
 }
 #chessBoard {
-        width:16em; 
-        height:16em; 
+    width:16em; 
+    height:16em; 
 }
 #chessBoard,#wGraveyard,#bGraveyard {
     margin:auto;
     display:block;
     border: 0.2em solid black;
     margin-top:0.2em;
-    overflow:hidden;
 }
 #wGraveyard {
     background-color:black;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 #bGraveyard {
     background-color:white;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 #boardpage_chat {
@@ -53,21 +56,17 @@
 .chessBoardSquare0 {
     background-image: url('/client/img/blackSq49x49.png');
 }
-    #chessBoardSquare0.overOk {
-        border: 0.1em solid #8fef77;
-    }
-    #chessBoardSquare0.overKo {
-        border: 0.1em solid #ef2929;
+    .chessBoardSquare0.selected {
+        background-color: red;
+        background-image:none;
     }
     
 .chessBoardSquare1 {
     background-image: url('/client/img/whiteSq49x49.png');
 }
-    #chessBoardSquare1.overOk {
-        border: 0.1em solid #4e9a06;
-    }
-    #chessBoardSquare1.overKo {
-        border: 0.1em solid #a40000;
+    .chessBoardSquare1.selected {
+        background-color: red;
+        background-image:none;
     }
 
 .piece {
@@ -75,6 +74,50 @@
     cursor: move;
     position:relative;
 }
+
+/********************
+        PIECES
+*********************/
+img.wking {
+    background-image: url('/client/img/wking.png');
+}
+img.wqueen {
+    background-image: url('/client/img/wqueen.png');
+}
+img.wrook {
+    background-image: url('/client/img/wrook.png');
+}
+img.wbishop {
+    background-image: url('/client/img/wbishop.png');
+}
+img.wknight {
+    background-image: url('/client/img/wknight.png');
+}
+img.wpawn {
+    background-image: url('/client/img/wpawn.png');
+}
+img.bking {
+    background-image: url('/client/img/bking.png');
+}
+img.bqueen {
+    background-image: url('/client/img/bqueen.png');
+}
+img.brook {
+    background-image: url('/client/img/brook.png');
+}
+img.bbishop {
+    background-image: url('/client/img/bbishop.png');
+}
+img.bknight {
+    background-image: url('/client/img/bknight.png');
+}
+img.bpawn {
+    background-image: url('/client/img/bpawn.png');
+}
+
+
+
+/*********************************************************************************************************/
 
 
 /* breakpoint at 256px */
@@ -122,8 +165,8 @@
         width: 2.7em;
     }
     #wGraveyard, #bGraveyard {
-        height:3em;
         width:24em; 
+        height:3em;
     }
 }
 
@@ -185,7 +228,7 @@
         margin: 0.5em 0.2em 0 0;
         float:left;
         display:block;
-        width:5em;
+        width: 5em;
         height:40em;
     }
     #boardpage_chat {
