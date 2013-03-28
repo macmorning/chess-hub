@@ -168,7 +168,7 @@
         for (var piece in CHESSBOARD.pieces) {
                var pieceRepresentation = '<img \
                         class="piece '+ CHESSBOARD.pieces[piece].class +'" \
-                        src="img/transparent.png" \
+                        src="/client/img/transparent.png" \
                         alt="' + CHESSBOARD.pieces[piece].name + '" \
                         title="' + CHESSBOARD.pieces[piece].name + '" \
                         id="' + CHESSBOARD.pieces[piece].id + '"> \
