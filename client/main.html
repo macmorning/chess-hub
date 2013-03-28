@@ -289,7 +289,13 @@
 <div data-role="page" id="boardpage">
     <header data-role="header">
 		<h1 id="boardpage_header"></h1>
+		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();">Exit</a>
+		<a href="#boardpage_popupConf" data-wrapperels="span" data-mini="true" data-rel="popup" data-icon="gear" data-iconpos="notext">Configuration</a>
 	</header>
+        <div data-role="popup" id="boardpage_popupConf" class="ui-content">
+            <button id="boardpage_flip" onclick="CHESSBOARD.flip();">flip board</button>
+        </div>
+
           <div id='chessBoardHidden'>
                 Sorry, this game requires a higher resolution. 
                 Width must be at least 256px.

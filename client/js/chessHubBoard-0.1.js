@@ -9,6 +9,15 @@
     chessBoardRows: [8, 7, 6, 5, 4, 3, 2, 1],
     colors: {'w':'white','b':'black'},
     pieces: [],
+    gameID: '',
+    playerA: '',
+    playerB: '',
+    blackPlayer: '',
+    whitePlayer: '',
+    blackHasRoocked: '',
+    whiteHasRoocked: '',
+    currentGameTurn: '', // 'white' or 'black'
+    
 
     handleDragOver: function(ev) {
         ev.preventDefault();
@@ -28,14 +37,16 @@
         document.getElementById(target.id).classList.remove('overOk');
         var child = target.childNodes[0] || '';
         for(var i=0; i<target.childNodes.length; i++) {
-            if (target.childNodes[i].tagName == 'IMG' && target.childNodes[i].id != pieceSelector.id) {
+            if (target.childNodes[i].tagName == 'IMG' && target.childNodes[i].id != pieceSelector.attr('id')) {
                 var p = target.childNodes[i];
                 console.log('piece taken : ' + p.title);
+                CHESSBOARD.pieces[p.id].sqId = '';
                 CHESSBOARD._move(p.id,p.id[0]+'Graveyard');
                 break;
             }
         }
         CHESSBOARD._move(pieceSelector.attr('id'),target.id);
+        CHESSBOARD.pieces[pieceSelector.attr('id')].sqId = target.id;
     },
 
     handleDragEnter: function(ev) {
@@ -46,7 +57,6 @@
         document.getElementById(ev.target.id).classList.remove('overOk');
     },
 
-    
     _move: function(piece,destination) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
@@ -69,6 +79,7 @@
                     order: 0,
                     name : CHESSBOARD.colors[c] + ' king',
                     class : c + 'king',
+                    sqId : 'sq' + 'e' + (c=="w"?1:8),
                     initx : 5,
                     inity : (c=="w"?1:8)
             };
@@ -77,6 +88,7 @@
                     order: 1,
                     name : CHESSBOARD.colors[c] + ' queen',
                     class : c + 'queen',
+                    sqId : 'sq' + 'd' + (c=="w"?1:8),
                     initx : 4,
                     inity : (c=="w"?1:8)
             };
@@ -85,6 +97,7 @@
                     order: 2,
                     name : CHESSBOARD.colors[c] + ' rook (a)',
                     class : c + 'rook',
+                    sqId : 'sq' + 'a' + (c=="w"?1:8),
                     initx : 1,
                     inity : (c=="w"?1:8)
             };
@@ -93,6 +106,7 @@
                     order: 3,
                     name : CHESSBOARD.colors[c] + ' rook (h)',
                     class : c + 'rook',
+                    sqId : 'sq' + 'h' + (c=="w"?1:8),
                     initx : 8,
                     inity : (c=="w"?1:8)
             };
@@ -101,6 +115,7 @@
                     order: 4,
                     name : CHESSBOARD.colors[c] + ' knight (b)',
                     class : c + 'knight',
+                    sqId : 'sq' + 'b' + (c=="w"?1:8),
                     initx : 2,
                     inity : (c=="w"?1:8)
             };
@@ -109,6 +124,7 @@
                     order: 2,
                     name : CHESSBOARD.colors[c] + ' knight (g)',
                     class : c + 'knight',
+                    sqId : 'sq' + 'g' + (c=="w"?1:8),
                     initx : 7,
                     inity : (c=="w"?1:8)
             };
@@ -117,6 +133,7 @@
                     order: 6,
                     name : CHESSBOARD.colors[c] + ' bishop (c)',
                     class : c + 'bishop',
+                    sqId : 'sq' + 'c' + (c=="w"?1:8),
                     initx : 3,
                     inity : (c=="w"?1:8)
             };
@@ -125,6 +142,7 @@
                     order: 7,
                     name : CHESSBOARD.colors[c] + ' bishop (f)',
                     class : c + 'bishop',
+                    sqId : 'sq' + 'f' + (c=="w"?1:8),
                     initx : 6,
                     inity : (c=="w"?1:8)
             };
@@ -134,6 +152,7 @@
                             order: 7+i,
                             name: CHESSBOARD.colors[c] + ' pawn (' + CHESSBOARD.chessBoardColumns[i] + ')',
                             class: c + 'pawn',
+                            sqId : 'sq' + CHESSBOARD.chessBoardColumns[i] + (c=="w"?2:7),
                             initx : i,
                             inity : (c=="w"?2:7)
                     };
@@ -144,12 +163,7 @@
         var bGraveyard = $('#bGraveyard');
         var wGraveyard = $('#wGraveyard');
         for (var piece in CHESSBOARD.pieces) {
-               if (CHESSBOARD.pieces[piece].id[0] == 'w') {
-                    var graveyard = wGraveyard;
-               } else {
-                    var graveyard = bGraveyard;
-               }
-               graveyard.append('<img \
+               var pieceRepresentation = '<img \
                         class="piece '+ CHESSBOARD.pieces[piece].class +'" \
                         src="img/transparent.png" \
                         alt="' + CHESSBOARD.pieces[piece].name + '" \
@@ -157,7 +171,14 @@
                         id="' + CHESSBOARD.pieces[piece].id + '" \
                         draggable="true" \
                         ondragstart="CHESSBOARD.handleDragStart(event)"> \
-                  </img>');
+                  </img>';
+               if (CHESSBOARD.pieces[piece].id[0] == 'w' && CHESSBOARD.pieces[piece].sqId == '' ) {   // piece is white and captured
+                    wGraveyard.append(pieceRepresentation);
+               } else if (CHESSBOARD.pieces[piece].id[0] == 'b' && CHESSBOARD.pieces[piece].sqId == '' ) {  // piece is black and captured
+                    bGraveyard.append(pieceRepresentation);
+               } else {
+                    $('#' + CHESSBOARD.pieces[piece].sqId).append(pieceRepresentation);
+               }
         }
     },
 
@@ -178,16 +199,29 @@
             board.append(htmlRow);
          }
     },
-    initChessBoard: function() {
-        CHESSBOARD.pieces=[];
-        CHESSBOARD._createPieces();
-        CHESSBOARD._spawnPieces();
+    
+    flip: function() {
+    // inverses the board without reinitializing it
+        var tmpchessBoardColumns = {1:CHESSBOARD.chessBoardColumns[8], 
+                                   2:CHESSBOARD.chessBoardColumns[7],
+                                   3:CHESSBOARD.chessBoardColumns[6], 
+                                   4:CHESSBOARD.chessBoardColumns[5], 
+                                   5:CHESSBOARD.chessBoardColumns[4], 
+                                   6:CHESSBOARD.chessBoardColumns[3], 
+                                   7:CHESSBOARD.chessBoardColumns[2], 
+                                   8:CHESSBOARD.chessBoardColumns[1]};
+        CHESSBOARD.chessBoardColumns = tmpchessBoardColumns;
+        CHESSBOARD.chessBoardRows.reverse();
         $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
         CHESSBOARD._drawBoard(); 
-        for (var piece in CHESSBOARD.pieces) {
-            try {
-                document.getElementById('sq' + CHESSBOARD.chessBoardColumns[CHESSBOARD.pieces[piece].initx] + CHESSBOARD.pieces[piece].inity).appendChild(document.getElementById(CHESSBOARD.pieces[piece].id));
-            } catch(err) { console.log('Error : sq' + CHESSBOARD.pieces[piece].initx + CHESSBOARD.pieces[piece].inity + ' was not found') };
-        }
+        CHESSBOARD._spawnPieces();
+    },
+    
+    initChessBoard: function() {
+        CHESSBOARD.pieces=[];
+        $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
+        CHESSBOARD._drawBoard(); 
+        CHESSBOARD._createPieces();
+        CHESSBOARD._spawnPieces();
     }
 }
