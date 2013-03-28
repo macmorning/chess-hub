@@ -27,13 +27,13 @@ var GAMEINDEX=0;        // IDs for newly created games
 var users = [];                                     // init the users array
 var channels = [];                                  // init the channels array
 channels['MAIN'] = new Channel('Main','MAIN');      // create the main chat channel
-channels['MAIN'].messages.push({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
+channels['MAIN'].addMessage({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
 channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
 
 //channels['TESTA'] = new Channel('Test A','TESTA');
+//channels['TESTA'].addMessage({ time : currTime(), user : "TOTO", msg : "Test TESTA", category : "chat_sys", to : "TESTA"  });
 //channels['TESTA'].gameLevel = 6;
 //channels['TESTA'].playerA= 'kaspa';
-
 //channels['TESTB'] = new Channel('Test B','TESTB');
 //channels['TESTB'].gameLevel = 1;
 //channels['TESTB'].playerA= 'kaspa';

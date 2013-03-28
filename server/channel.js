@@ -10,6 +10,7 @@ var Channel = function(name,id) {
     this.name = name;
     this.open = false; 
     this.id = id || name;
+    this.messages = [];
 };
 
 Channel.prototype = {
@@ -44,6 +45,9 @@ Channel.prototype = {
                 return true;
             }
             return false;
+        },
+    addMessage: function(message) {
+            this.messages.push({time:message.time,user:message.user,msg:message.msg,category:message.category,to:message.to});
         }
 };
 
