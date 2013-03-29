@@ -385,8 +385,8 @@ http.createServer(function (req, res) {
                 file = escapeHtml(url_parts.pathname); 
             }
         }
-        LOGSTATIC && console.log(currTime() + ' [STATIC] ... serving ../client/' + file);
-        fs.readFile(SERVERDIR+'../client/'+file, function(err, data) {
+        LOGSTATIC && console.log(currTime() + ' [STATIC] ... serving client/' + file);
+        fs.readFile(SERVERDIR+'client/'+file, function(err, data) {
             if(err) {
                 console.log(currTime() + ' [STATIC] ... ' + err);
                 if(err.code == "ENOENT") {      // file is simply missing
