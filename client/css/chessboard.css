@@ -31,7 +31,8 @@
 }
 
 #boardpage_chat {
-    width:100%;
+    width:98%;
+    margin: 0 1% 0 1%;
     display:block;
 }
 #board_chat_output,
@@ -79,40 +80,40 @@
         PIECES
 *********************/
 img.wking {
-    background-image: url('/client/img/wking.png');
+    background-image: url('/client/img/wking.svg');
 }
 img.wqueen {
-    background-image: url('/client/img/wqueen.png');
+    background-image: url('/client/img/wqueen.svg');
 }
 img.wrook {
-    background-image: url('/client/img/wrook.png');
+    background-image: url('/client/img/wrook.svg');
 }
 img.wbishop {
-    background-image: url('/client/img/wbishop.png');
+    background-image: url('/client/img/wbishop.svg');
 }
 img.wknight {
-    background-image: url('/client/img/wknight.png');
+    background-image: url('/client/img/wknight.svg');
 }
 img.wpawn {
-    background-image: url('/client/img/wpawn.png');
+    background-image: url('/client/img/wpawn.svg');
 }
 img.bking {
-    background-image: url('/client/img/bking.png');
+    background-image: url('/client/img/bking.svg');
 }
 img.bqueen {
-    background-image: url('/client/img/bqueen.png');
+    background-image: url('/client/img/bqueen.svg');
 }
 img.brook {
-    background-image: url('/client/img/brook.png');
+    background-image: url('/client/img/brook.svg');
 }
 img.bbishop {
-    background-image: url('/client/img/bbishop.png');
+    background-image: url('/client/img/bbishop.svg');
 }
 img.bknight {
-    background-image: url('/client/img/bknight.png');
+    background-image: url('/client/img/bknight.svg');
 }
 img.bpawn {
-    background-image: url('/client/img/bpawn.png');
+    background-image: url('/client/img/bpawn.svg');
 }
 
 
@@ -121,7 +122,7 @@ img.bpawn {
 
 
 /* breakpoint at 256px */
-@media all and (min-width: 16em) and (min-height: 19em){
+@media all and (min-width: 16em) {
     #chessBoardHidden {
         display:none;
     }
@@ -239,7 +240,7 @@ img.bpawn {
 /* breakpoint at 1024px : Chat is moved to the right side of the screen */
 @media all and (min-width: 64em){
     #boardpage_chat {
-        margin: 0.5em 0.2em 0 54em;
+        margin: 0.5em 0.5em 0 53em;
         width:auto;
         float:none;
     }

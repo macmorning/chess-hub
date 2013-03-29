@@ -23,24 +23,34 @@
 
     mouseDownHandler: function(ev) {            // using a mouse down event here : it's more user friendly than drag&drop when you are using a touch-enabled device
         ev.stopPropagation();   // stop propagation : we don't want the click event to bubble
-        if (ev.target.tagName == 'IMG' && !CHESSBOARD.selectedPiece) {          // user is not holding a piece yet and is clicking on one
+        
+        // user is not holding a piece yet and is clicking on one
+        if (ev.target.tagName == 'IMG' && !CHESSBOARD.selectedPiece) {
             CHESSBOARD.selectedPiece = $("#" + ev.target.id);
             $("#"+CHESSBOARD.pieces[ev.target.id].sqId).addClass("selected");
-        } else if(ev.target.tagName == 'IMG'                                    // user is holding a piece and is selecting another one
+        } 
+        
+        // user is holding a piece and is selecting another one, of the same color
+        else if(ev.target.tagName == 'IMG'
                     && CHESSBOARD.selectedPiece 
                     && CHESSBOARD.selectedPiece.attr('id') != ev.target.id
                     && CHESSBOARD.selectedPiece.attr('id')[0] == ev.target.id[0]) {     
             $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
             CHESSBOARD.selectedPiece = $("#" + ev.target.id);
             $("#"+CHESSBOARD.pieces[ev.target.id].sqId).addClass("selected");
-        } else if(ev.target.tagName == 'IMG'                                    // user is holding a piece and is selecting the same piece again
+        } 
+        
+        // user is holding a piece and is selecting the same piece again
+        else if(ev.target.tagName == 'IMG'
                     && CHESSBOARD.selectedPiece 
                     && CHESSBOARD.selectedPiece.attr('id') == ev.target.id) {
             $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
             CHESSBOARD.selectedPiece = '';
-        } else if((ev.target.tagName == 'DIV' || ev.target.tagName == 'IMG' && CHESSBOARD.selectedPiece.attr('id')[0] != ev.target.id[0]) 
-                            && CHESSBOARD.selectedPiece) {     // user is holding a piece and is clicking on a square or a piece of different color
-                            // TODO : call a function to check that the user can move the target piece at this moment
+        } 
+        
+        // user is holding a piece and is clicking on a square or a piece of different color
+        else if((ev.target.tagName == 'DIV' || ev.target.tagName == 'IMG' && CHESSBOARD.selectedPiece.attr('id')[0] != ev.target.id[0] && CHESSBOARD.pieces[ev.target.id].sqId != '') 
+                            && CHESSBOARD.selectedPiece) {
                     var target = ev.target;
                     while(target.tagName != 'DIV'){     // if the target was not a DIV, go up in the DOM to find the first DIV
                         target=target.parentNode;
@@ -58,14 +68,19 @@
                     $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
                     CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId = target.id;
                     CHESSBOARD.selectedPiece='';
-        } else {
-            CHESSBOARD.selectedPiece.attr('id');
+        } 
+        
+        // unexpected click event
+        else {
+            console.log('Unhandled case : ' + ev.target.id);
         }
     },
-        _move: function(pieceSelector,destinationSelector) {
+    
+    _move: function(pieceSelector,destinationSelector) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
-            pieceSelector.animate({ top: "+=" + (destinationSelector.position().top - pieceSelector.position().top) +"px" , left : "+=" + (destinationSelector.position().left - pieceSelector.position().left) +"px" }, 
+            var marginLeft = destinationSelector.width() * 0.05;  // change this if you change the width of the pieces in chessboard.css
+            pieceSelector.animate({ top: "+=" + (destinationSelector.position().top - pieceSelector.position().top) +"px" , left : "+=" + (destinationSelector.position().left - pieceSelector.position().left + marginLeft) +"px" }, 
                         "slow", 
                         undefined, 
                         function () {
@@ -181,7 +196,8 @@
                     $('#' + CHESSBOARD.pieces[piece].sqId).append(pieceRepresentation);
                }
         }
-        $(".piece").bind('vmousedown',function(event) { CHESSBOARD.mouseDownHandler(event); });
+        $(".piece").bind('vmousedown',function(event) { CHESSBOARD.mouseDownHandler(event); })  // add the vmousedown (jQuery Mobile) event to all pieces
+            .on('dragstart', function(event) { event.preventDefault(); });                      // prevent dragging the image
     },
 
     _drawBoard:function() {
