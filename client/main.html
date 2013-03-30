@@ -244,28 +244,19 @@
         <h3>To search for a game, fill this form and press "search".</h3>
                 <label for="game_search_user">Are you searching for a friend ?</label>
                 <input type="search" name="game_search_user" id="game_search_user">
-                <span>What is your self-estimated skill ?
-                    <span style="float:right;">
+                <span>What is your self estimated skill ?
                         <a href="#mainpage_popupElo" data-wrapperels="span" data-mini="true" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
-                    </span>
                 </span>
                 <form method="POST" action="" data-ajax="false">
-                        <fieldset data-role="controlgroup" data-mini="true">
-                            <input type="radio" value=6 name="game_user_level" id="game_user_level_GM">
-                            <label for="game_user_level_GM">Grand Master</label>
-                            <input type="radio" value=5  name="game_user_level" id="game_user_level_SM">
-                            <label for="game_user_level_SM">Senior Master</label>
-                            <input type="radio" value=4  name="game_user_level" id="game_user_level_M">
-                            <label for="game_user_level_M">Master</label>
-                            <input type="radio" value=3  name="game_user_level" id="game_user_level_E">
-                            <label for="game_user_level_E">Expert</label>
-                            <input type="radio" value=2  name="game_user_level" id="game_user_level_A">
-                            <label for="game_user_level_A">Class A</label>
-                            <input type="radio" value=1  name="game_user_level" id="game_user_level_B">
-                            <label for="game_user_level_B">Class B</label>
-                            <input type="radio" value=0  name="game_user_level" id="game_user_level_C">
-                            <label for="game_user_level_C">Class C</label>
-                        </fieldset>
+                        <select id="game_user_level" data-mini="true">
+                            <option value=6>Grand Master</option>
+                            <option value=5>Senior Master</option>
+                            <option value=4>Master</option>
+                            <option value=3>Expert</option>
+                            <option value=2>Class A</option>
+                            <option value=1>Class B</option>
+                            <option value=0>Class C</option>
+                        </select>
                         <label for="game_lower_ok">Allow lower level opponents ?</label>
                         <select name="game_lower_ok" id="game_lower_ok" data-role="slider">
                             <option value=1>Yes</option>
