@@ -104,10 +104,10 @@
     //  function : searchGame(playerLevel,playerAcceptLower,playerAcceptHigher)
     //  asks for a game
     //
-    searchGame: function(playerLevel,playerAcceptLower,playerAcceptHigher,successCallBack,errorCallBack) {
+    searchGame: function(playerLevel,playerAcceptLower,playerAcceptHigher,playerTimerPref,successCallBack,errorCallBack) {
         console.log('CHESSHUB.searchGame');
         var data = {};
-        data = { user: CHESSHUB.user, key: CHESSHUB.key, playerLevel: playerLevel, playerAcceptLower: playerAcceptLower, playerAcceptHigher: playerAcceptHigher } ;
+        data = { user: CHESSHUB.user, key: CHESSHUB.key, playerLevel: playerLevel, playerAcceptLower: playerAcceptLower, playerAcceptHigher: playerAcceptHigher, playerTimerPref: playerTimerPref } ;
         console.log(data);
         ajaxSearchGame = $.ajax({
             type: 'POST',
@@ -212,7 +212,7 @@
     },
  
     //
-    //  function : sendMessage(context, text, successCallBack, errorCallBack)
+    //  function : sendMessage(text, successCallBack, errorCallBack)
     //  
     //
     sendMessage: function (text, channel, successCallBack, errorCallBack) {
@@ -231,6 +231,31 @@
             success: function() { successCallBack(); },
             error: function(data,status,error) { 
                 console.log('CHESSHUB.sendMessage error - ' + status);
+                console.log(error);
+                errorCallBack(); 
+            }
+         });
+    },
+
+    //
+    //  function : getStats(successCallBack, errorCallBack)
+    //  
+    //
+    getStats: function (successCallBack, errorCallBack) {
+        if(!CHESSHUB.user) {
+            console.log('CHESSHUB.getStats error - Not connected');
+            return;
+        }
+        var data = { user: CHESSHUB.user,key: CHESSHUB.key } ;
+        $.ajax({
+            type: 'POST',
+            url : '/stats',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify(data),
+            success: function(response) { successCallBack(response); },
+            error: function(data,status,error) { 
+                console.log('CHESSHUB.getStats error - ' + status);
                 console.log(error);
                 errorCallBack(); 
             }

@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -31,7 +30,7 @@
         });
         $("#game_search").click(function(event) {
                 event.preventDefault();
-                searchGame($('input[type=radio][name=game_user_level]:checked').attr('value'),$('#game_lower_ok').val(),$('#game_higher_ok').val());
+                searchGame($('#game_user_level').val(),$('#game_lower_ok').val(),$('#game_higher_ok').val(),$('#game_timer').val());
         });
         CHESSBOARD.initChessBoard();
 //        logoff();
@@ -48,6 +47,7 @@
                         CONTEXT.user = response.user;
                         CONTEXT.key = response.key;
                         console.log(CONTEXT.user + ' connected; key : ' + CONTEXT.key);
+                        getStats();
                         CHESSHUB.listen('MAIN',
                                 function(message) { addMessage(message); }
                             );
@@ -61,11 +61,20 @@
         );
         return 0;
     }
+
+    function getStats() {
+        CHESSHUB.getStats(function(response) {
+                    console.log(response);
+                },
+                function() {
+                }
+        );
+    }
     
-    function searchGame(playerLevel,playerAllowLower,playerAllowHigher) {
+    function searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref) {
         $('#game_search').button('disable');
         var output = $('#chat_output');
-        CHESSHUB.searchGame(playerLevel,playerAllowLower,playerAllowHigher,
+        CHESSHUB.searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref,
                 function(response) {
                     console.log(response);
                     if(!isNaN(response.gameDetails.gameLevel) && response.returncode == "new") {
@@ -219,7 +228,7 @@
 <!-- ############### Main Page ###############-->
 <div data-role="page" id="mainpage">
     <header data-role="header">
-        <h1>Chess Hub lobby</h1>
+        <h1>Chess Hub</h1>
 		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();">Exit</a>
 		<a href="#configpage" data-icon="gear" data-iconpos="notext">Configuration</a>
 	</header>
@@ -241,13 +250,16 @@
     </div>
 
     <div id="mainpage_side">
+        <h3>Currently on this chess hub server :</h3>
+
+
         <h3>To search for a game, fill this form and press "search".</h3>
                 <label for="game_search_user">Are you searching for a friend ?</label>
                 <input type="search" name="game_search_user" id="game_search_user">
-                <span>What is your self estimated skill ?
-                        <a href="#mainpage_popupElo" data-wrapperels="span" data-mini="true" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
-                </span>
                 <form method="POST" action="" data-ajax="false">
+                        <label for="game_user_level">What is your self estimated skill ?
+                            <a href="#mainpage_popupElo" data-wrapperels="span" data-mini="true" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
+                        </label>
                         <select id="game_user_level" data-mini="true">
                             <option value=6>Grand Master</option>
                             <option value=5>Senior Master</option>
@@ -256,6 +268,13 @@
                             <option value=2>Class A</option>
                             <option value=1>Class B</option>
                             <option value=0>Class C</option>
+                        </select>
+                        <label for="game_timer">Timer ?</label>
+                        <select id="game_timer" data-mini="true">
+                            <option value=10>10 minutes</option>
+                            <option value=5>5 minutes</option>
+                            <option value=0>None</option>
+                            <option value=-1>Indifferent</option>
                         </select>
                         <label for="game_lower_ok">Allow lower level opponents ?</label>
                         <select name="game_lower_ok" id="game_lower_ok" data-role="slider">

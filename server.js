@@ -50,6 +50,7 @@ var LOGMESSAGING    = true;        // enable or disable messaging logs
 var LOGPOLLING      = true;        // enable or disable polling logs
 var LOGCHANNEL      = true;        // enable or disable channel activity logs
 var LOGSEARCHING    = true;        // enable or disable game searches logs
+var LOGSTATS        = true;        // enable or disable game stats logs
 
 function escapeHtml(unsafe) {
     if(unsafe && isNaN(unsafe)) {// escapes Html characters
@@ -239,6 +240,7 @@ http.createServer(function (req, res) {
         var playerLevel=0;
         var playerAcceptLower=0;
         var playerAcceptHigher=0;
+        var playerTimerPref=0;
         var data="";
         LOGSEARCHING && console.log(currTime() + ' [SEARCH] search a game')
         req.on('data', function(chunk) {
@@ -252,6 +254,7 @@ http.createServer(function (req, res) {
                 playerLevel = parseInt(json.playerLevel);
                 playerAcceptLower = parseInt(json.playerAcceptLower);
                 playerAcceptHigher = parseInt(json.playerAcceptHigher);
+                playerTimerPref = parseInt(json.playerTimerPref);
             } catch(err) {
                 LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... error, incorrect format, dumping data below')
                 LOGSEARCHING && console.log(json)
@@ -259,6 +262,7 @@ http.createServer(function (req, res) {
                 res.end('Bad request');
                 return 1;                
             }
+            if (isNaN(playerTimerPref)) { playerTimerPref = -1; }
             if (!player || isNaN(playerLevel))  {   // no username, no level => send Bad Request HTTP code
                 LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... error, dumping data below')
                 LOGSEARCHING && console.log(json)
@@ -266,7 +270,7 @@ http.createServer(function (req, res) {
                 res.end('Bad request');
                 return 1;
             }
-            LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + playerLevel, ' accepter higher/lower = ' + playerAcceptHigher + '/' + playerAcceptLower);
+            LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + playerLevel, ' timer = ' + playerTimerPref +  ' allow higher/lower = ' + playerAcceptHigher + '/' + playerAcceptLower);
             
             // searching for an existing game
             var count = 0;  // count the number of channels
@@ -348,6 +352,65 @@ http.createServer(function (req, res) {
             sendMessage(user, msg, category, channel);
             res.writeHead(200, { 'Content-type': 'text/html'});
             res.end(JSON.stringify({0:'OK'}));
+        });
+    }
+
+//
+// GET STATISTICS SERVICE
+//
+    else if(url_parts.pathname.substr(0, 6) == '/stats') {
+        // request for server statistics
+        // user : user issuing the messages
+        // key : user's key
+        LOGSTATS && console.log(currTime() + ' [STATS ] get stats');
+        var user = "";
+        var data = "";
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
+        req.on('end', function() {
+            try { var json = JSON.parse(data); }
+            catch(err) { console.log(err); console.log(data); var json= {};}
+            user = escapeHtml(json.user);
+            var gamesTimed10Started = 0;
+            var gamesTimed10Pending = 0;
+            var gamesTimed5Started = 0;
+            var gamesTimed5Pending = 0;
+            var gamesNonTimedStarted = 0;
+            var gamesNonTimedPending = 0;
+            for (var i in channels) {
+                if (channels[i].id == "MAIN") {
+                    continue;
+                } else if (channels[i].gameStarted == true) {
+                    if (channels[i].gameTimer == 10) {
+                        gamesTimed10Started++;
+                    } if (channels[i].gameTimer == 5) {
+                        gamesNonTimed5Started++;                        
+                    } else {
+                        gamesNonTimedStarted++;                        
+                    }
+                } else if (channels[i].gameStarted == false) {
+                    if (channels[i].gameTimer == 10) {
+                        gamesTimed10Pending++;
+                    } if (channels[i].gameTimer == 5) {
+                        gamesNonTimed5Pending++;                        
+                    } else {
+                        gamesNonTimedPending++;                        
+                    }
+                }
+            }
+            LOGSTATS && console.log(currTime() + " [STATS ] ... user = " + user);
+            res.writeHead(200, { 'Content-type': 'text/html'});
+            res.end(JSON.stringify( {
+                    users: users.length,
+                    gamesTimed10Started: gamesTimed10Started,
+                    gamesTimed10Pending: gamesTimed10Pending,
+                    gamesTimed5Started: gamesTimed5Started,
+                    gamesTimed5Pending: gamesTimed5Pending,
+                    gamesNonTimedStarted: gamesNonTimedStarted,
+                    gamesNonTimedPending: gamesNonTimedPending
+                }));
+            return 0;
         });
     }
     
