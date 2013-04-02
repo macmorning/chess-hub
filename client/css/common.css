@@ -17,7 +17,7 @@ label {
     height:100%;
 }
 
-p.chat_msg, p.chat_sys, p.chat_activity, p.chat_me {
+div#chat_output > p, div#board_chat_output > p {
     margin: 0.2em;
     line-height: 1em;
 }
@@ -44,7 +44,7 @@ span.chat_direct {
 a.chat_user:hover {
     text-decoration:underline;
 }
-span.chat_msg {
+span.chat_msg, span.game {
 }
 
 

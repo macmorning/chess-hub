@@ -211,8 +211,6 @@ http.createServer(function (req, res) {
             LOGPOLLING && console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel);
             res.writeHead(200, {'Content-Type': 'application/json'});
             var n = channels[channel].messages.length - counter;
-            console.log(channels[channel]);
-            console.log(channels[channel].messages);
             if(n > 0) {
                 var lastMessages = {};
                 if ( n <= MAXMESSAGES ) {

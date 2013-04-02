@@ -59,14 +59,26 @@
                         if (target.childNodes[i].tagName == 'IMG' && target.childNodes[i].id != CHESSBOARD.selectedPiece.attr('id')) {
                             var p = target.childNodes[i];
                             console.log('piece taken : ' + p.title);
-                            CHESSBOARD.pieces[p.id].sqId = '';
-                            CHESSBOARD._move($('#'+p.id),$('#'+p.id[0]+'Graveyard'));
+                            var pieceSelector = $('#'+p.id);
+                            var destinationSelector = $('#'+p.id[0]+'Graveyard');
+                            CHESSBOARD.move(pieceSelector,destinationSelector);
+                            CHESSHUB.sendMessage(pieceSelector.attr('id') + "-" + destinationSelector.attr('id'),
+                                 CONTEXT.currentGameID,
+                                 'game',
+                                 function() {},
+                                 function() {}
+                                 );
                             break;
                         }
                     }
-                    CHESSBOARD._move(CHESSBOARD.selectedPiece,$('#' + target.id));
                     $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
-                    CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId = target.id;
+                    CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));
+                    CHESSHUB.sendMessage(CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
+                         CONTEXT.currentGameID,
+                         'game',
+                         function() {},
+                         function() {}
+                         );
                     CHESSBOARD.selectedPiece='';
         } 
         
@@ -76,7 +88,7 @@
         }
     },
     
-    _move: function(pieceSelector,destinationSelector) {
+    move: function(pieceSelector,destinationSelector) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
             var marginLeft = destinationSelector.width() * 0.05;  // change this if you change the width of the pieces in chessboard.css
@@ -88,6 +100,7 @@
                             pieceSelector.css( { top : "0px", left : "0px"} );
                         }
                     );
+            CHESSBOARD.pieces[pieceSelector.attr('id')].sqId = destinationSelector.attr('id');
     },
         
     _createPieces: function() {

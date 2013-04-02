@@ -212,16 +212,17 @@
     },
  
     //
-    //  function : sendMessage(text, successCallBack, errorCallBack)
+    //  function : sendMessage(text, channel, category, successCallBack, errorCallBack)
     //  
     //
-    sendMessage: function (text, channel, successCallBack, errorCallBack) {
+    sendMessage: function (text, channel, category, successCallBack, errorCallBack) {
         if(!CHESSHUB.user) {
             console.log('CHESSHUB.sendMessage error - Not connected');
             return;
         }
         if(!channel) { channel = 'MAIN';}
-        var data = { user: CHESSHUB.user, channel: channel, key: CHESSHUB.key, msg: text } ;
+        if(!category) { category = 'chat_msg';}
+        var data = { user: CHESSHUB.user, channel: channel, key: CHESSHUB.key, msg: text, category: category } ;
         $.ajax({
             type: 'POST',
             url : '/msg',
