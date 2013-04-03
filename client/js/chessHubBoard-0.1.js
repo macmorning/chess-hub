@@ -232,7 +232,6 @@
             htmlRow += '</div>';
             board.append(htmlRow);
          }
-         board.append('<a href="#" data-role="button" id="bSit" data-inline="true">Sit</a><a href="#" data-role="button" id="wSit" data-inline="true">Sit</a>')
          $(".chessBoardSquare").bind('vmousedown',function(event) { CHESSBOARD.mouseDownHandler(event); });
     },
     
