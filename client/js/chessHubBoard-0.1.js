@@ -10,19 +10,25 @@
     colors: {'w':'white','b':'black'},
     pieces: [],
     gameID: '',
-    selectedPiece: '',      // selector for the piece held by the user
-    playerA: '',            // playerA username
-    playerB: '',            // playerB username
-    blackPlayer: '',        // blackPlayer username
+    selectedPiece: '',              // selector for the piece held by the user
+    playerA: '',                    // playerA username
+    playerB: '',                    // playerB username
+    blackPlayer: '',                // blackPlayer username
     blackCanCastleKingSide: true,
     blackCanCastleQueenSide: true,
-    whitePlayer: '',        // whitePlayer username
+    whitePlayer: '',                // whitePlayer username
     whiteCanCastleKingSide: true,
     whiteCanCastleQueenSide: true,
-    currentGameTurn: '', // 'white' or 'black'
+    currentGameTurn: '',            // 'w' or 'b'
+    gameHistory: [],                // turns history array
 
     mouseDownHandler: function(ev) {            // using a mouse down event here : it's more user friendly than drag&drop when you are using a touch-enabled device
         ev.stopPropagation();   // stop propagation : we don't want the click event to bubble
+        
+        // user is not holding a piece yet and is clicking on one, but the clicked piece is not the right color
+        if (ev.target.tagName == 'IMG' && !CHESSBOARD.selectedPiece && (ev.target.id[0] != currentGameTurn || ev.target.id[0] == "w" && whitePlayer == CONTEXT.user || ev.target.id[0] == "b" && blackPlayer == CONTEXT.user)) {
+            return 0;
+        }
         
         // user is not holding a piece yet and is clicking on one
         if (ev.target.tagName == 'IMG' && !CHESSBOARD.selectedPiece) {
@@ -63,7 +69,7 @@
                             var destinationSelector = $('#'+p.id[0]+'Graveyard');
                             CHESSBOARD.move(pieceSelector,destinationSelector);
                             CHESSHUB.sendMessage(pieceSelector.attr('id') + "-" + destinationSelector.attr('id'),
-                                 CONTEXT.currentGameID,
+                                 CHESSBOARD.gameID,
                                  'game',
                                  function() {},
                                  function() {}
@@ -73,8 +79,9 @@
                     }
                     $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
                     CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));
+                    // send the move to the server
                     CHESSHUB.sendMessage(CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
-                         CONTEXT.currentGameID,
+                         CHESSBOARD.gameID,
                          'game',
                          function() {},
                          function() {}
@@ -225,6 +232,7 @@
             htmlRow += '</div>';
             board.append(htmlRow);
          }
+         board.append('<a href="#" data-role="button" id="bSit" data-inline="true">Sit</a><a href="#" data-role="button" id="wSit" data-inline="true">Sit</a>')
          $(".chessBoardSquare").bind('vmousedown',function(event) { CHESSBOARD.mouseDownHandler(event); });
     },
     
@@ -247,7 +255,7 @@
         CHESSBOARD._spawnPieces();
     },
     
-    initChessBoard: function() {
+    initChessBoard: function(gameID) {
         CHESSBOARD.pieces=[];
         $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
         $('#wGraveyard').empty();
@@ -255,5 +263,16 @@
         CHESSBOARD._drawBoard(); 
         CHESSBOARD._createPieces();
         CHESSBOARD._spawnPieces();
+        CHESSBOARD.gameID = gameID;
+        CHESSBOARD.playerA = "";
+        CHESSBOARD.playerB = "";
+        CHESSBOARD.blackPlayer = '';
+        CHESSBOARD.blackCanCastleKingSide = true;
+        CHESSBOARD.blackCanCastleQueenSide = true;
+        CHESSBOARD.whitePlayer = '';
+        CHESSBOARD.whiteCanCastleKingSide = true;
+        CHESSBOARD.whiteCanCastleQueenSide = true;
+        CHESSBOARD.currentGameTurn= '';
+        CHESSBOARD.gameHistory = [];
     }
 }

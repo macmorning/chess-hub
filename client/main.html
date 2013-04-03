@@ -32,7 +32,7 @@
                 event.preventDefault();
                 searchGame($('#game_user_level').val(),$('#game_lower_ok').val(),$('#game_higher_ok').val(),$('#game_timer').val());
         });
-        CHESSBOARD.initChessBoard();
+        $("#loginpage_footer").html(CHESSHUB.name + " version " + CHESSHUB.version);
 //        logoff();
 //        $('#login_username').focus();
     });
@@ -65,6 +65,13 @@
     function getStats() {
         CHESSHUB.getStats(function(response) {
                     console.log(response);
+                    var totalGames = parseInt(response.gamesTimed10Pending) 
+                            + parseInt(response.gamesTimed10Started)
+                            + parseInt(response.gamesTimed5Pending)
+                            + parseInt(response.gamesTimed5Started)
+                            + parseInt(response.gamesNonTimedPending)
+                            + parseInt(response.gamesNonTimedStarted);
+                    $('#mainpage_stats').html('There are currently ' + response.users + ' players in this hub, seated at ' + totalGames + ' tables.');
                 },
                 function() {
                 }
@@ -73,20 +80,28 @@
     
     function searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref) {
         $('#game_search').button('disable');
-        var output = $('#chat_output');
+        var output = $('#board_chat_output');
         CHESSHUB.searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref,
                 function(response) {
                     console.log(response);
-                    if(!isNaN(response.gameDetails.gameLevel) && response.returncode == "new") {
-                        output.html('<p class="chat_sys">A new game was created : "' + response.gameDetails.name + '". Waiting for another player...</p>'+ output.html());
-                    } else if(!isNaN(response.gameDetails.gameLevel) && response.returncode != "new") {
-                        output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '"</p>'+ output.html());
+                    if (isNaN(response.gameDetails.gameLevel)) {
+                        output.html('<p class="chat_sys">There was an error when retrieving game informations. Please reconnect and retry.</p>'+ output.html());
+                    } else if(response.returncode == "new") {
+                        output.html('<p class="chat_sys">A new game was created : "' + response.gameDetails.name + '". Please sit and wait for another player...</p>'+ output.html());
+                    } else if(response.returncode != "new") {
+                        output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '". Please sit and let the game start.</p>'+ output.html());
                     }
-                    CHESSHUB.leave('MAIN');
+                    CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)
                     CHESSHUB.listen(response.gameDetails.id,
-                                function(message) { addMessage(message); }
+                                function(message) { addMessage(message); }  // start polling the game channel
                             );
-                    CONTEXT.currentGameID = response.gameDetails.id;
+                    CONTEXT.currentGameID = response.gameDetails.id;    // set the game informations
+                    CHESSBOARD.initChessBoard(response.gameDetails.id);
+                    CHESSBOARD.playerA = response.gameDetails.playerA;
+                    CHESSBOARD.playerB = response.gameDetails.playerB;
+                    CHESSBOARD.blackPlayer = response.gameDetails.blackPlayer;
+                    CHESSBOARD.whitePlayer = response.gameDetails.whitePlayer;
+
                     $('#game_search').button('enable');
                     $('#boardpage_header').text(response.gameDetails.name);
                     $.mobile.changePage($("#boardpage"));
@@ -165,6 +180,7 @@
         CHESSHUB.sendMessage(
                 text,
                 channel,             // the client knows where to send to message; needs to be fixed if multiple boards are possible
+                'chat_msg',
                 function(){
                     $('#chat_input').val('');
                     CONTEXT.history.push(text);
@@ -217,7 +233,7 @@
 <body>
 
 <!-- ############### Login Page ###############-->
-<div data-role="page" id="loginpage"> <!-- identification -->
+<div data-role="page" id="loginpage">
     <header data-role="header">
 		<h1>Login</h1>
 	</header>
@@ -227,6 +243,8 @@
                 <button id="login_submit" type="submit" data-theme="a">Submit</button>
                 <span class="info" id="login_returnmessage"></span>
         </div>
+    <div id='loginpage_footer'></div>        <!-- version goes here -->
+    </div>
 </div>
 
 
@@ -238,48 +256,35 @@
 		<a href="#configpage" data-icon="gear" data-iconpos="notext">Configuration</a>
 	</header>
 
-    <div data-role="popup" id="mainpage_popupElo" class="ui-content">
-        <p>This is an estimation of your level.<br/>
-        You can use the table below if you have an Elo rank.</p>
-        <table>
-            <tr>        <td>Category</td><td>Rating range</td>
-            </tr><tr>   <td>Grandmaster</td><td>2600 and up</td>
-            </tr><tr>   <td>Senior Master </td><td>2400–2599</td>
-            </tr><tr>   <td>Master</td><td>2200–2399</td>
-            </tr><tr>   <td>Expert</td><td>2000–2199</td>
-            </tr><tr>   <td>Class A</td><td>1800–1999</td>
-            </tr><tr>   <td>Class B</td><td>1600–1799</td>
-            </tr><tr>   <td>Class C</td><td>under 1600</td>
-            </tr>
-        </table>
+    <div data-role="popup" id="mainpage_popupHelpLevel" class="ui-content">
+        <p>This is an estimation of your skill.<br/>
+        <ul>
+            <li>beginner : You know the basics and enjoy a game from time to time.</li>
+            <li>amateur : You love chess. Maybe you are even in a club. You know the most popular openings and closings.</li>
+            <li>veteran : You are a seasoned player and probably know most openings and end games.</li>
     </div>
 
     <div id="mainpage_side">
-        <h3>Currently on this chess hub server :</h3>
-
+        <span class="mainpage_stats" id="mainpage_stats"></span>
 
         <h3>To search for a game, fill this form and press "search".</h3>
                 <label for="game_search_user">Are you searching for a friend ?</label>
                 <input type="search" name="game_search_user" id="game_search_user">
                 <form method="POST" action="" data-ajax="false">
                         <label for="game_user_level">What is your self estimated skill ?
-                            <a href="#mainpage_popupElo" data-wrapperels="span" data-mini="true" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
+                            <a href="#mainpage_popupHelpLevel" data-wrapperels="span" data-mini="true" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
                         </label>
                         <select id="game_user_level" data-mini="true">
-                            <option value=6>Grand Master</option>
-                            <option value=5>Senior Master</option>
-                            <option value=4>Master</option>
-                            <option value=3>Expert</option>
-                            <option value=2>Class A</option>
-                            <option value=1>Class B</option>
-                            <option value=0>Class C</option>
+                            <option value=2>veteran</option>
+                            <option value=1 selected=true>amateur</option>
+                            <option value=0>beginner</option>
                         </select>
                         <label for="game_timer">Timer ?</label>
                         <select id="game_timer" data-mini="true">
                             <option value=10>10 minutes</option>
                             <option value=5>5 minutes</option>
-                            <option value=0>None</option>
-                            <option value=-1>Indifferent</option>
+                            <option value=0 selected=true>none</option>
+                            <option value=-1>indifferent</option>
                         </select>
                         <label for="game_lower_ok">Allow lower level opponents ?</label>
                         <select name="game_lower_ok" id="game_lower_ok" data-role="slider">
@@ -300,6 +305,7 @@
     </div>
 </div>
 
+
 <!-- ############### Board Page ###############-->
 <div data-role="page" id="boardpage">
     <header data-role="header">
@@ -312,22 +318,22 @@
             <button id="boardpage_history" onclick="">show history</button>
         </div>
 
-          <div id='chessBoardHidden'>
+        <div id='chessBoardHidden'>
                 Sorry, this game requires a higher resolution. 
                 Width must be at least 256px.
-          </div>
-          <div id='chessBoardContainer'>
-              <div id='chessBoard'>   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
-              </div>
-              <div id='bGraveyard'>
-              </div>
-              <div id='wGraveyard'>
-              </div>
-          </div>
-          <div id='boardpage_chat'>
-                <input type='text' id="board_chat_input" onkeyup="chatSpecialKeys(event,'');">
-                <div id="board_chat_output"></div>
-          </div>
+        </div>
+        <div id='chessBoardContainer'>
+            <div id='chessBoard'>   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
+            </div>
+            <div id='bGraveyard'>
+            </div>
+            <div id='wGraveyard'>
+            </div>
+        </div>
+        <div id='boardpage_chat'>
+            <input type='text' id="board_chat_input" onkeyup="chatSpecialKeys(event,'');">
+            <div id="board_chat_output"></div>
+        </div>
 
 <!--          <input type="button" value="init chessboard" id="initButton" onclick="CHESSBOARD.initChessBoard()"></input>-->
 </div>

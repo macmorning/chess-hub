@@ -4,7 +4,16 @@ body {
     background-color : #eeeeee;
 }
 
+span.mainpage_stats {
 
+}
+
+div#loginpage_footer {
+    position:fixed;
+    bottom: 0px;
+    color: #999999;
+    font-size: 0.7em;
+}
 /************************
         CHAT
 *************************/

@@ -5,14 +5,34 @@
     display:block;
     margin:auto;
 }
+
 #chessBoardContainer {
     display: none;
     width:100%;
 }
+
 #chessBoard {
     width:16em; 
     height:16em; 
+    overflow:hidden;
 }
+
+#wSit,#bSit {
+    position:relative;
+    display: block;
+    width: 25%;
+    height: 10%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#wSit {
+    bottom: 5%;
+}
+#bSit {
+    top: 5%;
+}
+
 #chessBoard,#wGraveyard,#bGraveyard {
     margin:auto;
     display:block;

@@ -10,20 +10,30 @@ var Channel = function(name,id) {
     this.name = name;
     this.open = false; 
     this.id = id || name;
+    this.users= [];
     this.messages = [];
-    gameTimer = 0;
-    gameStarted = false;
+    this.playerA= '';
+    this.playerB= '';
+    this.whitePlayer= '';
+    this.blackPlayer= '';
+    this.gameLevel= '';
+    this.gameAcceptHigher= false;
+    this.gameAcceptLower= false;
+    this.gameTimer = 0;
+    this.gameStarted = false;
 };
 
 Channel.prototype = {
     name: '',               // displayed name of the channel (char)
-    open: false,            // is the channel open for watchers ? (true or false)
+    open: false,            // is the channel open for watchers ? (true or false)   (not implemented yet)
     id: '',                 // id of the channel (char)
     users: [],              // current users    
     messages: [],           // list of messages
     clients: [],            // list of clients currently long-polling the channel
     playerA: '',            // username of the game creator
     playerB: '',            // username of the game joiner
+    whitePlayer: '',
+    blackPlayer: '',
     gameLevel: '',          // level of the game, [0,6]
     gameAcceptHigher: false,// allow player B to join even if his level is more than 1 level higher than the game level
     gameAcceptLower: false, // allow player B to join even if his level is more than 1 level lower than the game level
