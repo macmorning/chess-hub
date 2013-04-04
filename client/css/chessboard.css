@@ -223,7 +223,7 @@ img.bpawn {
     }
 }
 
-/* breakpoint at 650px */
+/* breakpoint at 650px and 704px height */
 @media all and (min-width: 40em) and (min-height: 44em){
     #chessBoard {
         width:40em; 
@@ -238,10 +238,10 @@ img.bpawn {
         height:5em;
     }
     #wSit {
-        top: 30em;
+        top: 32em;
     }
     #bSit {
-        top: 8em;
+        top: 11em;
     }
     .piece {
         width: 4.5em;
@@ -253,7 +253,7 @@ img.bpawn {
     }
 }
 
-/* breakpoint at 864px : Graveyards are moved to the right side of the board */
+/* breakpoint at 864px width : Graveyards are moved to the right side of the board */
 @media all and (min-width: 54em) and (min-height: 44em){
     #chessBoard {
         margin: 0.5em 0.5em 0 0.5em;
@@ -269,6 +269,12 @@ img.bpawn {
     }
     #boardpage_chat {
         float:left;
+        margin-right:2em;
+    }
+    #wSit, #bSit {
+        margin-left:0;
+        margin-right:0;
+        left: 15.25em;
     }
 }
 
