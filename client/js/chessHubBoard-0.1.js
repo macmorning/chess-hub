@@ -314,7 +314,7 @@
             else { $('#bSit').css('display','block'); }
         }
         
-        if (CHESSBOARD.playerBlack && CHESSBOARD.playerWhite) {
+        if (CHESSBOARD.blackPlayer && CHESSBOARD.whitePlayer) {
             CHESSBOARD.currentGameTurn = 'w';
         }
     }
