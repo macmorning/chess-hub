@@ -28,8 +28,8 @@
         // user is not holding a piece yet and is clicking on one, but the clicked piece is not the right color
         if (ev.target.tagName == 'IMG' && !CHESSBOARD.selectedPiece 
                 && (ev.target.id[0] != CHESSBOARD.currentGameTurn 
-                    || ev.target.id[0] == "w" && CHESSBOARD.whitePlayer == CONTEXT.user 
-                    || ev.target.id[0] == "b" && CHESSBOARD.blackPlayer == CONTEXT.user)) {
+                    || ev.target.id[0] == "w" && CHESSBOARD.whitePlayer != CONTEXT.user 
+                    || ev.target.id[0] == "b" && CHESSBOARD.blackPlayer != CONTEXT.user)) {
             return 0;
         }
         
