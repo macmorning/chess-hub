@@ -286,7 +286,7 @@
     },
     
     sit: function(color) {
-        $('#' + color + 'Sit').button('disable');
+        $('#'+color+'Sit').css('display','none');
         CHESSHUB.sendMessage('sit-' + color, 
             CHESSBOARD.gameID, 
             'game', 
