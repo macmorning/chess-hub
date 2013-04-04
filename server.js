@@ -15,7 +15,7 @@ var PORT = process.env.PORT || 8080;
 var ADDRESS = process.env.IP;
 var SERVERDIR = "";
 if (process.env.C9_PID) {       // for running the server on c9.io
-    SERVERDIR = process.env.HOME + '/' + process.env.C9_PID + '/server/';
+    SERVERDIR = process.env.HOME + '/' + process.env.C9_PID + "/";
 }
 var http = require('http'),
     url = require('url'),

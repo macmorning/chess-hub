@@ -15,14 +15,13 @@ Current state
 
     server  : |=====================================================================>                              | 70%
 
-Handles connection, polling & messaging (through channels), serving static files, searching for games.
+Handles connection, polling & messaging (through channels), serving static files, searching for games, getting stats.
+Need to handle user timeout, not sure how to do it yet.
 
 
-    client  : |==================================================>                                                | 50%
+    client  : |==========================================================================>                         | 75%
 
-Handles connections, polling & messaging, searching for games and redirecting to the board page.
-A lot of work remains on the chessHubBoard lib. Some troubles getting it to scale with browser's width & height, while maintaining ratio and keep it all visible.
-Need to enforce pieces moves, turns, and the "sitting" mechanism.
+All the basics are here. Need to handle the user key for reconnection, and enforce chess rules.
 
 
 ___
@@ -91,8 +90,9 @@ TODO
 - [x] generate the board
 - [x] generated pieces objects
 - [x] spawn the pieces and place them
-- [ ] handle the moves
-
+- [x] handle the moves
+- [ ] enforce pieces move restrictions
+- [ ] finsih the "sit" process
 
 
 ___
@@ -118,7 +118,9 @@ Requires jQuery.
 
 TODO
 ---------
-- [ ] correctly place & render the board (css issue)
-- [ ] add chat to games
-- [ ] finis the main page design
+- [x] correctly place & render the board
+- [x] add chat to games
+- [x] finish the main page design
+- [ ] save the context into local storage
+- [ ] handle reconnection (or page refresh)
 

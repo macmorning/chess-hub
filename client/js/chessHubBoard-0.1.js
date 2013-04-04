@@ -71,7 +71,7 @@
                             var pieceSelector = $('#'+p.id);
                             var destinationSelector = $('#'+p.id[0]+'Graveyard');
                             CHESSBOARD.move(pieceSelector,destinationSelector);
-                            CHESSHUB.sendMessage(pieceSelector.attr('id') + "-" + destinationSelector.attr('id'),
+                            CHESSHUB.sendMessage("move-" + pieceSelector.attr('id') + "-" + destinationSelector.attr('id'),
                                  CHESSBOARD.gameID,
                                  'game',
                                  function() {},
@@ -83,7 +83,7 @@
                     $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
                     CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));
                     // send the move to the server
-                    CHESSHUB.sendMessage(CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
+                    CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
                          CHESSBOARD.gameID,
                          'game',
                          function() {},
@@ -282,6 +282,20 @@
         CHESSBOARD.whiteCanCastleQueenSide = true;
         CHESSBOARD.currentGameTurn= '';
         CHESSBOARD.gameHistory = [];
+        return 0;
+    },
+    
+    sit: function(color) {
+        $('#' + color + 'Sit').button('disable');
+        CHESSHUB.sendMessage('sit-' + color, 
+            CHESSBOARD.gameID, 
+            'game', 
+            function(){ 
+                CHESSBOARD.setPlayer(color,CONTEXT.user); 
+            }, 
+            function() { alert('error while sitting'); }
+        );
+        return 0;
     },
     
     setPlayer: function(parameter,value) {
@@ -291,11 +305,11 @@
         } else if (parameter == 'B') {
             CHESSBOARD.playerB = value;
         } else if (parameter == 'w') {
-            CHESSBOARD.playerWhite = value;
+            CHESSBOARD.whitePlayer = value;
             if(value) { $('#wSit').css('display','none'); }
             else { $('#wSit').css('display','block'); }
         } else if (parameter == 'b') {
-            CHESSBOARD.playerBlack = value;
+            CHESSBOARD.blackPlayer = value;
             if(value) { $('#bSit').css('display','none'); }
             else { $('#bSit').css('display','block'); }
         }
