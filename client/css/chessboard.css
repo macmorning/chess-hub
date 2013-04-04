@@ -180,6 +180,12 @@ img.bpawn {
         width:3em;
         height:3em;
     }
+    #wSit {
+        top: 21em;
+    }
+    #bSit {
+        top: 6em;
+    }
     .piece {
         width: 2.7em;
     }
@@ -201,6 +207,12 @@ img.bpawn {
     .chessBoardSquare {
         width:4em;
         height:4em;
+    }
+    #wSit {
+        top: 27em;
+    }
+    #bSit {
+        top: 7em;
     }
     .piece {
         width: 3.6em;
@@ -225,6 +237,12 @@ img.bpawn {
         width:5em;
         height:5em;
     }
+    #wSit {
+        top: 30em;
+    }
+    #bSit {
+        top: 8em;
+    }
     .piece {
         width: 4.5em;
     }
@@ -241,7 +259,6 @@ img.bpawn {
         margin: 0.5em 0.5em 0 0.5em;
         float:left;
         display:block;
-        width:40em; 
     }
     #wGraveyard, #bGraveyard {
         margin: 0.5em 0.2em 0 0;

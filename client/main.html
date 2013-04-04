@@ -97,10 +97,10 @@
                             );
                     CONTEXT.currentGameID = response.gameDetails.id;    // set the game informations
                     CHESSBOARD.initChessBoard(response.gameDetails.id);
-                    CHESSBOARD.playerA = response.gameDetails.playerA;
-                    CHESSBOARD.playerB = response.gameDetails.playerB;
-                    CHESSBOARD.blackPlayer = response.gameDetails.blackPlayer;
-                    CHESSBOARD.whitePlayer = response.gameDetails.whitePlayer;
+                    CHESSBOARD.setPlayer('A',response.gameDetails.playerA);
+                    CHESSBOARD.setPlayer('B',response.gameDetails.playerB);
+                    CHESSBOARD.setPlayer('w',response.gameDetails.whitePlayer);
+                    CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
 
                     $('#game_search').button('enable');
                     $('#boardpage_header').text(response.gameDetails.name);
@@ -323,8 +323,8 @@
                 Width must be at least 256px.
         </div>
         <div id='chessBoardContainer'>
-            <a id="wSit" href="#" data-role="button" data-inline="true">Sit White</a>
-            <a id="bSit" href="#" data-role="button" data-inline="true">Sit Black</a>
+            <a id="wSit" href="#" data-role="button" data-inline="true" onclick="CHESSBOARD.setPlayer('w',CONTEXT.user);">Sit White</a>
+            <a id="bSit" href="#" data-role="button" data-inline="true" onclick="CHESSBOARD.setPlayer('b',CONTEXT.user);">Sit Black</a>
             <div id='chessBoard'>   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
             </div>
             <div id='bGraveyard'>

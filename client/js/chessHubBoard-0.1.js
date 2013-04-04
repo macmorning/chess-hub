@@ -26,7 +26,10 @@
         ev.stopPropagation();   // stop propagation : we don't want the click event to bubble
         
         // user is not holding a piece yet and is clicking on one, but the clicked piece is not the right color
-        if (ev.target.tagName == 'IMG' && !CHESSBOARD.selectedPiece && (ev.target.id[0] != currentGameTurn || ev.target.id[0] == "w" && whitePlayer == CONTEXT.user || ev.target.id[0] == "b" && blackPlayer == CONTEXT.user)) {
+        if (ev.target.tagName == 'IMG' && !CHESSBOARD.selectedPiece 
+                && (ev.target.id[0] != CHESSBOARD.currentGameTurn 
+                    || ev.target.id[0] == "w" && CHESSBOARD.whitePlayer == CONTEXT.user 
+                    || ev.target.id[0] == "b" && CHESSBOARD.blackPlayer == CONTEXT.user)) {
             return 0;
         }
         
@@ -54,7 +57,7 @@
             CHESSBOARD.selectedPiece = '';
         } 
         
-        // user is holding a piece and is clicking on a square or a piece of different color
+        // user is holding a piece and is clicking on an empty square or a piece of different color
         else if((ev.target.tagName == 'DIV' || ev.target.tagName == 'IMG' && CHESSBOARD.selectedPiece.attr('id')[0] != ev.target.id[0] && CHESSBOARD.pieces[ev.target.id].sqId != '') 
                             && CHESSBOARD.selectedPiece) {
                     var target = ev.target;
@@ -108,6 +111,10 @@
                         }
                     );
             CHESSBOARD.pieces[pieceSelector.attr('id')].sqId = destinationSelector.attr('id');
+            if(destinationSelector.attr('id') != 'wGraveyard' && destinationSelector.attr('id') != 'bGraveyard') {
+                CHESSBOARD.gameHistory.push(pieceSelector.attr('id') + '-' + destinationSelector.attr('id'));
+                CHESSBOARD.currentGameTurn=(CHESSBOARD.currentGameTurn == 'w' ? 'b' : 'w'); // switch game turn
+            }
     },
         
     _createPieces: function() {
@@ -259,6 +266,8 @@
         $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
         $('#wGraveyard').empty();
         $('#bGraveyard').empty();
+        $('#wSit').css('display','block');
+        $('#bSit').css('display','block');
         CHESSBOARD._drawBoard(); 
         CHESSBOARD._createPieces();
         CHESSBOARD._spawnPieces();
@@ -273,5 +282,26 @@
         CHESSBOARD.whiteCanCastleQueenSide = true;
         CHESSBOARD.currentGameTurn= '';
         CHESSBOARD.gameHistory = [];
+    },
+    
+    setPlayer: function(parameter,value) {
+        console.log('setPlayer : ' + parameter + '=' + value);
+        if (parameter == 'A') {
+            CHESSBOARD.playerA = value;
+        } else if (parameter == 'B') {
+            CHESSBOARD.playerB = value;
+        } else if (parameter == 'w') {
+            CHESSBOARD.playerWhite = value;
+            if(value) { $('#wSit').css('display','none'); }
+            else { $('#wSit').css('display','block'); }
+        } else if (parameter == 'b') {
+            CHESSBOARD.playerBlack = value;
+            if(value) { $('#bSit').css('display','none'); }
+            else { $('#bSit').css('display','block'); }
+        }
+        
+        if (CHESSBOARD.playerBlack && CHESSBOARD.playerWhite) {
+            CHESSBOARD.currentGameTurn = 'w';
+        }
     }
 }
