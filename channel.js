@@ -8,7 +8,7 @@
 
 var Channel = function(name,id) {
     this.name = name;
-    this.open = false; 
+    this.open = true; 
     this.id = id || name;
     this.users= [];
     this.messages = [];
@@ -25,7 +25,7 @@ var Channel = function(name,id) {
 
 Channel.prototype = {
     name: '',               // displayed name of the channel (char)
-    open: false,            // is the channel open for watchers ? (true or false)   (not implemented yet)
+    open: true,            // is the channel open for watchers ? (true or false)   (not implemented yet)
     id: '',                 // id of the channel (char)
     users: [],              // current users    
     messages: [],           // list of messages

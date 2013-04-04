@@ -23,7 +23,17 @@
 
     if ( ! window.console ) console = { log: function(){} };
     
+    try { 
+        var testJSON = JSON.parse('{}');        // test if the browser knows about JSON
+    }
+    catch(err) { 
+        alert('Sorry, the browser you are using is not supported.'); 
+    }
+    
+    
     $(document).ready(function() {
+        window.onunload = function(){logoff();};
+        
         $("#login_submit").click(function(event) {
                 event.preventDefault();
                 connect($("#login_username").val());
@@ -162,6 +172,24 @@
                         '<p class="chat_activity"> == ['
                         + message.time + "] "
                         + message.user + ' sits as ' + (command[1] == 'w' ? 'White' : 'Black')
+                        + '</p>'
+                        + output.html());
+                } else if (command[0] == "leave") {
+                    var color='';
+                    if(CHESSBOARD.playerA == message.user) { CHESSBOARD.setPlayer('A',''); };
+                    if(CHESSBOARD.playerB == message.user) { CHESSBOARD.setPlayer('B',''); };
+                    if(CHESSBOARD.blackPlayer == message.user) { 
+                        CHESSBOARD.setPlayer('b',''); 
+                        color = ' (was Black)';
+                    };
+                    if(CHESSBOARD.whitePlayer == message.user) { 
+                        CHESSBOARD.setPlayer('w',''); 
+                        color = ' (was White)';
+                    };
+                    output.html(
+                        '<p class="chat_activity"> == ['
+                        + message.time + "] "
+                        + message.user + ' left' + color
                         + '</p>'
                         + output.html());
                 }

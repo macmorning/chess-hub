@@ -64,6 +64,25 @@ function escapeHtml(unsafe) {
     return false;
 }
 
+function disconnect(user) {
+    users.splice(users.indexOf(user),1);    // remove the user from the users array
+    for (var i in channels) {               // remove the user from any game he's in
+        if(channels[i].users.indexOf(user) > -1) {
+            var channel = channels[i];
+            channel.users.splice(channel.users.indexOf(user),1);    // remove the user from the users array
+            sendMessage(user,'leave','game',channel.id);    // send the information to users in that channel
+            if(channel.playerA == user) {
+                channel.playerA = '';
+            } else if (channel.playerB == user) {
+                channel.playerB = '';
+            }
+            if (channel.blackPlayer == user || channel.whitePlayer == user) {        // the user was a seated player, close the game
+                channel.switchOpen(false);
+            }
+        }
+    } 
+}
+
 function sendMessage(from, msg, category, to ) {
     // adds a message to the messages array and send it to polling clients
     // sendMessage(from, msg, [category, [to]])
@@ -73,7 +92,7 @@ function sendMessage(from, msg, category, to ) {
     //        - chat_msg (by default), simple message sent to a chat channel or a user
     //        - chat_sys, system message to be broadcasted in all opened chat channels
     //        - chat_activity, chat channel activity : join, leave, quit
-    //        - game, game channel activity
+    //        - game, game channel activity : sit-[w|b] ; move-piece-square ; leave
     // to : target for the message : a user, a game channel id, or main channel (by default)
     var message = [];
     if (!category) category = "chat_msg";
@@ -177,8 +196,8 @@ http.createServer(function (req, res) {
             user = escapeHtml(json.user);
             LOGCONNECT && console.log(currTime() + ' [CONNEC] ... disconnect user ' + user);
             res.writeHead(200, { 'Content-Type': 'application/json'});
-            res.end(JSON.stringify([]));
-            users.splice(users.indexOf(user),1);
+            res.end(JSON.stringify([]));    // first, release the client
+            disconnect(user);               // then, handle the disconnection
         });
     }
     
@@ -209,8 +228,14 @@ http.createServer(function (req, res) {
                 res.end('Bad request');
             }
             LOGPOLLING && console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel);
-            res.writeHead(200, {'Content-Type': 'application/json'});
-            var n = channels[channel].messages.length - counter;
+            
+            try { var n = channels[channel].messages.length - counter; }        // try to get the messages list for the channel
+            catch(err) {                                        // the channel doesn't exit
+                res.writeHead(500, {'Content-Type': 'text/txt'});
+                res.end("This channel doesn't exist or has been destroyed.");
+                return 1;
+            }
+                        
             if(n > 0) {
                 var lastMessages = {};
                 if ( n <= MAXMESSAGES ) {
@@ -225,6 +250,7 @@ http.createServer(function (req, res) {
                     append: lastMessages
                 }));
             } else {
+                res.writeHead(200, {'Content-Type': 'application/json'});
                 channels[channel].clients.push(res);  // if there is no message to push, keep the client in the clients array (long polling)
             }
         });
@@ -275,7 +301,8 @@ http.createServer(function (req, res) {
             for (var i in channels) {
                 count++;
                 var channel = channels[i];
-                if(channel.playerA && !channel.playerB && channel.playerA != player     // this is a game channel with only a player A, who is not the user who searches for a game
+                if(channel.open         // the channel is open
+                        && channel.playerA && !channel.playerB && channel.playerA != player     // this is a game channel with only a player A, who is not the user who searches for a game
                         && ((playerAcceptLower == 1 && channel.gameAcceptHigher == 1) || channel.gameLevel >= playerLevel - 1)      // this game allows lower level players to join, or is wihtin accepted range
                         && ((playerAcceptHigher == 1 && channel.gameAcceptLower == 1) || channel.gameLevel <= playerLevel + 1)) {  // this game allows higher level players to join, or is wihtin accepted range
                     LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);
