@@ -26,18 +26,6 @@ var Channel = require('./channel.js');
 var GAMEINDEX=0;        // IDs for newly created games
 var users = [];                                     // init the users array
 var channels = [];                                  // init the channels array
-channels['MAIN'] = new Channel('Main','MAIN');      // create the main chat channel
-channels['MAIN'].addMessage({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
-channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
-
-//channels['TESTA'] = new Channel('Test A','TESTA');
-//channels['TESTA'].addMessage({ time : currTime(), user : "TOTO", msg : "Test TESTA", category : "chat_sys", to : "TESTA"  });
-//channels['TESTA'].gameLevel = 6;
-//channels['TESTA'].playerA= 'kaspa';
-//channels['TESTB'] = new Channel('Test B','TESTB');
-//channels['TESTB'].gameLevel = 1;
-//channels['TESTB'].playerA= 'kaspa';
-
 
 var MAXCLIENTS_2    = 70;          // absolute maximum number of clients; any request will be dropped once this number is reached
 var MAXCLIENTS_1    = 50;          // maximum number of clients before refusing new connections
@@ -64,23 +52,14 @@ function escapeHtml(unsafe) {
     return false;
 }
 
-function disconnect(user) {
-    users.splice(users.indexOf(user),1);    // remove the user from the users array
-    for (var i in channels) {               // remove the user from any game he's in
-        if(channels[i].users.indexOf(user) > -1) {
-            var channel = channels[i];
-            channel.users.splice(channel.users.indexOf(user),1);    // remove the user from the users array
-            sendMessage(user,'leave','game',channel.id);    // send the information to users in that channel
-            if(channel.playerA == user) {
-                channel.playerA = '';
-            } else if (channel.playerB == user) {
-                channel.playerB = '';
-            }
-            if (channel.blackPlayer == user || channel.whitePlayer == user) {        // the user was a seated player, close the game
-                channel.switchOpen(false);
-            }
-        }
-    } 
+function currTime() {
+    // write current time in HH:mm format
+    var currentDate = new Date();
+    var hours = currentDate.getHours();
+    if (hours < 10) { hours = "0" + hours; }
+    var minutes = currentDate.getMinutes();
+    if (minutes < 10) { minutes = "0" + minutes; }
+    return(hours + ":" + minutes);
 }
 
 function sendMessage(from, msg, category, to ) {
@@ -95,9 +74,9 @@ function sendMessage(from, msg, category, to ) {
     //        - game, game channel activity : sit-[w|b] ; move-piece-square ; leave
     // to : target for the message : a user, a game channel id, or main channel (by default)
     var message = [];
-    if (!category) category = "chat_msg";
+    if (!category) { category = "chat_msg"; }
     message = {time: currTime(), user: from, msg: msg, category: category, to: to };
-    LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... sendMessage : ' + message.msg);
+    if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... sendMessage : ' + message.msg);}
     channels[to].messages.push(message);
     var json = JSON.stringify( { counter: channels[to].messages.length, append: message });
     var i = 0;
@@ -106,18 +85,41 @@ function sendMessage(from, msg, category, to ) {
         client.end(json);
         i++;
     }
-    LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... sent message to ' + i + ' client(s)');
+    if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... sent message to ' + i + ' client(s)');}
 }
 
-function currTime() {
-    // write current time in HH:mm format
-    var currentDate = new Date();
-    var hours = currentDate.getHours();
-    if (hours < 10) hours = "0" + hours;
-    var minutes = currentDate.getMinutes();
-    if (minutes < 10) minutes = "0" + minutes;
-    return(hours + ":" + minutes);
+function disconnect(user) {
+    users.splice(users.indexOf(user),1);    // remove the user from the users array
+    for (var i in channels) {               // remove the user from any game he's in
+        if(channels[i].users.indexOf(user) > -1) {
+            var channel = channels[i];
+            channel.users.splice(channel.users.indexOf(user),1);    // remove the user from the users array
+            sendMessage(user,'leave','game',channel.id);    // send the information to users in that channel
+            if(channel.playerA === user) {
+                channel.playerA = '';
+            } else if (channel.playerB === user) {
+                channel.playerB = '';
+            }
+            if (channel.blackPlayer === user || channel.whitePlayer === user) {        // the user was a seated player, close the game
+                channel.switchOpen(false);
+            }
+        }
+    } 
 }
+
+
+
+channels['MAIN'] = new Channel('Main','MAIN');      // create the main chat channel
+channels['MAIN'].addMessage({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
+channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
+
+//channels['TESTA'] = new Channel('Test A','TESTA');
+//channels['TESTA'].addMessage({ time : currTime(), user : "TOTO", msg : "Test TESTA", category : "chat_sys", to : "TESTA"  });
+//channels['TESTA'].gameLevel = 6;
+//channels['TESTA'].playerA= 'kaspa';
+//channels['TESTB'] = new Channel('Test B','TESTB');
+//channels['TESTB'].gameLevel = 1;
+//channels['TESTB'].playerA= 'kaspa';
 
 
 http.createServer(function (req, res) {
@@ -137,15 +139,15 @@ http.createServer(function (req, res) {
 //
 // CONNECTION SERVICE
 //
-    if(url_parts.pathname.substr(0, 8) == '/connect') {
-        LOGCONNECT && console.log(currTime() + ' [CONNEC] connect');
+    if(url_parts.pathname.substr(0, 8) === '/connect') {
+        if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] connect');}
         if(channels['MAIN'].clients.length > MAXCLIENTS_1) {
                 console.log(currTime() + ' [LIMIT ] Cannot accept connection, MAXCLIENT_1 reached !(' + MAXCLIENTS_1 + ')');
                 res.writeHead(200, { 'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
                     returncode: 'ko',
                     returnmessage: 'Sorry, there are too many users right now. Please try again in a few minutes.',
-                    user: user
+                    user: ''
                 }));
         }
         var user = "";
@@ -156,9 +158,9 @@ http.createServer(function (req, res) {
         req.on('end', function() {
             var json = JSON.parse(data);
             user = escapeHtml(json.user);
-            LOGCONNECT && console.log(currTime() + ' [CONNEC] ... connect ' + user);
+            if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... connect ' + user); }
 
-            if (users.indexOf(user) == -1) {
+            if (users.indexOf(user) === -1) {
                 console.log(currTime() + ' [CONNEC] user: ' + user + ' connected, client: ' + json.clientLib + ', version: ' + json.clientVersion);
                 users.push(user);
                 res.writeHead(200, { 'Content-type': 'application/json'});
@@ -169,7 +171,7 @@ http.createServer(function (req, res) {
                     key: 'unique key for ' + user     // TODO : generate a GUID here
                 }));
             } else {
-                LOGCONNECT && console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved');
+                if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved'); }
                 res.writeHead(200, { 'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
                     returncode: 'ko',
@@ -177,15 +179,15 @@ http.createServer(function (req, res) {
                     user: user
                 }));
             }
-            LOGCONNECT && console.log(currTime() + ' [CONNEC] ... current users : ' + users);
+            if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... current users : ' + users); }
         });
     } 
 
 //
 // DISCONNECTION SERVICE
 //
-    else if(url_parts.pathname.substr(0, 11) == '/disconnect') {
-        LOGCONNECT && console.log(currTime() + ' [CONNEC] disconnect');
+    else if(url_parts.pathname.substr(0, 11) === '/disconnect') {
+        if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] disconnect'); }
         var user = "";
         var data = "";
         req.on('data', function(chunk) {
@@ -194,7 +196,7 @@ http.createServer(function (req, res) {
         req.on('end', function() {
             var json = JSON.parse(data);
             user = escapeHtml(json.user);
-            LOGCONNECT && console.log(currTime() + ' [CONNEC] ... disconnect user ' + user);
+            if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... disconnect user ' + user); }
             res.writeHead(200, { 'Content-Type': 'application/json'});
             res.end(JSON.stringify([]));    // first, release the client
             disconnect(user);               // then, handle the disconnection
@@ -204,14 +206,14 @@ http.createServer(function (req, res) {
 //
 // POLLING SERVICE
 //
-    else if(url_parts.pathname.substr(0, 5) == '/poll') {
+    else if(url_parts.pathname.substr(0, 5) === '/poll') {
         // polling
         var data="";
         var channel="";
         var user = "";
         var key = "";
         var counter = 0;
-        LOGPOLLING && console.log(currTime() + ' [POLLIN] polling')
+        if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] polling'); }
         req.on('data', function(chunk) {
             data += chunk;
         });
@@ -222,14 +224,15 @@ http.createServer(function (req, res) {
             key = escapeHtml(json.key);
             counter = json.counter;
             if (isNaN(counter) || !channel || !channels[channel])  {   // no counter provided or no channel id, send Bad Request HTTP code
-                LOGPOLLING && console.log(currTime() + ' [POLLIN] ... error, dumping data below')
-                LOGPOLLING && console.log(json)
+                if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... error, dumping data below');}
+                if(LOGPOLLING) { console.log(json); }
                 res.writeHead(400, { 'Content-type': 'text/txt'});
                 res.end('Bad request');
             }
-            LOGPOLLING && console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel);
+            if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel); }
             
-            try { var n = channels[channel].messages.length - counter; }        // try to get the messages list for the channel
+            var n = 0;
+            try { n = channels[channel].messages.length - counter; }        // try to get the messages list for the channel
             catch(err) {                                        // the channel doesn't exit
                 res.writeHead(500, {'Content-Type': 'text/txt'});
                 res.end("This channel doesn't exist or has been destroyed.");
@@ -239,11 +242,11 @@ http.createServer(function (req, res) {
             if(n > 0) {
                 var lastMessages = {};
                 if ( n <= MAXMESSAGES ) {
-                    lastMessages = channels[channel].messages.slice(counter)
+                    lastMessages = channels[channel].messages.slice(counter);
                 } else if ( n > MAXMESSAGES ) {       // if there are too many messages to send
                     lastMessages = channels[channel].messages.slice(channels[channel].messages.length - MAXMESSAGES);
                 }
-                LOGPOLLING && console.log(currTime() + ' [POLLIN] ... sending ' + lastMessages.length + ' new message(s)');
+                if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... sending ' + lastMessages.length + ' new message(s)'); }
                 res.writeHead(200, { 'Content-type': 'application/json'});
                 res.end(JSON.stringify( {
                     counter: channels[channel].messages.length,
@@ -259,42 +262,43 @@ http.createServer(function (req, res) {
 //
 // SEARCH GAME SERVICE
 //
-    else if(url_parts.pathname.substr(0, 11) == '/searchGame') {
+    else if(url_parts.pathname.substr(0, 11) === '/searchGame') {
         var player="";
         var playerLevel=0;
         var playerAcceptLower=0;
         var playerAcceptHigher=0;
         var playerTimerPref=0;
         var data="";
-        LOGSEARCHING && console.log(currTime() + ' [SEARCH] search a game')
+        if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] search a game'); }
         req.on('data', function(chunk) {
             data += chunk;
         });
         req.on('end', function() {
-            try { var json = JSON.parse(data); }
+            var json = {};
+            try { json = JSON.parse(data); }
             catch(err) { console.log(err); console.log(data); var json= {};}
             player = escapeHtml(json.user);
             try {
-                playerLevel = parseInt(json.playerLevel);
-                playerAcceptLower = parseInt(json.playerAcceptLower);
-                playerAcceptHigher = parseInt(json.playerAcceptHigher);
-                playerTimerPref = parseInt(json.playerTimerPref);
+                playerLevel = parseInt(json.playerLevel,10);
+                playerAcceptLower = parseInt(json.playerAcceptLower,10);
+                playerAcceptHigher = parseInt(json.playerAcceptHigher,10);
+                playerTimerPref = parseInt(json.playerTimerPref,10);
             } catch(err) {
-                LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... error, incorrect format, dumping data below')
-                LOGSEARCHING && console.log(json)
+                if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... error, incorrect format, dumping data below');}
+                if(LOGSEARCHING) { console.log(json); }
                 res.writeHead(400, { 'Content-type': 'text/txt'});
                 res.end('Bad request');
                 return 1;                
             }
             if (isNaN(playerTimerPref)) { playerTimerPref = -1; }
             if (!player || isNaN(playerLevel))  {   // no username, no level => send Bad Request HTTP code
-                LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... error, dumping data below')
-                LOGSEARCHING && console.log(json)
+                if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... error, dumping data below'); }
+                if(LOGSEARCHING) { console.log(json); }
                 res.writeHead(400, { 'Content-type': 'text/txt'});
                 res.end('Bad request');
                 return 1;
             }
-            LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + playerLevel, ' timer = ' + playerTimerPref +  ' allow higher/lower = ' + playerAcceptHigher + '/' + playerAcceptLower);
+            if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + playerLevel, ' timer = ' + playerTimerPref +  ' allow higher/lower = ' + playerAcceptHigher + '/' + playerAcceptLower);}
             
             // searching for an existing game
             var count = 0;  // count the number of channels
@@ -302,13 +306,13 @@ http.createServer(function (req, res) {
                 count++;
                 var channel = channels[i];
                 if(channel.open         // the channel is open
-                        && channel.playerA && !channel.playerB && channel.playerA != player     // this is a game channel with only a player A, who is not the user who searches for a game
-                        && ((playerAcceptLower == 1 && channel.gameAcceptHigher == 1) || channel.gameLevel >= playerLevel - 1)      // this game allows lower level players to join, or is wihtin accepted range
-                        && ((playerAcceptHigher == 1 && channel.gameAcceptLower == 1) || channel.gameLevel <= playerLevel + 1)) {  // this game allows higher level players to join, or is wihtin accepted range
-                    LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);
+                        && channel.playerA && !channel.playerB && channel.playerA !== player     // this is a game channel with only a player A, who is not the user who searches for a game
+                        && ((playerAcceptLower === 1 && channel.gameAcceptHigher === 1) || channel.gameLevel >= playerLevel - 1)      // this game allows lower level players to join, or is wihtin accepted range
+                        && ((playerAcceptHigher === 1 && channel.gameAcceptLower === 1) || channel.gameLevel <= playerLevel + 1)) {  // this game allows higher level players to join, or is wihtin accepted range
+                    if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);}
                     channel.addUser(player);
                     channel.playerB = player;
-                    LOGSEARCHING && console.log(currTime() + ' [SEARCH] ... playerB = ' + channel.playerB);
+                    if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... playerB = ' + channel.playerB);}
                     res.writeHead(200, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify( {
                             returncode: 'joined',
@@ -316,7 +320,7 @@ http.createServer(function (req, res) {
                         }));
                     return 0;   // found a game, exit the loop
                 }
-            };
+            }
 
             // no game found, create one if MAXGAMES has not been reached yet
             if(count > MAXGAMES) {      // there are too many games, send http/500 and return
@@ -327,15 +331,15 @@ http.createServer(function (req, res) {
             } else {
                 // create the new game channel and push it
                 GAMEINDEX++;
-                var gameId = "GAME" + GAMEINDEX
+                var gameId = "GAME" + GAMEINDEX;
                     channels[gameId] = new Channel(player + "'s table",gameId);
                     channels[gameId].gameLevel = playerLevel;
                     channels[gameId].playerA = player;
                     channels[gameId].gameAcceptHigher = playerAcceptHigher;
                     channels[gameId].gameAcceptLower = playerAcceptLower;
                     channels[gameId].addUser(player);
-                console.log(currTime() + ' [SEARCH] New game created, see details below.');
-                console.log(channels[gameId]);
+                if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] New game created, see details below.'); }
+                if(LOGSEARCHING) { console.log(channels[gameId]); }
                 res.writeHead(200, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
                         returncode: 'new',
@@ -349,14 +353,14 @@ http.createServer(function (req, res) {
 //
 // INBOUND MESSAGES SERVICE
 //
-    else if(url_parts.pathname.substr(0, 4) == '/msg') {
+    else if(url_parts.pathname.substr(0, 4) === '/msg') {
         // message receiving via JSON POST request
         // user : user issuing the messages
         // key : user's key
         // channel : channel to dispatch the message to
         // category : message category; either chat_msg or game
         // msg : message
-        LOGMESSAGING && console.log(currTime() + ' [MESSAG] new message');
+        if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] new message'); }
         var user = "";
         var msg = "";
         var channel = "";
@@ -366,14 +370,15 @@ http.createServer(function (req, res) {
             data += chunk;
         });
         req.on('end', function() {
-            try { var json = JSON.parse(data); }
+            var json = {};
+            try { json = JSON.parse(data); }
             catch(err) { console.log(err); console.log(data); var json= {};}
             msg = escapeHtml(json.msg);         // escaping html chars
             user = escapeHtml(json.user);
             category = escapeHtml(json.category) || 'chat_msg' ;        // default : chat message
             channel = escapeHtml(json.channel) || 'MAIN';                  // default : main channel
             
-            LOGMESSAGING && console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user + " / channel = " + channel + " / category = " + category);
+            if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user + " / channel = " + channel + " / category = " + category); }
             sendMessage(user, msg, category, channel);
             res.writeHead(200, { 'Content-type': 'text/html'});
             res.end(JSON.stringify({0:'OK'}));
@@ -383,18 +388,19 @@ http.createServer(function (req, res) {
 //
 // GET STATISTICS SERVICE
 //
-    else if(url_parts.pathname.substr(0, 6) == '/stats') {
+    else if(url_parts.pathname.substr(0, 6) === '/stats') {
         // request for server statistics
         // user : user issuing the messages
         // key : user's key
-        LOGSTATS && console.log(currTime() + ' [STATS ] get stats');
+        if(LOGSTATS) { console.log(currTime() + ' [STATS ] get stats'); }
         var user = "";
         var data = "";
         req.on('data', function(chunk) {
             data += chunk;
         });
         req.on('end', function() {
-            try { var json = JSON.parse(data); }
+            var json = {};
+            try { json = JSON.parse(data); }
             catch(err) { console.log(err); console.log(data); var json= {};}
             user = escapeHtml(json.user);
             var gamesTimed10Started = 0;
@@ -404,27 +410,27 @@ http.createServer(function (req, res) {
             var gamesNonTimedStarted = 0;
             var gamesNonTimedPending = 0;
             for (var i in channels) {
-                if (channels[i].id == "MAIN") {
+                if (channels[i].id === "MAIN") {
                     continue;
-                } else if (channels[i].gameStarted == true) {
-                    if (channels[i].gameTimer == 10) {
+                } else if (channels[i].gameStarted === true) {
+                    if (channels[i].gameTimer === 10) {
                         gamesTimed10Started++;
-                    } if (channels[i].gameTimer == 5) {
-                        gamesNonTimed5Started++;                        
+                    } if (channels[i].gameTimer === 5) {
+                        gamesTimed5Started++;                        
                     } else {
                         gamesNonTimedStarted++;                        
                     }
-                } else if (channels[i].gameStarted == false) {
-                    if (channels[i].gameTimer == 10) {
+                } else if (channels[i].gameStarted === false) {
+                    if (channels[i].gameTimer === 10) {
                         gamesTimed10Pending++;
-                    } if (channels[i].gameTimer == 5) {
-                        gamesNonTimed5Pending++;                        
+                    } if (channels[i].gameTimer === 5) {
+                        gamesTimed5Pending++;                        
                     } else {
                         gamesNonTimedPending++;                        
                     }
                 }
             }
-            LOGSTATS && console.log(currTime() + " [STATS ] ... user = " + user);
+            if(LOGSTATS) { console.log(currTime() + " [STATS ] ... user = " + user); }
             res.writeHead(200, { 'Content-type': 'text/html'});
             res.end(JSON.stringify( {
                     users: users.length,
@@ -442,14 +448,14 @@ http.createServer(function (req, res) {
 //
 // ADMIN SERVICE
 //
-    else if(url_parts.pathname.substr(0) == '/admin') {
+    else if(url_parts.pathname.substr(0) === '/admin') {
         console.log(currTime() + ' [ADMIN ] dumping objects to console');
         console.log(currTime() + ' [ADMIN ] ... users');
         console.log(users);
         //console.log(currTime() + ' [ADMIN ] ... clients');
         //console.log(clients);
-        console.log(currTime() + ' [ADMIN ] ... messages');
-        console.log(messages);
+        console.log(currTime() + ' [ADMIN ] ... channels');
+        console.log(channels);
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end(currTime() + ' Objects dumped to console');
     }
@@ -459,25 +465,25 @@ http.createServer(function (req, res) {
 //
     else {
         // file serving
-        LOGSTATIC && console.log(currTime() + ' [STATIC] client file request');
+        if(LOGSTATIC) { console.log(currTime() + ' [STATIC] client file request'); }
         var file='';
-        if(url_parts.pathname == '/' || url_parts.pathname == '/client' || url_parts.pathname == '/client/') {
+        if(url_parts.pathname === '/' || url_parts.pathname === '/client' || url_parts.pathname === '/client/') {
             file = 'main.html';
-        }  else if(url_parts.pathname.substr(0, 8) == '/favicon') {
+        }  else if(url_parts.pathname.substr(0, 8) === '/favicon') {
             // serving the favicon
             file = 'img/favicon.ico';
         }  else {
-            if(url_parts.pathname.substr(0,7) == "/client") {   // remove the potential "/client" reference
+            if(url_parts.pathname.substr(0,7) === "/client") {   // remove the potential "/client" reference
                 file = escapeHtml(url_parts.pathname.substr(8)); 
             } else {
                 file = escapeHtml(url_parts.pathname); 
             }
         }
-        LOGSTATIC && console.log(currTime() + ' [STATIC] ... serving client/' + file);
+        if(LOGSTATIC) { console.log(currTime() + ' [STATIC] ... serving client/' + file); }
         fs.readFile(SERVERDIR+'client/'+file, function(err, data) {
             if(err) {
                 console.log(currTime() + ' [STATIC] ... ' + err);
-                if(err.code == "ENOENT") {      // file is simply missing
+                if(err.code === "ENOENT") {      // file is simply missing
                     res.writeHead(404, { 'Content-type': 'text/txt'});
                     res.end('file not found');
                 } else {                        // other error; could be EACCES or anything

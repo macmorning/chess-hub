@@ -16,6 +16,9 @@ module.exports = function(grunt) {
             eqnull: true,
             browser: true,
             multistr:true,
+            shadow:true,
+            laxbreak:true,
+            node:true,
             globals: {
                 jQuery: true,
                 $: true,
@@ -26,6 +29,9 @@ module.exports = function(grunt) {
         },
         'chessHubClientLibs': {
             src: [ 'src/js/chessHub*.js' ]
+        },
+        'chessHubServer': {
+            src: [ 'server.js', 'channel.js' ]
         }
     },
     uglify: {
