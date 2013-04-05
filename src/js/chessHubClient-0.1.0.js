@@ -9,7 +9,7 @@
 *
 *
 */
-;CHESSHUB = {
+CHESSHUB = {
 	name: 'chessHubClient', // client name
 	version: '0.1',         // client lib version
     user: '',               // user name
@@ -42,9 +42,9 @@
     //  attempts to stop the current ajaxPoll
     //
     _abortAjaxCalls: function() {
-        try { ajaxPoll.abort(); }  // try to abort latest ajax polling request
+        try { CHESSHUB.ajaxPoll.abort(); }  // try to abort latest ajax polling request
             catch(err) { }     // if no polling has to be aborted
-        try { ajaxSearchGame.abort(); }  // try to abort latest ajax polling request
+        try { CHESSHUB.ajaxSearchGame.abort(); }  // try to abort latest ajax polling request
             catch(err) { }     // if no polling has to be aborted
     },
 
@@ -60,7 +60,7 @@
         }
         console.log('polling ... ' + CHESSHUB.channels[channel].counter);
         var data = { user: CHESSHUB.user, key: CHESSHUB.key, counter: CHESSHUB.channels[channel].counter, channel: channel } ;
-        ajaxPoll = $.ajax({
+        CHESSHUB.ajaxPoll = $.ajax({
             type: 'POST',
             url : '/poll',
             contentType: 'application/json; charset=utf-8',
@@ -85,7 +85,7 @@
                     // or if the request is aborted (status = abort)
                     console.log('CHESSHUB._poll : error - ' + status);
                     console.log(error);
-                    if (status == 'error') {
+                    if (status === 'error') {
                         setTimeout(function() {CHESSHUB._poll(channel,newMessageCallBack);},10000); // retry after 10 seconds
                     }
             }
@@ -109,7 +109,7 @@
         var data = {};
         data = { user: CHESSHUB.user, key: CHESSHUB.key, playerLevel: playerLevel, playerAcceptLower: playerAcceptLower, playerAcceptHigher: playerAcceptHigher, playerTimerPref: playerTimerPref } ;
         console.log(data);
-        ajaxSearchGame = $.ajax({
+        CHESSHUB.ajaxSearchGame = $.ajax({
             type: 'POST',
             url : '/searchGame',
             contentType: 'application/json; charset=utf-8',
@@ -142,7 +142,7 @@
             newMessageCallBack = function(message) { 
                 console.log('listen : no handler provided for message');
             };
-        };
+        }
         this._poll(channel,newMessageCallBack);
     },
 
@@ -170,7 +170,7 @@
                 dataType: 'json',
                 data: JSON.stringify(data),
                 success: function (response) { 
-                        if (response.returncode == 'ok') {
+                        if (response.returncode === 'ok') {
                             CHESSHUB.user = response.user;
                             CHESSHUB.key = response.key;
                         }
@@ -262,4 +262,4 @@
             }
          });
     }
-}
+};

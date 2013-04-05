@@ -1,0 +1,59 @@
+/* app css stylesheet */
+
+body {
+    background-color : #eeeeee;
+}
+
+span.mainpage_stats {
+
+}
+
+div#loginpage_footer {
+    position:fixed;
+    bottom: 0px;
+    color: #999999;
+    font-size: 0.7em;
+}
+/************************
+        CHAT
+*************************/
+
+label {
+    color:#000000;  
+}
+
+#chat_output {
+    height:100%;
+}
+
+div#chat_output > p, div#board_chat_output > p {
+    margin: 0.2em;
+    line-height: 1em;
+}
+p.chat_sys {
+    font-weight: bold;
+    color: #AA0000;
+}
+
+p.chat_activity {
+    font-style:italic;
+    color: #908ED1;
+}
+
+span.chat_time {
+    color: #AA0000;
+}
+span.chat_user, a.chat_user {
+    color: #00AA00;
+    text-decoration:none;
+}
+span.chat_direct {
+    font-weight: bold;
+}
+a.chat_user:hover {
+    text-decoration:underline;
+}
+span.chat_msg, span.game {
+}
+
+

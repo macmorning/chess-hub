@@ -1,1 +1,29 @@
-{}
+{
+  "scripts": {
+    "start": "node server.js"
+  },
+  "readmeFilename": "README.md",
+  "gitHead": "435f291b3ca7d7641dfa07bda67e123be5476fc7",
+  "name": "chess-hub",
+  "description": "chess-hub =========",
+  "version": "0.1.0",
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/macmorning/chess-hub"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "~0.4.0",
+    "grunt-contrib-nodeunit": "~0.1.2",
+    "grunt-contrib-uglify": "~0.2.0",
+    "grunt-contrib-copy": "~0.4.1"
+  },
+  "keywords": [
+    "chess",
+    "hub",
+    "node"
+  ],
+  "author": "macmorning",
+  "license": "BSD"
+}

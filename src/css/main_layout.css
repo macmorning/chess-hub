@@ -1,0 +1,35 @@
+/* Stack the two content containers */
+
+#loginpage_main { display:block; width:98%; max-width:25em; margin-top: 15%;margin:auto;}
+
+#mainpage_chat,
+#mainpage_side { display:block; width:98%; margin: 0 1% 0 1%;}
+
+
+
+/* First breakpoint at 512px */
+@media all and (min-width: 32em){
+    #loginpage_main { width:25em; margin:auto;}
+
+    #mainpage_side,#mainpage_chat { float:left; }
+	#mainpage_side { width:48%; max-width: 20em; margin: 0 1% 0 2%;}
+	#mainpage_chat { width:48%; margin: 0 1% 0 0; }
+}
+
+/* Second breakpoint at 800px */
+@media all and (min-width: 50em){
+    #loginpage_main { width:25em; margin:auto;}
+
+    #mainpage_side,#mainpage_chat { float:left; }
+	#mainpage_side { width:39%; margin: 0 1% 0 2%;}
+	#mainpage_chat { width:57%; margin: 0 1% 0 0;}
+}
+
+/* Second breakpoint at 800px */
+@media all and (min-width: 50em) and (min-height: 40em) {
+    #loginpage,#mainpage {
+        background-image : url('/client/img/chess-hub_background.png');
+        background-repeat:no-repeat;
+        background-position:right bottom;
+    }
+}
