@@ -24,9 +24,13 @@ var CHESSBOARD = {
 
     mouseDownHandler: function(ev) {            // using a mouse down event here : it's more user friendly than drag&drop when you are using a touch-enabled device
         ev.stopPropagation();   // stop propagation : we don't want the click event to bubble
-        
+
         // user is not holding a piece yet and is clicking on one, but the clicked piece is not the right color
-        if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece && (ev.target.id[0] !== CHESSBOARD.currentGameTurn || ev.target.id[0] === "w" && CHESSBOARD.whitePlayer !== CONTEXT.user  || ev.target.id[0] === "b" && CHESSBOARD.blackPlayer !== CONTEXT.user)) {
+        if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece 
+            && (ev.target.id[0] !== CHESSBOARD.currentGameTurn 
+                || CHESSBOARD.pieces[ev.target.id].sqId === 'wGraveyard' || CHESSBOARD.pieces[ev.target.id].sqId === 'bGraveyard'
+                || ev.target.id[0] === "w" && CHESSBOARD.whitePlayer !== CONTEXT.user  
+                || ev.target.id[0] === "b" && CHESSBOARD.blackPlayer !== CONTEXT.user)) {
             return 0;
         }
         
