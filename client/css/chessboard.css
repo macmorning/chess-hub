@@ -224,7 +224,7 @@ img.bpawn {
 }
 
 /* breakpoint at 650px and 704px height */
-@media all and (min-width: 40em) and (min-height: 42em){
+@media all and (min-width: 40em){
     #chessBoard {
         width:40em; 
         height:40em; 
@@ -254,7 +254,7 @@ img.bpawn {
 }
 
 /* breakpoint at 864px width : Graveyards are moved to the right side of the board */
-@media all and (min-width: 54em) and (min-height: 42em){
+@media all and (min-width: 54em){
     #chessBoard {
         margin: 0.5em 0.5em 0 0.5em;
         float:left;
