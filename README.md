@@ -92,7 +92,7 @@ TODO
 - [x] spawn the pieces and place them
 - [x] handle the moves
 - [ ] enforce pieces move restrictions
-- [ ] finsih the "sit" process
+- [x] finsih the "sit" process
 
 
 ___
