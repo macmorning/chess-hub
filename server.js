@@ -35,10 +35,11 @@ var MAXMESSAGES     = 20;          // maximum number of messages sent at once
 var LOGSTATIC       = false;       // enable or disable static files serving logs
 var LOGCONNECT      = true;        // enable or disable connections logs
 var LOGMESSAGING    = true;        // enable or disable messaging logs
-var LOGPOLLING      = false;        // enable or disable polling logs
+var LOGPOLLING      = false;       // enable or disable polling logs
 var LOGCHANNEL      = true;        // enable or disable channel activity logs
-var LOGSEARCHING    = false;        // enable or disable game searches logs
-var LOGSTATS        = false;        // enable or disable game stats logs
+var LOGSEARCHING    = false;       // enable or disable game searches logs
+var LOGSTATS        = false;       // enable or disable game stats logs
+var LOGHOUSEKEEPING = false;        // enable or disable house keeping logs
 
 function escapeHtml(unsafe) {
     if(unsafe && isNaN(unsafe)) {// escapes Html characters
@@ -108,19 +109,29 @@ function disconnect(user,reason) {
     } 
 }
 
-
-
-channels['MAIN'] = new Channel('Main','MAIN');      // create the main chat channel
+function houseKeeper() {
+// disconnects inactive users and destroys empty channels
+    if(LOGHOUSEKEEPING) { console.log(currTime() + ' [HOUSEK] running');}
+    var limitTime = new Date() - 120000;   // drop users if their last activity is more than 2 minutes old
+    for (var user in users) {
+        if (users[user].lastActivity < limitTime) {
+            console.log(currTime() + ' [HOUSEK] ... disconnect ' + user);
+            if(LOGHOUSEKEEPING) { console.log(currTime() + ' [HOUSEK] ... last activity = ' + users[user].lastActivity);}
+            if(LOGHOUSEKEEPING) { console.log(currTime() + ' [HOUSEK] ... limit time = ' + limitTime);}
+            disconnect(user);
+        }
+    }
+}
+// create the main chat channel
+channels['MAIN'] = new Channel('Main','MAIN');
 channels['MAIN'].addMessage({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
 channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
 
-//channels['TESTA'] = new Channel('Test A','TESTA');
-//channels['TESTA'].addMessage({ time : currTime(), user : "TOTO", msg : "Test TESTA", category : "chat_sys", to : "TESTA"  });
-//channels['TESTA'].gameLevel = 6;
-//channels['TESTA'].playerA= 'kaspa';
-//channels['TESTB'] = new Channel('Test B','TESTB');
-//channels['TESTB'].gameLevel = 1;
-//channels['TESTB'].playerA= 'kaspa';
+
+// start the housekeeping interval, every 1000ms
+setInterval(function() {
+        houseKeeper();
+    }, 10000);
 
 
 http.createServer(function (req, res) {
@@ -231,6 +242,14 @@ http.createServer(function (req, res) {
                 if(LOGPOLLING) { console.log(json); }
                 res.writeHead(400, { 'Content-type': 'text/txt'});
                 res.end('Bad request');
+                return 1;
+            }
+            if (!users[user]) {
+                if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... unknown user');}
+                if(LOGPOLLING) { console.log(json); }
+                res.writeHead(401, { 'Content-type': 'text/txt'});
+                res.end('Unauthorized');
+                return 1;
             }
             if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel); }
             users[user].lastActivity = new Date();       // update user's last polling request
