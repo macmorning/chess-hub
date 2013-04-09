@@ -223,8 +223,8 @@ img.bpawn {
     }
 }
 
-/* breakpoint at 650px and 704px height */
-@media all and (min-width: 40em){
+/* breakpoint at 650px*/
+@media all and (min-width: 40em) and (min-height: 40em) {
     #chessBoard {
         width:40em; 
         height:40em; 

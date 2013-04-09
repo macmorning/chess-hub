@@ -35,10 +35,10 @@ var MAXMESSAGES     = 20;          // maximum number of messages sent at once
 var LOGSTATIC       = false;       // enable or disable static files serving logs
 var LOGCONNECT      = true;        // enable or disable connections logs
 var LOGMESSAGING    = true;        // enable or disable messaging logs
-var LOGPOLLING      = true;        // enable or disable polling logs
+var LOGPOLLING      = false;        // enable or disable polling logs
 var LOGCHANNEL      = true;        // enable or disable channel activity logs
-var LOGSEARCHING    = true;        // enable or disable game searches logs
-var LOGSTATS        = true;        // enable or disable game stats logs
+var LOGSEARCHING    = false;        // enable or disable game searches logs
+var LOGSTATS        = false;        // enable or disable game stats logs
 
 function escapeHtml(unsafe) {
     if(unsafe && isNaN(unsafe)) {// escapes Html characters
@@ -307,8 +307,10 @@ http.createServer(function (req, res) {
                 var channel = channels[i];
                 if(channel.open         // the channel is open
                         && channel.playerA && !channel.playerB && channel.playerA !== player     // this is a game channel with only a player A, who is not the user who searches for a game
-                        && ((playerAcceptLower === 1 && channel.gameAcceptHigher === 1) || channel.gameLevel >= playerLevel - 1)      // this game allows lower level players to join, or is wihtin accepted range
-                        && ((playerAcceptHigher === 1 && channel.gameAcceptLower === 1) || channel.gameLevel <= playerLevel + 1)) {  // this game allows higher level players to join, or is wihtin accepted range
+                        && ((playerAcceptLower === 1 && channel.gameAcceptHigher === 1 && channel.gameLevel < playerLevel) || channel.gameLevel === playerLevel)      // this game allows lower level players to join, or is wihtin accepted range
+                        && ((playerAcceptHigher === 1 && channel.gameAcceptLower === 1 && channel.gameLevel > playerLevel) || channel.gameLevel === playerLevel)      // this game allows higher level players to join, or is wihtin accepted range
+                        && (playerTimerPref === -1 || playerTimerPref === channel.gameTimer)  // player has not set a timer pref (-1) or the game matches his search
+                        ) {
                     if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);}
                     channel.addUser(player);
                     channel.playerB = player;
@@ -333,6 +335,7 @@ http.createServer(function (req, res) {
                 GAMEINDEX++;
                 var gameId = "GAME" + GAMEINDEX;
                     channels[gameId] = new Channel(player + "'s table",gameId);
+                    channels[gameId].gameTimer = (playerTimerPref >= 0 ? playerTimerPref : 0);  // if user has set his pref to indifferent (-1), then don't set a timer
                     channels[gameId].gameLevel = playerLevel;
                     channels[gameId].playerA = player;
                     channels[gameId].gameAcceptHigher = playerAcceptHigher;
@@ -370,18 +373,37 @@ http.createServer(function (req, res) {
             data += chunk;
         });
         req.on('end', function() {
-            var json = {};
-            try { json = JSON.parse(data); }
-            catch(err) { console.log(err); console.log(data); var json= {};}
+            var json = {};      // then analyze the message
+            try { json = JSON.parse(data); }    // we were unable to analyze the json string
+            catch(err) { 
+                res.writeHead(400, { 'Content-type': 'application/json'});
+                res.end(JSON.stringify( {
+                        returncode: 'ko'
+                }));
+                console.log(err); 
+                console.log(data); 
+                return 1;                
+            }
             msg = escapeHtml(json.msg);         // escaping html chars
             user = escapeHtml(json.user);
             category = escapeHtml(json.category) || 'chat_msg' ;        // default : chat message
             channel = escapeHtml(json.channel) || 'MAIN';                  // default : main channel
+            if (!msg || !user) {
+                res.writeHead(400, { 'Content-type': 'application/json'});
+                res.end(JSON.stringify( {
+                        returncode: 'ko'
+                }));
+                return 1;                
+            }
             
             if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user + " / channel = " + channel + " / category = " + category); }
+            if (category === 'game') {
+                // TODO : check game commands here
+            }
+
             sendMessage(user, msg, category, channel);
-            res.writeHead(200, { 'Content-type': 'text/html'});
-            res.end(JSON.stringify({0:'OK'}));
+            res.writeHead(200, { 'Content-type': 'application/json'});
+            res.end(JSON.stringify({returncode: 'ok'}));
         });
     }
 
