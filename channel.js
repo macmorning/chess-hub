@@ -10,7 +10,7 @@ var Channel = function(name,id) {
     this.name = name;
     this.open = true; 
     this.id = id || name;
-    this.users= [];
+    this.users= {};
     this.messages = [];
     this.playerA= '';
     this.playerB= '';
@@ -27,9 +27,8 @@ Channel.prototype = {
     name: '',               // displayed name of the channel (char)
     open: true,            // is the channel open for watchers ? (true or false)   (not implemented yet)
     id: '',                 // id of the channel (char)
-    users: [],              // current users    
+    users: {},              // current users    
     messages: [],           // list of messages
-    clients: [],            // list of clients currently long-polling the channel
     playerA: '',            // username of the game creator
     playerB: '',            // username of the game joiner
     whitePlayer: '',
@@ -49,16 +48,16 @@ Channel.prototype = {
         },
 
     addUser: function(user) {
-            if(user && this.users.indexOf(user) < 0) {
-                this.users.push(user);
+            if(user && this.users[user]) {
+                this.users[user] = new Date();
                 return true;
             }
             return false;
         },
 
     removeUser: function(user) {
-            if(user && this.users.indexOf(user) >= 0) {
-                this.users.splice(this.users.indexOf(user),1);
+            if(user && this.users[user] ) {
+                delete this.users[user];
                 return true;
             }
             return false;

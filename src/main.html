@@ -186,10 +186,12 @@
                         CHESSBOARD.setPlayer('w',''); 
                         color = ' (was White)';
                     };
+                    var reason = "";
+                    if(command[1] !== "") { reason = " - " + command[1]; }
                     output.html(
                         '<p class="chat_activity"> == ['
                         + message.time + "] "
-                        + message.user + ' left' + color
+                        + message.user + ' left' + color + reason
                         + '</p>'
                         + output.html());
                 }

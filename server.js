@@ -24,8 +24,8 @@ var Channel = require('./channel.js');
 
 
 var GAMEINDEX=0;        // IDs for newly created games
-var users = [];                                     // init the users array
-var channels = [];                                  // init the channels array
+var users = {};         // init the users objects array
+var channels = [];      // init the channels array
 
 var MAXCLIENTS_2    = 70;          // absolute maximum number of clients; any request will be dropped once this number is reached
 var MAXCLIENTS_1    = 50;          // maximum number of clients before refusing new connections
@@ -80,21 +80,22 @@ function sendMessage(from, msg, category, to ) {
     channels[to].messages.push(message);
     var json = JSON.stringify( { counter: channels[to].messages.length, append: message });
     var i = 0;
-    while(channels[to].clients.length > 0) {
-        var client = channels[to].clients.pop();
-        client.end(json);
+    for(var user in channels[to].users) {
+        channels[to].users[user].client.end(json);
+        delete channels[to].users[user].client;
         i++;
     }
     if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... sent message to ' + i + ' client(s)');}
 }
 
-function disconnect(user) {
-    users.splice(users.indexOf(user),1);    // remove the user from the users array
+function disconnect(user,reason) {
+    delete users[user];    // remove the user from the users array
+    if(!reason) { reason = 'quit'; }
     for (var i in channels) {               // remove the user from any game he's in
-        if(channels[i].users.indexOf(user) > -1) {
+        if(channels[i].users[user]) {
             var channel = channels[i];
-            channel.users.splice(channel.users.indexOf(user),1);    // remove the user from the users array
-            sendMessage(user,'leave','game',channel.id);    // send the information to users in that channel
+            channel.removeUser(user);    // remove the user from the users array
+            sendMessage(user,'leave-'+reason,'game',channel.id);    // send the information to users in that channel
             if(channel.playerA === user) {
                 channel.playerA = '';
             } else if (channel.playerB === user) {
@@ -124,7 +125,7 @@ channels['MAIN'].switchOpen(true);                  // mark the main chat channe
 
 http.createServer(function (req, res) {
 
-    if(channels['MAIN'].clients.length > MAXCLIENTS_2) {
+    if(Object.keys(users).length > MAXCLIENTS_2) {
           console.log(currTime() + ' [LIMIT ] Cannot accept request, MAXCLIENT_2 reached !(' + MAXCLIENTS_2 + ')');
           res.writeHead(500, { 'Content-type': 'text/txt'});
           res.end('Sorry, there are too many users right now ! Please try again later.');
@@ -141,7 +142,7 @@ http.createServer(function (req, res) {
 //
     if(url_parts.pathname.substr(0, 8) === '/connect') {
         if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] connect');}
-        if(channels['MAIN'].clients.length > MAXCLIENTS_1) {
+        if(Object.keys(users).length > MAXCLIENTS_1) {
                 console.log(currTime() + ' [LIMIT ] Cannot accept connection, MAXCLIENT_1 reached !(' + MAXCLIENTS_1 + ')');
                 res.writeHead(200, { 'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
@@ -160,9 +161,11 @@ http.createServer(function (req, res) {
             user = escapeHtml(json.user);
             if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... connect ' + user); }
 
-            if (users.indexOf(user) === -1) {
+            if (!users[user]) {
+                users[user] = {};
+                channels['MAIN'].users[user] = {};
                 console.log(currTime() + ' [CONNEC] user: ' + user + ' connected, client: ' + json.clientLib + ', version: ' + json.clientVersion);
-                users.push(user);
+                users[user].lastActivity = new Date();
                 res.writeHead(200, { 'Content-type': 'application/json'});
                 res.end(JSON.stringify( {
                     returncode: 'ok',
@@ -179,7 +182,7 @@ http.createServer(function (req, res) {
                     user: user
                 }));
             }
-            if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... current users : ' + users); }
+            if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... current users : ' + Object.keys(users).length); }
         });
     } 
 
@@ -230,7 +233,9 @@ http.createServer(function (req, res) {
                 res.end('Bad request');
             }
             if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel); }
-            
+            users[user].lastActivity = new Date();       // update user's last polling request
+            channels[channel].users[user].lastActivity = new Date();       // update user's last polling request
+
             var n = 0;
             try { n = channels[channel].messages.length - counter; }        // try to get the messages list for the channel
             catch(err) {                                        // the channel doesn't exit
@@ -254,7 +259,7 @@ http.createServer(function (req, res) {
                 }));
             } else {
                 res.writeHead(200, {'Content-Type': 'application/json'});
-                channels[channel].clients.push(res);  // if there is no message to push, keep the client in the clients array (long polling)
+                channels[channel].users[user].client = res;  // if there is no message to push, keep the client in the clients array (long polling)
             }
         });
     } 
@@ -455,7 +460,7 @@ http.createServer(function (req, res) {
             if(LOGSTATS) { console.log(currTime() + " [STATS ] ... user = " + user); }
             res.writeHead(200, { 'Content-type': 'text/html'});
             res.end(JSON.stringify( {
-                    users: users.length,
+                    users: Object.keys(users).length,
                     gamesTimed10Started: gamesTimed10Started,
                     gamesTimed10Pending: gamesTimed10Pending,
                     gamesTimed5Started: gamesTimed5Started,
