@@ -123,6 +123,27 @@ function houseKeeper() {
         }
     }
 }
+
+function checkCommand(channel,user,msg) {
+// this function verifies the validity of the game commands sent by the clients.
+// returns 0 if ok, 1 if ko
+    var command = msg.split('-');
+    if(command[0] === "move") {
+        if (command[1]) {
+            return true;
+        }
+    } else if (command[0] === "sit") {
+        if (command[1] === 'w' || command[1] === 'b' ) {
+            return true;
+        }
+    } else if (command[0] === "leave") {
+        return true;
+    }
+    return false;
+}
+
+
+
 // create the main chat channel
 channels['MAIN'] = new Channel('Main','MAIN');
 channels['MAIN'].addMessage({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
@@ -354,7 +375,7 @@ http.createServer(function (req, res) {
                                                     gameAcceptHigher: channel.gameAcceptHigher,
                                                     gameAcceptLower: channel.gameAcceptLower,
                                                     gameTimer: channel.gameTimer,
-                                                    gameStarted: false};
+                                                    gameStarted: channel.gameStarted};
                     res.end(JSON.stringify( {
                             returncode: 'joined',
                             gameDetails: tmpChannel
@@ -437,12 +458,21 @@ http.createServer(function (req, res) {
             
             if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user + " / channel = " + channel + " / category = " + category); }
             if (category === 'game') {
-                // TODO : check game commands here
+                if (!checkCommand(channel,user,msg)) {  // the command is invalid
+                    res.writeHead(400, { 'Content-type': 'application/json'});
+                    res.end(JSON.stringify( {
+                            returncode: 'ko'
+                    }));
+                    console.log(currTime() + ' [MESSAG] incorrect game command from user ' + user + ' : ' + msg);
+                    return 1;   
+                }
             }
 
+            // Every thing seems alright. Forward the message via the specified channel and reply with "ok"
             sendMessage(user, msg, category, channel);
             res.writeHead(200, { 'Content-type': 'application/json'});
             res.end(JSON.stringify({returncode: 'ok'}));
+            return 0;
         });
     }
 
