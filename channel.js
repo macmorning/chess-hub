@@ -48,8 +48,8 @@ Channel.prototype = {
         },
 
     addUser: function(user) {
-            if(user && this.users[user]) {
-                this.users[user] = new Date();
+            if(user && !this.users[user]) {
+                this.users[user] = {lastActivity: new Date()};
                 return true;
             }
             return false;

@@ -82,7 +82,8 @@ function sendMessage(from, msg, category, to ) {
     var json = JSON.stringify( { counter: channels[to].messages.length, append: message });
     var i = 0;
     for(var user in channels[to].users) {
-        channels[to].users[user].client.end(json);
+        try { channels[to].users[user].client.end(json); }
+        catch(err) {}
         delete channels[to].users[user].client;
         i++;
     }
@@ -340,9 +341,23 @@ http.createServer(function (req, res) {
                     channel.playerB = player;
                     if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... playerB = ' + channel.playerB);}
                     res.writeHead(200, {'Content-Type': 'application/json'});
+                    console.log(channel);
+                    var tmpChannel = {name: channel.name, 
+                                                    open: channel.open, 
+                                                    id: channel.id, 
+                                                    messages: channel.messages, 
+                                                    playerA: channel.playerA, 
+                                                    playerB: channel.playerB,
+                                                    whitePlayer: channel.whitePlayer,
+                                                    blackPlayer: channel.blackPlayer,
+                                                    gameLevel: channel.gameLevel,
+                                                    gameAcceptHigher: channel.gameAcceptHigher,
+                                                    gameAcceptLower: channel.gameAcceptLower,
+                                                    gameTimer: channel.gameTimer,
+                                                    gameStarted: false};
                     res.end(JSON.stringify( {
                             returncode: 'joined',
-                            gameDetails: channel
+                            gameDetails: tmpChannel
                         }));
                     return 0;   // found a game, exit the loop
                 }
