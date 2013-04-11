@@ -130,8 +130,9 @@ var CHESSBOARD = {
 	
 	_unnumeric: function(value)	{
 	// returns the id of a square from its numeric value
-		//console.log('unnumeric : ' + value + ' => ' + 'sq' + CHESSBOARD.unumericColumns[value[0]] + value[1]);
-		return 'sq' + CHESSBOARD.unumericColumns[value[0]] + value[1];
+        var textValue = value + "";
+//        console.log('unnumeric : ' + value + ' => ' + 'sq' + CHESSBOARD.unnumericColumns[textValue[0]] + textValue[1]);
+		return 'sq' + CHESSBOARD.unnumericColumns[textValue[0]] + textValue[1];
 	},
 
     
@@ -140,6 +141,8 @@ var CHESSBOARD = {
     // returns true if yes, false if no
         var target = window.document.getElementById(destinationId);
         var targetPiece = '';
+        var tmpId = "";
+        var operator = 0;
         for(var i=0; i<target.childNodes.length; i++) {
             if (target.childNodes[i].tagName === 'IMG' && target.childNodes[i].id !== pieceId) {
                 targetPiece = target.childNodes[i].id;
@@ -158,29 +161,28 @@ var CHESSBOARD = {
             case 'king':
                 break;
             case 'pawn':
-                var tmpId = "";
                 // simple or double move
                 // ... for white pawns
-                if (pieceId[0] === "w" && (numericMove === 1 || numericMove === 2 && CHESSBOARD.pieces[pieceId].sqId[1] === "2")) {
+                if (pieceId[0] === "w" && (numericMove === 1 || numericMove === 2 && CHESSBOARD.pieces[pieceId].sqId[3] === "2")) {
                     if (targetPiece) {
                         return false;   // there is a piece here, but the pawn cannot take it this way
                     }						
                     if ( numericMove === 2 ) { // double move : check that there is not something blocking the way
                         tmpId = CHESSBOARD._unnumeric(numericFrom + 1);
-                        if (window.getElementById(tmpId).childNodes.length > 0) {
+                        if (window.document.getElementById(tmpId).childNodes.length > 0) {
                             return false;
                         }
                     }
                     return true;
                 }
                 // ... for black pawns
-                if (pieceId[0] === "b" && (numericMove === -1 || numericMove === -2 && CHESSBOARD.pieces[pieceId].sqId[1] === "7")) {
+                if (pieceId[0] === "b" && (numericMove === -1 || numericMove === -2 && CHESSBOARD.pieces[pieceId].sqId[3] === "7")) {
                     if (targetPiece) {
                         return false;   // there is a piece here, but the pawn cannot take it this way
                     }						
                     if ( numericMove === -2 ) { // double move : check that there is not something blocking the way
                         tmpId = CHESSBOARD._unnumeric(numericFrom - 1);
-                        if (window.getElementById(tmpId).childNodes.length > 0) {
+                        if (window.document.getElementById(tmpId).childNodes.length > 0) {
                             return false;
                         }
                     }
@@ -194,6 +196,7 @@ var CHESSBOARD = {
                     return false;
                 }
                 break;
+			
 			case "knight":
                 if (numericMove === 21 
                     || numericMove === -21  
@@ -206,6 +209,30 @@ var CHESSBOARD = {
                     return true;
                 }
                 break;
+                
+                case "bishop":
+                    if ((numericMove%11 === 0 && numericMove > 0 && parseInt(CHESSBOARD.pieces[pieceId].sqId[3],10) < parseInt(destinationId[3],10) && CHESSBOARD.pieces[pieceId].sqId[2] < destinationId[2])
+                        || (numericMove%11 === 0 && numericMove < 0 && parseInt(CHESSBOARD.pieces[pieceId].sqId[3],10) > parseInt(destinationId[3],10) && CHESSBOARD.pieces[pieceId].sqId[2] > destinationId[2])
+                        || (numericMove%9 === 0 && numericMove > 0 && parseInt(CHESSBOARD.pieces[pieceId].sqId[3],10) > parseInt(destinationId[3],10) && CHESSBOARD.pieces[pieceId].sqId[2] < destinationId[2])
+                        || (numericMove%9 === 0 && numericMove < 0 && parseInt(CHESSBOARD.pieces[pieceId].sqId[3],10) < parseInt(destinationId[3],10) && CHESSBOARD.pieces[pieceId].sqId[2] > destinationId[2])) {
+                        if(numericMove%11 === 0 && numericMove > 0) {
+                            operator = 11;
+                        } else if(numericMove%11 === 0 && numericMove < 0) {
+                            operator = -11;
+                        } else if(numericMove%9 === 0 && numericMove > 0) {
+                            operator = 9;
+                        } else if(numericMove%9 === 0 && numericMove < 0) {
+                            operator = -9;
+                        }
+                        for (i = numericFrom+operator ; (i < numericTo && numericMove > 0) || (i > numericTo && numericMove < 0); i += operator) {
+                            tmpId = CHESSBOARD._unnumeric(i);
+                            if (window.document.getElementById(tmpId).childNodes.length > 0) {
+                                return false;
+                            }
+                        }  
+                        return true;
+                    }
+                    break;
 
         }
         return false;
