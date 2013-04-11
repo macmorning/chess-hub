@@ -21,6 +21,8 @@ var CHESSBOARD = {
     whiteCanCastleQueenSide: true,
     currentGameTurn: '',            // 'w' or 'b'
     gameHistory: [],                // turns history array
+    numericColumns: {'a':10,'b':20,'c':30,'d':40,'e':50,'f':60,'g':70,'h':80},
+    unnumericColumns: {1:"a",2:"b",3:"c",4:"d",5:"e",6:"f",7:"g",8:"h"},
 
     mouseDownHandler: function(ev) {            // using a mouse down event here : it's more user friendly than drag&drop when you are using a touch-enabled device
         ev.stopPropagation();   // stop propagation : we don't want the click event to bubble
@@ -58,6 +60,11 @@ var CHESSBOARD = {
                     var target = ev.target;
                     while(target.tagName !== 'DIV'){     // if the target was not a DIV, go up in the DOM to find the first DIV
                         target=target.parentNode;
+                    }
+                    
+                    if (!CHESSBOARD._canMove(CHESSBOARD.selectedPiece.attr('id'),target.id)) { 
+                        // if held piece cannot be moved to target square, exit
+                        return 1;
                     }
                     var emptyFunction = function() {};
                     for(var i=0; i<target.childNodes.length; i++) {
@@ -112,11 +119,103 @@ var CHESSBOARD = {
                 CHESSBOARD.currentGameTurn=(CHESSBOARD.currentGameTurn === 'w' ? 'b' : 'w'); // switch game turn
             }
     },
+
+
+	_numeric: function(id) {
+	// returns a numeric value for the id (ex: "sqa1")
+        var value = parseInt(CHESSBOARD.numericColumns[id[2]],10) + parseInt(id[3],10);
+		//console.log('numeric : ' + id + ' => ' + value );
+		return value;
+	},
+	
+	_unnumeric: function(value)	{
+	// returns the id of a square from its numeric value
+		//console.log('unnumeric : ' + value + ' => ' + 'sq' + CHESSBOARD.unumericColumns[value[0]] + value[1]);
+		return 'sq' + CHESSBOARD.unumericColumns[value[0]] + value[1];
+	},
+
+    
+    _canMove: function(pieceId, destinationId) {
+    // check if the selected piece can be moved to the destination
+    // returns true if yes, false if no
+        var target = window.document.getElementById(destinationId);
+        var targetPiece = '';
+        for(var i=0; i<target.childNodes.length; i++) {
+            if (target.childNodes[i].tagName === 'IMG' && target.childNodes[i].id !== pieceId) {
+                targetPiece = target.childNodes[i].id;
+                if (targetPiece === 'wking' || targetPiece === 'bking' ) {
+                    return false;
+                }
+            }
+        }
+
+		var numericFrom = CHESSBOARD._numeric(CHESSBOARD.pieces[pieceId].sqId);
+		var numericTo = CHESSBOARD._numeric(destinationId); 
+
+		var numericMove = numericTo - numericFrom;
+		
+        switch(CHESSBOARD.pieces[pieceId].type) {
+            case 'king':
+                break;
+            case 'pawn':
+                var tmpId = "";
+                // simple or double move
+                // ... for white pawns
+                if (pieceId[0] === "w" && (numericMove === 1 || numericMove === 2 && CHESSBOARD.pieces[pieceId].sqId[1] === "2")) {
+                    if (targetPiece) {
+                        return false;   // there is a piece here, but the pawn cannot take it this way
+                    }						
+                    if ( numericMove === 2 ) { // double move : check that there is not something blocking the way
+                        tmpId = CHESSBOARD._unnumeric(numericFrom + 1);
+                        if (window.getElementById(tmpId).childNodes.length > 0) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                // ... for black pawns
+                if (pieceId[0] === "b" && (numericMove === -1 || numericMove === -2 && CHESSBOARD.pieces[pieceId].sqId[1] === "7")) {
+                    if (targetPiece) {
+                        return false;   // there is a piece here, but the pawn cannot take it this way
+                    }						
+                    if ( numericMove === -2 ) { // double move : check that there is not something blocking the way
+                        tmpId = CHESSBOARD._unnumeric(numericFrom - 1);
+                        if (window.getElementById(tmpId).childNodes.length > 0) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                // taking a piece sideways
+                else if ((pieceId[0] === "w" && (numericMove === 11 || numericMove === -9)) || (pieceId[0] === "b" && (numericMove === -11 || numericMove === 9))) {
+                    if (targetPiece) {
+                        return true;
+                    }
+                    return false;
+                }
+                break;
+			case "knight":
+                if (numericMove === 21 
+                    || numericMove === -21  
+                    || numericMove === 19  
+                    || numericMove === -19  
+                    || numericMove === 12  
+                    || numericMove === -12
+                    || numericMove === 8
+                    || numericMove === -8) {
+                    return true;
+                }
+                break;
+
+        }
+        return false;
+    },
         
     _createPieces: function() {
         for (var c in CHESSBOARD.colors) {
             CHESSBOARD.pieces[c+'king'] = {
                     id: c+'king',
+                    type: 'king',
                     order: 0,
                     name : CHESSBOARD.colors[c] + ' king',
                     class : c + 'king',
@@ -126,6 +225,7 @@ var CHESSBOARD = {
             };
             CHESSBOARD.pieces[c + 'queen'] = {
                     id: c+'queen',
+                    type: 'queen',
                     order: 1,
                     name : CHESSBOARD.colors[c] + ' queen',
                     class : c + 'queen',
@@ -135,6 +235,7 @@ var CHESSBOARD = {
             };
             CHESSBOARD.pieces[c + 'rooka'] = {
                     id: c+'rooka',
+                    type: 'rook',
                     order: 2,
                     name : CHESSBOARD.colors[c] + ' rook (a)',
                     class : c + 'rook',
@@ -144,6 +245,7 @@ var CHESSBOARD = {
             };
             CHESSBOARD.pieces[c + 'rookh'] = {
                     id: c+'rookh',
+                    type: 'rook',
                     order: 3,
                     name : CHESSBOARD.colors[c] + ' rook (h)',
                     class : c + 'rook',
@@ -153,6 +255,7 @@ var CHESSBOARD = {
             };
             CHESSBOARD.pieces[c + 'knightb'] = {
                     id: c+'knightb',
+                    type: 'knight',
                     order: 4,
                     name : CHESSBOARD.colors[c] + ' knight (b)',
                     class : c + 'knight',
@@ -162,6 +265,7 @@ var CHESSBOARD = {
             };
             CHESSBOARD.pieces[c + 'knightg'] = {
                     id: c+'knightg',
+                    type: 'knight',
                     order: 2,
                     name : CHESSBOARD.colors[c] + ' knight (g)',
                     class : c + 'knight',
@@ -171,6 +275,7 @@ var CHESSBOARD = {
             };
             CHESSBOARD.pieces[c + 'bishopc'] = {
                     id: c+'bishopc',
+                    type: 'bishop',
                     order: 6,
                     name : CHESSBOARD.colors[c] + ' bishop (c)',
                     class : c + 'bishop',
@@ -180,6 +285,7 @@ var CHESSBOARD = {
             };
             CHESSBOARD.pieces[c + 'bishopf'] = {
                     id: c+'bishopf',
+                    type: 'bishop',
                     order: 7,
                     name : CHESSBOARD.colors[c] + ' bishop (f)',
                     class : c + 'bishop',
@@ -190,6 +296,7 @@ var CHESSBOARD = {
             for (var i in CHESSBOARD.chessBoardColumns) {
                     CHESSBOARD.pieces[c + 'pawn' + CHESSBOARD.chessBoardColumns[i]] = {
                             id: c + 'pawn' + CHESSBOARD.chessBoardColumns[i],
+                            type: 'pawn',
                             order: 7+i,
                             name: CHESSBOARD.colors[c] + ' pawn (' + CHESSBOARD.chessBoardColumns[i] + ')',
                             class: c + 'pawn',
