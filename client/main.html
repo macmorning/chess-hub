@@ -48,10 +48,12 @@
     });
     
     function connect(user) {
+        $('#login_submit').button('disable');
         $.mobile.loading('show');
         CHESSHUB.connect(user,
                 function(response) {                    // callback function for success event
                     $('#login_returnmessage').text(response.returnmessage); // display returned message, be it "welcome" or "keep out"
+                    $('#login_submit').button('enable');
                     $.mobile.loading('hide');
                     if(response.returncode == 'ok'){    // user is connected; start polling for messaging and switch to main page
                         CONTEXT.user = response.user;
@@ -65,6 +67,7 @@
                     }
 				},
                 function() {                       // callback function for error event
+                    $('#login_submit').button('enable');
                     $.mobile.loading('hide');
                     $('#login_returnmessage').text("Error connecting you to the server :(");
                 }
@@ -174,7 +177,7 @@
                         + message.user + ' sits as ' + (command[1] == 'w' ? 'White' : 'Black')
                         + '</p>'
                         + output.html());
-                } else if (command[0] == "leave") {
+                } else if (command[0] === "leave" || command[0] === "join") {
                     var color='';
                     if(CHESSBOARD.playerA == message.user) { CHESSBOARD.setPlayer('A',''); };
                     if(CHESSBOARD.playerB == message.user) { CHESSBOARD.setPlayer('B',''); };
@@ -191,7 +194,7 @@
                     output.html(
                         '<p class="chat_activity"> == ['
                         + message.time + "] "
-                        + message.user + ' left' + color + reason
+                        + message.user + (command[0] === 'leave' ? ' left' + color + reason : ' joined')
                         + '</p>'
                         + output.html());
                 }
@@ -306,8 +309,8 @@
         <span class="mainpage_stats" id="mainpage_stats"></span>
 
         <h3>To search for a game, fill this form and press "search".</h3>
-                <label for="game_search_user">Are you searching for a friend ?</label>
-                <input type="search" name="game_search_user" id="game_search_user">
+                <!--<label for="game_search_user">Are you searching for a friend ?</label>
+                <input type="search" name="game_search_user" id="game_search_user"> -->
                 <form method="POST" action="" data-ajax="false">
                         <label for="game_user_level">What is your self estimated skill ?
                             <a href="#mainpage_popupHelpLevel" data-wrapperels="span" data-mini="true" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>

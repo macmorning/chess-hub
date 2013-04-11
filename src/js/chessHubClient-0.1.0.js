@@ -97,7 +97,7 @@ CHESSHUB = {
     //  queries the server for the users list for the specified channel
     //
     listUsers: function(channel) {
-        console.log('CHESSHUB.listUsers');
+        console.log('CHESSHUB.listUsers'); // TODO: everything ^^;
     },
 
     //
@@ -135,7 +135,6 @@ CHESSHUB = {
     //  starts polling for the specified channel
     //
     listen: function(channel,newMessageCallBack) {
-        console.log('CHESSHUB.listen : adding ' + channel + ' to the channels list : ');
         CHESSHUB.channels[channel] = { counter : 0, name : channel, history : [] };
         if(!newMessageCallBack || Object.getPrototypeOf(newMessageCallBack) !== Function.prototype) { 
             console.log('listen : no handler provided for message');

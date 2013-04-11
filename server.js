@@ -53,6 +53,17 @@ function escapeHtml(unsafe) {
     return false;
 }
 
+function s4() {
+  // generate random string to use as user key
+    return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+}
+
+function guid() {
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
+
 function currTime() {
     // write current time in HH:mm format
     var currentDate = new Date();
@@ -196,15 +207,17 @@ http.createServer(function (req, res) {
 
             if (!users[user]) {
                 users[user] = {};
-                channels['MAIN'].users[user] = {};
-                console.log(currTime() + ' [CONNEC] user: ' + user + ' connected, client: ' + json.clientLib + ', version: ' + json.clientVersion);
                 users[user].lastActivity = new Date();
+                sendMessage(user,'join','game','MAIN');    // send the information to users in that channel
+                channels['MAIN'].addUser(user);
+                console.log(currTime() + ' [CONNEC] user: ' + user + ' connected, client: ' + json.clientLib + ', version: ' + json.clientVersion);
+                var uuid = guid();
                 res.writeHead(200, { 'Content-type': 'application/json'});
                 res.end(JSON.stringify( {
                     returncode: 'ok',
                     returnmessage: 'Welcome ' + user,
                     user: user,
-                    key: 'unique key for ' + user     // TODO : generate a GUID here
+                    key: uuid
                 }));
             } else {
                 if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved'); }
@@ -359,6 +372,7 @@ http.createServer(function (req, res) {
                         ) {
                     if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);}
                     channel.addUser(player);
+                    sendMessage(player,'join','game',channel.id);    // send the information to users in that channel
                     channel.playerB = player;
                     if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... playerB = ' + channel.playerB);}
                     res.writeHead(200, {'Content-Type': 'application/json'});

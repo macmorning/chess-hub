@@ -311,7 +311,7 @@ var CHESSBOARD = {
         }
         
         if (CHESSBOARD.blackPlayer && CHESSBOARD.whitePlayer) {
-            CHESSBOARD.currentGameTurn = 'w';
+            if (!CHESSBOARD.currentGameTurn) { CHESSBOARD.currentGameTurn = 'w';}
         }
     }
 };
