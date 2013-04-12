@@ -104,6 +104,24 @@ var CHESSBOARD = {
     move: function(pieceSelector,destinationSelector) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
+ 
+            // player moves his king, castling is now forbidden
+            if (pieceSelector.attr('id') === 'wking' ) { 
+                CHESSBOARD.whiteCanCastleKingSide = false;
+                CHESSBOARD.whiteCanCastleQueenSide = false;
+            } else if (pieceSelector.attr('id') === 'bking' ) {
+                CHESSBOARD.blackCanCastleKingSide = false;
+                CHESSBOARD.blackCanCastleQueenSide = false;
+            } else if (pieceSelector.attr('id') === 'wrooka' ) {
+                CHESSBOARD.whiteCanCastleQueenSide = false;
+            } else if (pieceSelector.attr('id') === 'wrookh' ) {
+                CHESSBOARD.whiteCanCastleKingSide = false;
+            } else if (pieceSelector.attr('id') === 'brooka' ) {
+                CHESSBOARD.blackCanCastleQueenSide = false;
+            } else if (pieceSelector.attr('id') === 'brookh' ) {
+                CHESSBOARD.blackCanCastleKingSide = false;
+            }
+            
             var marginLeft = destinationSelector.width() * 0.05;  // change this if you change the width of the pieces in chessboard.css
             pieceSelector.animate({ top: "+=" + (destinationSelector.position().top - pieceSelector.position().top) +"px" , left : "+=" + (destinationSelector.position().left - pieceSelector.position().left + marginLeft) +"px" }, 
                         "slow", 
@@ -318,6 +336,7 @@ var CHESSBOARD = {
                 break;
 
 			case "king":
+                operator = 0;
                 if (numericMove === 1
                     || numericMove === -1
                     || numericMove === -11
@@ -326,13 +345,46 @@ var CHESSBOARD = {
                     || numericMove === 9
                     || numericMove === -10
                     || numericMove === 10) {
+
                     return true;
-                }					 
-                break;
+                    
+                } else if (CHESSBOARD._isCheck(pieceId,from) || CHESSBOARD._isCheck(pieceId,destinationId)) {
+                    // the king cannot castle out of check, nor into check
+                    return false; 
+                } else if (numericMove === 20 && CHESSBOARD.whiteCanCastleKingSide && pieceId[0] === 'w') {
+                    // white castling on the king size
+                    operator = 10;
+                } else if (numericMove === 20 && CHESSBOARD.blackCanCastleKingSide && pieceId[0] === 'b') {
+                    // black castling on the king size
+                    operator = 10;
+                } else if (numericMove === -20 && CHESSBOARD.whiteCanCastleQueenSide && pieceId[0] === 'w') {
+                    // white castling on the queen size
+                    operator = -10;
+                } else if (numericMove === -20 && CHESSBOARD.blackCanCastleQueenSide && pieceId[0] === 'b') {
+                    // black castling on the queen size
+                    operator = -10;
+                }
+                
+                if (!operator) { return false; }
+                
+                for (i = numericFrom+operator ; (i <= numericTo && numericMove > 0) || (i >= numericTo && numericMove < 0); i += operator) {
+                    tmpId = CHESSBOARD._unnumeric(i);
+                    
+                    if (window.document.getElementById(tmpId).childNodes.length > 0
+                        && window.document.getElementById(tmpId).childNodes[0].tagName === 'IMG') {
+                        return false;
+                    }
+                }
+                return true;
         }
         return false;
     },
-        
+
+    _isCheck: function(pieceId,destinationId) {
+        // TODO : everything !
+        return false;
+    },
+            
     _createPieces: function() {
         for (var c in CHESSBOARD.colors) {
             CHESSBOARD.pieces[c+'king'] = {
