@@ -86,9 +86,10 @@ TODO
 - [x] spawn the pieces and place them
 - [x] handle the moves
 - [x] enforce pieces move restrictions
-- [ ] enforce other rules (check, check mate, castling, en passant)
 - [x] finish the "sit" process
-
+- [ ] enforce other rules (check, check mate, castling, en passant)
+- [ ] display whose turn it is
+- [ ] allow to show last move
 
 ___
 client
@@ -118,4 +119,4 @@ TODO
 - [ ] finish the main page design
 - [ ] save the context into local storage
 - [ ] handle reconnection (or page refresh)
-
+- [ ] show a list of users in the game channel (not in MAIN)
