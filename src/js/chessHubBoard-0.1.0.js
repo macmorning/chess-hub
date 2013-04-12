@@ -151,19 +151,23 @@ var CHESSBOARD = {
                 }
             }
         }
-
-		var numericFrom = CHESSBOARD._numeric(CHESSBOARD.pieces[pieceId].sqId);
-		var numericTo = CHESSBOARD._numeric(destinationId); 
-
+        var from = CHESSBOARD.pieces[pieceId].sqId;
+		var numericFrom = parseInt(CHESSBOARD._numeric(from),10);
+		var numericTo = parseInt(CHESSBOARD._numeric(destinationId),10); 
 		var numericMove = numericTo - numericFrom;
 		
+//      We use numeric values for the squares to compute the pieces allowed moves
+//		a1 = 11
+//		b1 = 21
+//		c2 = 32
+//      For example, a white pawn can move forward, one case at a time, which means its move must be equal to 1 (a3 - a2 == 13 - 12 = 1),
+//      except if has not moved yet, in which case its move can be 2, or if it's taking a black piece. Its numerical move will then be either 11 or -9
+		
         switch(CHESSBOARD.pieces[pieceId].type) {
-            case 'king':
-                break;
             case 'pawn':
                 // simple or double move
                 // ... for white pawns
-                if (pieceId[0] === "w" && (numericMove === 1 || numericMove === 2 && CHESSBOARD.pieces[pieceId].sqId[3] === "2")) {
+                if (pieceId[0] === "w" && (numericMove === 1 || numericMove === 2 && from[3] === "2")) {
                     if (targetPiece) {
                         return false;   // there is a piece here, but the pawn cannot take it this way
                     }						
@@ -176,7 +180,7 @@ var CHESSBOARD = {
                     return true;
                 }
                 // ... for black pawns
-                if (pieceId[0] === "b" && (numericMove === -1 || numericMove === -2 && CHESSBOARD.pieces[pieceId].sqId[3] === "7")) {
+                else if (pieceId[0] === "b" && (numericMove === -1 || numericMove === -2 && from[3] === "7")) {
                     if (targetPiece) {
                         return false;   // there is a piece here, but the pawn cannot take it this way
                     }						
@@ -194,10 +198,13 @@ var CHESSBOARD = {
                         return true;
                     }
                     return false;
+                } else {
+                    return false;
                 }
                 break;
 			
 			case "knight":
+                // surprisingly, the knight's move is the easiest to test because it "jumps" to the target square
                 if (numericMove === 21 
                     || numericMove === -21  
                     || numericMove === 19  
@@ -207,33 +214,121 @@ var CHESSBOARD = {
                     || numericMove === 8
                     || numericMove === -8) {
                     return true;
+                } else {
+                    return false;
                 }
                 break;
                 
-                case "bishop":
-                    if ((numericMove%11 === 0 && numericMove > 0 && parseInt(CHESSBOARD.pieces[pieceId].sqId[3],10) < parseInt(destinationId[3],10) && CHESSBOARD.pieces[pieceId].sqId[2] < destinationId[2])
-                        || (numericMove%11 === 0 && numericMove < 0 && parseInt(CHESSBOARD.pieces[pieceId].sqId[3],10) > parseInt(destinationId[3],10) && CHESSBOARD.pieces[pieceId].sqId[2] > destinationId[2])
-                        || (numericMove%9 === 0 && numericMove > 0 && parseInt(CHESSBOARD.pieces[pieceId].sqId[3],10) > parseInt(destinationId[3],10) && CHESSBOARD.pieces[pieceId].sqId[2] < destinationId[2])
-                        || (numericMove%9 === 0 && numericMove < 0 && parseInt(CHESSBOARD.pieces[pieceId].sqId[3],10) < parseInt(destinationId[3],10) && CHESSBOARD.pieces[pieceId].sqId[2] > destinationId[2])) {
-                        if(numericMove%11 === 0 && numericMove > 0) {
-                            operator = 11;
-                        } else if(numericMove%11 === 0 && numericMove < 0) {
-                            operator = -11;
-                        } else if(numericMove%9 === 0 && numericMove > 0) {
-                            operator = 9;
-                        } else if(numericMove%9 === 0 && numericMove < 0) {
-                            operator = -9;
-                        }
-                        for (i = numericFrom+operator ; (i < numericTo && numericMove > 0) || (i > numericTo && numericMove < 0); i += operator) {
-                            tmpId = CHESSBOARD._unnumeric(i);
-                            if (window.document.getElementById(tmpId).childNodes.length > 0) {
-                                return false;
-                            }
-                        }  
-                        return true;
-                    }
-                    break;
+            case "bishop":
+                // is it heading in diagonal direction ?
+                if ((numericMove%11 === 0 && numericMove > 0 && parseInt(from[3],10) < parseInt(destinationId[3],10) && from[2] < destinationId[2])
+                    || (numericMove%11 === 0 && numericMove < 0 && parseInt(from[3],10) > parseInt(destinationId[3],10) && from[2] > destinationId[2])
+                    || (numericMove%9 === 0 && numericMove > 0 && parseInt(from[3],10) > parseInt(destinationId[3],10) && from[2] < destinationId[2])
+                    || (numericMove%9 === 0 && numericMove < 0 && parseInt(from[3],10) < parseInt(destinationId[3],10) && from[2] > destinationId[2])) {
 
+                    // check there is no piece on the way
+                    if(numericMove%11 === 0 && numericMove > 0) {
+                        operator = 11;
+                    } else if(numericMove%11 === 0 && numericMove < 0) {
+                        operator = -11;
+                    } else if(numericMove%9 === 0 && numericMove > 0) {
+                        operator = 9;
+                    } else if(numericMove%9 === 0 && numericMove < 0) {
+                        operator = -9;
+                    }
+                    for (i = numericFrom+operator ; (i < numericTo && numericMove > 0) || (i > numericTo && numericMove < 0); i += operator) {
+                        tmpId = CHESSBOARD._unnumeric(i);
+                        if (window.document.getElementById(tmpId).childNodes.length > 0
+                            && window.document.getElementById(tmpId).childNodes[0].tagName === 'IMG') {
+                            return false;
+                        }
+                    }  
+                    return true;
+                } else {
+                    return false;
+                }
+                break;
+
+			case "rook":
+				if (from[2] === destinationId[2] 
+					|| from[3] === destinationId[3] ) {
+					if(from[2] === destinationId[2] && numericMove > 0) {
+						operator = 1;
+					} else if(from[2] === destinationId[2] && numericMove < 0) {
+						operator = -1;
+					} else if(from[3] === destinationId[3] && numericMove > 0) {
+						operator = 10;
+					} else if(from[3] === destinationId[3] && numericMove < 0) {
+						operator = -10;
+					}
+
+					for (i = numericFrom+operator ; (i < numericTo && numericMove > 0) || (i > numericTo && numericMove < 0); i += operator) {
+						tmpId = CHESSBOARD._unnumeric(i);
+						if (window.document.getElementById(tmpId).childNodes.length > 0
+                            && window.document.getElementById(tmpId).childNodes[0].tagName === 'IMG') {
+							return false;
+						}
+					}  
+					return true;
+				}
+				break;
+
+            case "queen":
+                if ((numericMove%11 === 0 && numericMove > 0 && parseInt(from[3],10) < parseInt(destinationId[3],10) && from[2] < destinationId[2])
+                || (numericMove%11 === 0 && numericMove < 0 && parseInt(from[3],10) > parseInt(destinationId[3],10) && from[2] > destinationId[2])
+                || (numericMove%9 === 0 && numericMove > 0 && parseInt(from[3],10) > parseInt(destinationId[3],10) && from[2] < destinationId[2])
+                || (numericMove%9 === 0 && numericMove < 0 && parseInt(from[3],10) < parseInt(destinationId[3],10) && from[2] > destinationId[2])
+                || from[2] === destinationId[2] 
+                || from[3] === destinationId[3]) {
+                    if(numericMove%11 === 0 && numericMove > 0) {
+                        operator = 11;
+                    }
+                    else if(numericMove%11 === 0 && numericMove < 0) {
+                        operator = -11;
+                    }
+                    else if(numericMove%9 === 0 && numericMove > 0) {
+                        operator = 9;
+                    }
+                    else if(numericMove%9 === 0 && numericMove < 0) {
+                        operator = -9;
+                    }
+                    else if(from[2] === destinationId[2] && numericMove > 0) {
+                        operator = 1;
+                    }
+                    else if(from[2] === destinationId[2] && numericMove < 0) {
+                        operator = -1;
+                    }
+                    else if(from[3] === destinationId[3] && numericMove > 0) {
+                        operator = 10;
+                    }
+                    else if(from[3] === destinationId[3] && numericMove < 0) {
+                        operator = -10;
+                    }
+
+                    for (i = numericFrom+operator ; (i < numericTo && numericMove > 0) || (i > numericTo && numericMove < 0); i += operator) {
+                        tmpId = CHESSBOARD._unnumeric(i);
+                        if (window.document.getElementById(tmpId).childNodes.length > 0
+                            && window.document.getElementById(tmpId).childNodes[0].tagName === 'IMG') {
+                            return false;
+                        }
+                    }  
+
+                    return true;
+                }
+                break;
+
+			case "king":
+                if (numericMove === 1
+                    || numericMove === -1
+                    || numericMove === -11
+                    || numericMove === 11
+                    || numericMove === -9
+                    || numericMove === 9
+                    || numericMove === -10
+                    || numericMove === 10) {
+                    return true;
+                }					 
+                break;
         }
         return false;
     },
