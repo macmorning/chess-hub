@@ -13,15 +13,10 @@ ___
 Current state
 ---------
 
-    server  : |=====================================================================>                              | 70%
+    server  : |===============================================================================>                    | 80%
 
-Handles connection, polling & messaging (through channels), serving static files, searching for games, getting stats.
-Need to handle user timeout, not sure how to do it yet.
+    client  : |====================================================================================>               | 85%
 
-
-    client  : |==========================================================================>                         | 75%
-
-All the basics are here. Need to handle the user key for reconnection, and enforce chess rules.
 
 
 ___
@@ -29,13 +24,13 @@ server - the Hub
 =========
 
 Built with NodeJS. No framework.
+Using gruntj with jslint & uglify.
 
 1st version Goals :
 --------
 - do everything with nodejs : routing, serving static files, handling connections and messaging
 - simple login (no login/password database, IRC style) : give a login name, if it's free then you're in
 - use a simple dialog protocol based on json post requests, allowing the use of custom clients
-- should enforce chess rules (don't delegate all to clients)
 - messaging : 1 main lobby, 1 channel per game, direct messages, IRC style ("XX has joined #MyGame", "@YY Hey !", ...)
 - find a partner based on : self-estimated level (beginner, experienced, master, great master)
 - learning games : have a willing master+ and a willing beginner play together
@@ -49,12 +44,13 @@ Nice to have :
 - web sockets connection
 - allow a user to watch an ongoing game
 - allow a user to open multiple boards
+- should enforce chess rules (don't delegate all to clients)
 
 
 TODO
 ---------
 - [ ] handle the user key (to avoid user impersonnification)
-- [ ] handle user timeout
+- [x] handle user timeout
 - [ ] handle multiple channel polling for each client
 
 
@@ -71,9 +67,7 @@ Library that handles connection and messaging with the Hub.
 TODO
 ---------
 - [ ] handle the user key (to avoid user impersonnification)
-- [ ] handle user timeout
 - [ ] handle multiple channel polling for each client
-
 
 
 ___
@@ -91,8 +85,9 @@ TODO
 - [x] generated pieces objects
 - [x] spawn the pieces and place them
 - [x] handle the moves
-- [ ] enforce pieces move restrictions
-- [x] finsih the "sit" process
+- [x] enforce pieces move restrictions
+- [ ] enforce other rules (check, check mate, castling, en passant)
+- [x] finish the "sit" process
 
 
 ___
@@ -120,7 +115,7 @@ TODO
 ---------
 - [x] correctly place & render the board
 - [x] add chat to games
-- [x] finish the main page design
+- [ ] finish the main page design
 - [ ] save the context into local storage
 - [ ] handle reconnection (or page refresh)
 
