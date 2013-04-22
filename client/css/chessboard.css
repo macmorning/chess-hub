@@ -224,7 +224,7 @@ img.bpawn {
 }
 
 /* breakpoint at 650px*/
-@media all and (min-width: 40em) and (min-height: 40em) {
+@media all and (min-width: 40em) {
     #chessBoard {
         width:40em; 
         height:40em; 
@@ -254,7 +254,7 @@ img.bpawn {
 }
 
 /* breakpoint at 864px width : Graveyards are moved to the right side of the board */
-@media all and (min-width: 54em){
+@media all and (min-width: 54em) and (min-height: 42em){
     #chessBoard {
         margin: 0.5em 0.5em 0 0.5em;
         float:left;
@@ -279,7 +279,7 @@ img.bpawn {
 }
 
 /* breakpoint at 1024px : Chat is moved to the right side of the screen */
-@media all and (min-width: 64em){
+@media all and (min-width: 64em) and (min-height: 42em){
     #boardpage_chat {
         margin: 0.5em 0.5em 0 53em;
         width:auto;
