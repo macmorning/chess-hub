@@ -242,10 +242,6 @@ CHESSHUB = {
     //  
     //
     getStats: function (successCallBack, errorCallBack) {
-        if(!CHESSHUB.user) {
-            console.log('CHESSHUB.getStats error - Not connected');
-            return;
-        }
         var data = { user: CHESSHUB.user,key: CHESSHUB.key } ;
         $.ajax({
             type: 'POST',

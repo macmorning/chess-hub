@@ -11,9 +11,8 @@
     <script src="lib/jquery/jquery.mobile-1.3.0.min.js"></script>
     <script src="js/chessHubClient-0.1.0.min.js"></script>
     <script src="js/chessHubBoard-0.1.0.min.js"></script>
-<!--    <script src="js/chessHubClient-0.1.0.min.js"></script>-->
-<!--    <script src="js/chessHubBoard-0.1.0.min.js"></script>-->
-  <script>
+
+    <script>
 
     ;CONTEXT = {
         user:"",
@@ -23,6 +22,7 @@
         currentGameID: ''
     };
 
+    // current browser doesn't have a console
     if ( ! window.console ) console = { log: function(){} };
     
     try { 
@@ -45,8 +45,9 @@
                 searchGame($('#game_user_level').val(),$('#game_lower_ok').val(),$('#game_higher_ok').val(),$('#game_timer').val());
         });
         $("#loginpage_footer").html(CHESSHUB.name + " version " + CHESSHUB.version);
+        getStats('login_stats');
 //        logoff();
-//        $('#login_username').focus();
+        $('#login_username').focus();
     });
     
     function connect(user) {
@@ -61,14 +62,14 @@
                         CONTEXT.user = response.user;
                         CONTEXT.key = response.key;
                         console.log(CONTEXT.user + ' connected; key : ' + CONTEXT.key);
-                        getStats();
+                        getStats('mainpage_stats');
                         CHESSHUB.listen('MAIN',
                                 function(message) { addMessage(message); }
                             );
                         $.mobile.changePage($("#mainpage"));
                     }
 				},
-                function() {                       // callback function for error event
+                function() {    // callback function for error event
                     $('#login_submit').button('enable');
                     $.mobile.loading('hide');
                     $('#login_returnmessage').text("Error connecting you to the server :(");
@@ -77,7 +78,7 @@
         return 0;
     }
 
-    function getStats() {
+    function getStats(destinationDiv) {
         CHESSHUB.getStats(function(response) {
                     console.log(response);
                     var totalGames = parseInt(response.gamesTimed10Pending) 
@@ -86,9 +87,9 @@
                             + parseInt(response.gamesTimed5Started)
                             + parseInt(response.gamesNonTimedPending)
                             + parseInt(response.gamesNonTimedStarted);
-                    $('#mainpage_stats').html('There are currently ' + response.users + ' players in this hub, seated at ' + totalGames + ' tables.');
+                    $('#'+destinationDiv).html('There are currently ' + response.users + ' players in this hub, seated at ' + totalGames + ' tables.');
                 },
-                function() {
+                function() {    // callback function for error event
                 }
         );
     }
@@ -285,6 +286,7 @@
                 <input type='text' id="login_username" onkeypress="{if (event.keyCode==13 && this.value !== '') connect(this.value)}">
                 <button id="login_submit" type="submit" data-theme="a">Submit</button>
                 <span class="info" id="login_returnmessage"></span>
+                <span class="info" id="login_stats"></span>
         </div>
     <div id='loginpage_footer'></div>        <!-- version goes here -->
     </div>

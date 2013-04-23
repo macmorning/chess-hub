@@ -508,7 +508,7 @@ http.createServer(function (req, res) {
             var json = {};
             try { json = JSON.parse(data); }
             catch(err) { console.log(err); console.log(data); var json= {};}
-            user = escapeHtml(json.user);
+            user = escapeHtml(json.user) || 'unknown';
             var gamesTimed10Started = 0;
             var gamesTimed10Pending = 0;
             var gamesTimed5Started = 0;

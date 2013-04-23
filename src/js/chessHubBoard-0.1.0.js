@@ -21,87 +21,50 @@ var CHESSBOARD = {
     whiteCanCastleQueenSide: true,
     currentGameTurn: '',            // 'w' or 'b'
     gameHistory: [],                // turns history array
+
+    ///////////////////////////////
+    // UTILITIES
+    ///////////////////////////////
     numericColumns: {'a':10,'b':20,'c':30,'d':40,'e':50,'f':60,'g':70,'h':80},
     unnumericColumns: {1:"a",2:"b",3:"c",4:"d",5:"e",6:"f",7:"g",8:"h"},
 
-    mouseDownHandler: function(ev) {            // using a mouse down event here : it's more user friendly than drag&drop when you are using a touch-enabled device
-        ev.stopPropagation();   // stop propagation : we don't want the click event to bubble
+	_numeric: function(id) {
+	// returns a numeric value for the id (ex: "sqa1")
+        var value = parseInt(CHESSBOARD.numericColumns[id[2]],10) + parseInt(id[3],10);
+		return value;
+	},
+	
+	_unnumeric: function(value)	{
+	// returns the id of a square from its numeric value
+        var textValue = value + "";
+		return 'sq' + CHESSBOARD.unnumericColumns[textValue[0]] + textValue[1];
+	},
 
-        // user is not holding a piece yet and is clicking on one, but the clicked piece is not the right color
-        if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece 
-            && (ev.target.id[0] !== CHESSBOARD.currentGameTurn 
-                || CHESSBOARD.pieces[ev.target.id].sqId === 'wGraveyard' || CHESSBOARD.pieces[ev.target.id].sqId === 'bGraveyard'
-                || ev.target.id[0] === "w" && CHESSBOARD.whitePlayer !== CONTEXT.user  
-                || ev.target.id[0] === "b" && CHESSBOARD.blackPlayer !== CONTEXT.user)) {
-            return 0;
-        }
-        
-        // user is not holding a piece yet and is clicking on one
-        if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece) {
-            CHESSBOARD.selectedPiece = $("#" + ev.target.id);
-            $("#"+CHESSBOARD.pieces[ev.target.id].sqId).addClass("selected");
-        } 
-        
-        // user is holding a piece and is selecting another one, of the same color
-        else if(ev.target.tagName === 'IMG' && CHESSBOARD.selectedPiece && CHESSBOARD.selectedPiece.attr('id') !== ev.target.id && CHESSBOARD.selectedPiece.attr('id')[0] === ev.target.id[0]) {     
-            $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
-            CHESSBOARD.selectedPiece = $("#" + ev.target.id);
-            $("#"+CHESSBOARD.pieces[ev.target.id].sqId).addClass("selected");
-        } 
-        
-        // user is holding a piece and is selecting the same piece again
-        else if(ev.target.tagName === 'IMG' && CHESSBOARD.selectedPiece && CHESSBOARD.selectedPiece.attr('id') === ev.target.id) {
-            $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
-            CHESSBOARD.selectedPiece = '';
-        } 
-        
-        // user is holding a piece and is clicking on an empty square or a piece of different color
-        else if((ev.target.tagName === 'DIV' || ev.target.tagName === 'IMG' && CHESSBOARD.selectedPiece.attr('id')[0] !== ev.target.id[0] && CHESSBOARD.pieces[ev.target.id].sqId !== '') && CHESSBOARD.selectedPiece) {
-                    var target = ev.target;
-                    while(target.tagName !== 'DIV'){     // if the target was not a DIV, go up in the DOM to find the first DIV
-                        target=target.parentNode;
-                    }
-                    
-                    if (!CHESSBOARD._canMove(CHESSBOARD.selectedPiece.attr('id'),target.id)) { 
-                        // if held piece cannot be moved to target square, exit
-                        return 1;
-                    }
-                    var emptyFunction = function() {};
-                    for(var i=0; i<target.childNodes.length; i++) {
-                        if (target.childNodes[i].tagName === 'IMG' && target.childNodes[i].id !== CHESSBOARD.selectedPiece.attr('id')) {
-                            var p = target.childNodes[i];
-                            console.log('piece taken : ' + p.title);
-                            var pieceSelector = $('#'+p.id);
-                            var destinationSelector = $('#'+p.id[0]+'Graveyard');
-                            CHESSBOARD.move(pieceSelector,destinationSelector);
-                            CHESSHUB.sendMessage("move-" + pieceSelector.attr('id') + "-" + destinationSelector.attr('id'),
-                                 CHESSBOARD.gameID,
-                                 'game',
-                                 emptyFunction,
-                                 emptyFunction
-                                 );
-                            break;
-                        }
-                    }
-                    $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
-                    CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));
-                    CHESSBOARD._verifyCheck();
-                    // send the move to the server
-                    CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
-                         CHESSBOARD.gameID,
-                         'game',
-                         emptyFunction,
-                         emptyFunction
-                         );
-                    CHESSBOARD.selectedPiece='';
-        } 
-        
-        // unexpected click event
-        else {
-            console.log('Unhandled case : ' + ev.target.id);
+
+
+    ///////////////////////////////
+    // VIEW 
+    ///////////////////////////////
+    _markSquare: function(squareId,cssClass,bool) {
+        if(bool) {
+            try {
+                $("#"+squareId).addClass(cssClass); // JQUERY
+            } catch(err) {
+                console.log(squareId + ' cannot be marked as checked.');
+                return false;
+            }
+            return true;
+        } else {
+            try {
+                $("#"+squareId).removeClass(cssClass);  // JQUERY
+            } catch(err) {
+                console.log(squareId + ' cannot be unmarked as checked.');
+                return false;
+            }
+            return true;
         }
     },
-    
+
     move: function(pieceSelector,destinationSelector) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
@@ -124,6 +87,7 @@ var CHESSBOARD = {
             }
             
             var marginLeft = destinationSelector.width() * 0.05;  // change this if you change the width of the pieces in chessboard.css
+            // JQUERY
             pieceSelector.animate({ top: "+=" + (destinationSelector.position().top - pieceSelector.position().top) +"px" , left : "+=" + (destinationSelector.position().left - pieceSelector.position().left + marginLeft) +"px" }, 
                         "slow", 
                         undefined, 
@@ -139,21 +103,110 @@ var CHESSBOARD = {
             }
     },
 
+    flip: function() {
+    // inverses the board without reinitializing it
+        var tmpchessBoardColumns = {1:CHESSBOARD.chessBoardColumns[8], 
+                                   2:CHESSBOARD.chessBoardColumns[7],
+                                   3:CHESSBOARD.chessBoardColumns[6], 
+                                   4:CHESSBOARD.chessBoardColumns[5], 
+                                   5:CHESSBOARD.chessBoardColumns[4], 
+                                   6:CHESSBOARD.chessBoardColumns[3], 
+                                   7:CHESSBOARD.chessBoardColumns[2], 
+                                   8:CHESSBOARD.chessBoardColumns[1]};
+        CHESSBOARD.chessBoardColumns = tmpchessBoardColumns;
+        CHESSBOARD.chessBoardRows.reverse();
+        // JQUERY
+        $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
+        $('#wGraveyard').empty();
+        $('#bGraveyard').empty();
+        CHESSBOARD._drawBoard(); 
+        CHESSBOARD._spawnPieces();
+    },
+    
 
-	_numeric: function(id) {
-	// returns a numeric value for the id (ex: "sqa1")
-        var value = parseInt(CHESSBOARD.numericColumns[id[2]],10) + parseInt(id[3],10);
-		//console.log('numeric : ' + id + ' => ' + value );
-		return value;
-	},
-	
-	_unnumeric: function(value)	{
-	// returns the id of a square from its numeric value
-        var textValue = value + "";
-//        console.log('unnumeric : ' + value + ' => ' + 'sq' + CHESSBOARD.unnumericColumns[textValue[0]] + textValue[1]);
-		return 'sq' + CHESSBOARD.unnumericColumns[textValue[0]] + textValue[1];
-	},
+    ///////////////////////////////
+    // CONTROLLER
+    ///////////////////////////////
 
+    mouseDownHandler: function(ev) {            // using a mouse down event here : it's more user friendly than drag&drop when you are using a touch-enabled device
+        ev.stopPropagation();   // stop propagation : we don't want the click event to bubble
+
+        // user is not holding a piece yet and is clicking on one, but the clicked piece is not the right color
+        if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece 
+            && (ev.target.id[0] !== CHESSBOARD.currentGameTurn 
+                || CHESSBOARD.pieces[ev.target.id].sqId === 'wGraveyard' || CHESSBOARD.pieces[ev.target.id].sqId === 'bGraveyard'
+                || ev.target.id[0] === "w" && CHESSBOARD.whitePlayer !== CONTEXT.user  
+                || ev.target.id[0] === "b" && CHESSBOARD.blackPlayer !== CONTEXT.user)) {
+            return 0;
+        }
+        
+        // user is not holding a piece yet and is clicking on one
+        if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece) {
+            CHESSBOARD.selectedPiece = $("#" + ev.target.id);   // JQUERY
+            CHESSBOARD._markSquare(CHESSBOARD.pieces[ev.target.id].sqId,"selected",true);
+        } 
+        
+        // user is holding a piece and is selecting another one, of the same color
+        else if(ev.target.tagName === 'IMG' && CHESSBOARD.selectedPiece && CHESSBOARD.selectedPiece.attr('id') !== ev.target.id && CHESSBOARD.selectedPiece.attr('id')[0] === ev.target.id[0]) {     
+            CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
+            CHESSBOARD.selectedPiece = $("#" + ev.target.id);   // JQUERY
+            CHESSBOARD._markSquare(CHESSBOARD.pieces[ev.target.id].sqId,"selected",true);
+        } 
+        
+        // user is holding a piece and is selecting the same piece again
+        else if(ev.target.tagName === 'IMG' && CHESSBOARD.selectedPiece && CHESSBOARD.selectedPiece.attr('id') === ev.target.id) {
+            CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
+            CHESSBOARD.selectedPiece = '';
+        } 
+        
+        // user is holding a piece and is clicking on an empty square or a piece of different color
+        else if((ev.target.tagName === 'DIV' || ev.target.tagName === 'IMG' && CHESSBOARD.selectedPiece.attr('id')[0] !== ev.target.id[0] && CHESSBOARD.pieces[ev.target.id].sqId !== '') && CHESSBOARD.selectedPiece) {
+                    var target = ev.target;
+                    while(target.tagName !== 'DIV'){     // if the target was not a DIV, go up in the DOM to find the first DIV
+                        target=target.parentNode;
+                    }
+                    
+                    if (!CHESSBOARD._canMove(CHESSBOARD.selectedPiece.attr('id'),target.id)) { 
+                        // if held piece cannot be moved to target square, exit
+                        return 1;
+                    }
+                    var emptyFunction = function() {};
+                    for(var i=0; i<target.childNodes.length; i++) { // check if a piece is taken
+                        if (target.childNodes[i].tagName === 'IMG' && target.childNodes[i].id !== CHESSBOARD.selectedPiece.attr('id')) {
+                            // a piece is taken, move it to its graveyard
+                            var p = target.childNodes[i];
+                            console.log('piece taken : ' + p.title);
+                            var pieceSelector = $('#'+p.id);    // JQUERY
+                            var destinationSelector = $('#'+p.id[0]+'Graveyard');
+                            CHESSBOARD.move(pieceSelector,destinationSelector);
+                            CHESSHUB.sendMessage("move-" + pieceSelector.attr('id') + "-" + destinationSelector.attr('id'),
+                                 CHESSBOARD.gameID,
+                                 'game',
+                                 emptyFunction,
+                                 emptyFunction
+                                 );
+                            break;
+                        }
+                    }
+                    CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
+                    CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));   // JQUERY
+                    CHESSBOARD._verifyCheck();
+                    // send the move to the server
+                    CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
+                         CHESSBOARD.gameID,
+                         'game',
+                         emptyFunction,
+                         emptyFunction
+                         );
+                    CHESSBOARD.selectedPiece='';
+        } 
+        
+        // unexpected click event
+        else {
+            console.log('Unhandled case : ' + ev.target.id);
+        }
+    },
+    
     
     _canMove: function(pieceId, destinationId) {
     // check if the selected piece can be moved to the destination
@@ -179,7 +232,7 @@ var CHESSBOARD = {
 //		a1 = 11
 //		b1 = 21
 //		c2 = 32
-//      For example, a white pawn can move forward, one case at a time, which means its move must be equal to 1 (a3 - a2 == 13 - 12 = 1),
+//      For example, a white pawn can move forward, one case at a time, which means its move must be equal to 1 (a3 - a2 == 13 - 12 == 1),
 //      except if has not moved yet, in which case its move can be 2, or if it's taking a black piece. Its numerical move will then be either 11 or -9
 		
         switch(CHESSBOARD.pieces[pieceId].type) {
@@ -386,7 +439,8 @@ var CHESSBOARD = {
             return false;
         }
         for (var p in CHESSBOARD.pieces) {     // parse the pieces array
-            if (CHESSBOARD.pieces[p].type === 'king' || CHESSBOARD.pieces[p].sqId[0] !== 's' || p[0] === pieceId[0]) {  // the piece is not on a square or is of the same color as the king
+            if (CHESSBOARD.pieces[p].type === 'king' || CHESSBOARD.pieces[p].sqId[0] !== 's' || p[0] === pieceId[0]) {  
+                // the piece is a king, or not on a square, or of the same color as the king
                 continue;
             } else if (CHESSBOARD._canMove(p,destinationId)) {
                 console.log(pieceId + ' checked at square ' + destinationId + ' by ' + p);
@@ -400,10 +454,11 @@ var CHESSBOARD = {
         var kings = ['bking','wking'];
         kings.forEach(function(king,index) {
             if (CHESSBOARD._isCheck(king, CHESSBOARD.pieces[king].sqId)) {
-                $("#"+CHESSBOARD.pieces[king].sqId).addClass("check");
+                CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',true);
                 console.log(king + ' is check');
             } else {
-                $("#"+CHESSBOARD.pieces[king].sqId).removeClass("check");
+                console.log(king + ' is NOT check');
+                CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',false);
             }
         });
         return false;
@@ -506,8 +561,8 @@ var CHESSBOARD = {
         }
     },
     _spawnPieces:function() {
-        var bGraveyard = $('#bGraveyard');
-        var wGraveyard = $('#wGraveyard');
+        var bGraveyard = $('#bGraveyard');  // JQUERY
+        var wGraveyard = $('#wGraveyard');  // JQUERY
         for (var piece in CHESSBOARD.pieces) {
                var pieceRepresentation = '<img \
                         class="piece '+ CHESSBOARD.pieces[piece].class +'" \
@@ -517,13 +572,14 @@ var CHESSBOARD = {
                         id="' + CHESSBOARD.pieces[piece].id + '"> \
                   </img>';
                if (CHESSBOARD.pieces[piece].id[0] === 'w' && CHESSBOARD.pieces[piece].sqId === '' ) {   // piece is white and captured
-                    wGraveyard.append(pieceRepresentation);
+                    wGraveyard.append(pieceRepresentation); // JQUERY
                } else if (CHESSBOARD.pieces[piece].id[0] === 'b' && CHESSBOARD.pieces[piece].sqId === '' ) {  // piece is black and captured
-                    bGraveyard.append(pieceRepresentation);
+                    bGraveyard.append(pieceRepresentation); // JQUERY
                } else {
-                    $('#' + CHESSBOARD.pieces[piece].sqId).append(pieceRepresentation);
+                    $('#' + CHESSBOARD.pieces[piece].sqId).append(pieceRepresentation); // JQUERY
                }
         }
+        // JQUERY
         $(".piece").bind('vmousedown',function(event) { CHESSBOARD.mouseDownHandler(event); })  // add the vmousedown (jQuery Mobile) event to all pieces
             .on('dragstart', function(event) { event.preventDefault(); });                      // prevent dragging the image
     },
@@ -540,30 +596,12 @@ var CHESSBOARD = {
             htmlRow += '</div>';
             board.append(htmlRow);
          }
-         $(".chessBoardSquare").bind('vmousedown',function(event) { CHESSBOARD.mouseDownHandler(event); });
-    },
-    
-    flip: function() {
-    // inverses the board without reinitializing it
-        var tmpchessBoardColumns = {1:CHESSBOARD.chessBoardColumns[8], 
-                                   2:CHESSBOARD.chessBoardColumns[7],
-                                   3:CHESSBOARD.chessBoardColumns[6], 
-                                   4:CHESSBOARD.chessBoardColumns[5], 
-                                   5:CHESSBOARD.chessBoardColumns[4], 
-                                   6:CHESSBOARD.chessBoardColumns[3], 
-                                   7:CHESSBOARD.chessBoardColumns[2], 
-                                   8:CHESSBOARD.chessBoardColumns[1]};
-        CHESSBOARD.chessBoardColumns = tmpchessBoardColumns;
-        CHESSBOARD.chessBoardRows.reverse();
-        $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
-        $('#wGraveyard').empty();
-        $('#bGraveyard').empty();
-        CHESSBOARD._drawBoard(); 
-        CHESSBOARD._spawnPieces();
+         $(".chessBoardSquare").bind('vmousedown',function(event) { CHESSBOARD.mouseDownHandler(event); }); // JQUERY
     },
     
     initChessBoard: function(gameID) {
         CHESSBOARD.pieces=[];
+        // JQUERY
         $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
         $('#wGraveyard').empty();
         $('#bGraveyard').empty();
@@ -587,7 +625,7 @@ var CHESSBOARD = {
     },
     
     sit: function(color) {
-        $('#'+color+'Sit').css('display','none');
+        $('#'+color+'Sit').css('display','none');   // JQUERY
         CHESSHUB.sendMessage('sit-' + color, 
             CHESSBOARD.gameID, 
             'game', 
@@ -607,12 +645,12 @@ var CHESSBOARD = {
             CHESSBOARD.playerB = value;
         } else if (parameter === 'w') {
             CHESSBOARD.whitePlayer = value;
-            if(value) { $('#wSit').css('display','none'); }
+            if(value) { $('#wSit').css('display','none'); } // JQUERY
             else { $('#wSit').css('display','block'); }
         } else if (parameter === 'b') {
             CHESSBOARD.blackPlayer = value;
             if(value) { $('#bSit').css('display','none'); }
-            else { $('#bSit').css('display','block'); }
+            else { $('#bSit').css('display','block'); } // JQUERY
         }
         
         if (CHESSBOARD.blackPlayer && CHESSBOARD.whitePlayer) {
