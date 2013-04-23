@@ -94,6 +94,7 @@ var CHESSBOARD = {
                         function () {
                             pieceSelector.prependTo(destinationSelector);
                             pieceSelector.css( { top : "0px", left : "0px"} );
+                            CHESSBOARD._verifyCheck(); 
                         }
                     );
             CHESSBOARD.pieces[pieceSelector.attr('id')].sqId = destinationSelector.attr('id');
@@ -190,7 +191,6 @@ var CHESSBOARD = {
                     }
                     CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
                     CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));   // JQUERY
-                    CHESSBOARD._verifyCheck();
                     // send the move to the server
                     CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
                          CHESSBOARD.gameID,
