@@ -13,9 +13,9 @@ ___
 Current state
 ---------
 
-    server  : |===============================================================================>                    | 80%
+    server  : |=====================================================================>                              | 70%
 
-    client  : |====================================================================================>               | 85%
+    client  : |==========================================================================>                         | 75%
 
 
 
@@ -52,7 +52,9 @@ TODO
 - [ ] handle the user key (to avoid user impersonnification)
 - [x] handle user timeout
 - [ ] handle multiple channel polling for each client
-
+- [ ] share code with clients (pieces and board classes)
+- [ ] add a periodic stats updater to replace the ondemand function
+- [ ] handle timed games
 
 ___
 client - chessHubClient
@@ -86,10 +88,14 @@ TODO
 - [x] spawn the pieces and place them
 - [x] handle the moves
 - [x] enforce pieces move restrictions
+  - [ ] rethink the _canMove and _isCheck functions; should not rely on the dom
+  - [ ] maintain an array of squares with their pieces for fast search
 - [x] finish the "sit" process
 - [ ] enforce other rules (check, check mate, castling, en passant)
 - [ ] display whose turn it is
 - [ ] allow to show last move
+- [ ] create classes for pieces and squares, shared with the server
+- [ ] handle timed games
 
 ___
 client
@@ -117,6 +123,7 @@ TODO
 - [x] correctly place & render the board
 - [x] add chat to games
 - [ ] finish the main page design
+- [ ] work on the login page; describe the app, show the stats
 - [ ] save the context into local storage
 - [ ] handle reconnection (or page refresh)
 - [ ] show a list of users in the game channel (not in MAIN)
