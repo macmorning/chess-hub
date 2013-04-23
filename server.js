@@ -55,6 +55,7 @@ function escapeHtml(unsafe) {
 
 function s4() {
   // generate random string to use as user key
+  // thank you Stack Overflow :)
     return Math.floor((1 + Math.random()) * 0x10000)
         .toString(16)
         .substring(1);
@@ -122,7 +123,7 @@ function disconnect(user,reason) {
 }
 
 function houseKeeper() {
-// disconnects inactive users and destroys empty channels
+    // disconnects inactive users and destroys empty channels
     if(LOGHOUSEKEEPING) { console.log(currTime() + ' [HOUSEK] running');}
     var limitTime = new Date() - 120000;   // drop users if their last activity is more than 2 minutes old
     for (var user in users) {
@@ -136,8 +137,8 @@ function houseKeeper() {
 }
 
 function checkCommand(channel,user,msg) {
-// this function verifies the validity of the game commands sent by the clients.
-// returns 0 if ok, 1 if ko
+    // this function verifies the validity of the game commands sent by the clients.
+    // returns 0 if ok, 1 if ko
     var command = msg.split('-');
     if(command[0] === "move") {
         if (command[1]) {

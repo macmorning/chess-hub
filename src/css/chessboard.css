@@ -76,6 +76,10 @@
     background-image: url('/client/img/blackSq49x49.png');
 }
     .chessBoardSquare0.selected {
+        background-color: green;
+        background-image:none;
+    }
+    .chessBoardSquare0.check {
         background-color: red;
         background-image:none;
     }
@@ -84,6 +88,10 @@
     background-image: url('/client/img/whiteSq49x49.png');
 }
     .chessBoardSquare1.selected {
+        background-color: green;
+        background-image:none;
+    }
+    .chessBoardSquare1.check {
         background-color: red;
         background-image:none;
     }

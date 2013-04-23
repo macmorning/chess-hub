@@ -85,6 +85,7 @@ var CHESSBOARD = {
                     }
                     $("#"+CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId).removeClass("selected");
                     CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));
+                    CHESSBOARD._verifyCheck();
                     // send the move to the server
                     CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
                          CHESSBOARD.gameID,
@@ -164,9 +165,9 @@ var CHESSBOARD = {
         for(var i=0; i<target.childNodes.length; i++) {
             if (target.childNodes[i].tagName === 'IMG' && target.childNodes[i].id !== pieceId) {
                 targetPiece = target.childNodes[i].id;
-                if (targetPiece === 'wking' || targetPiece === 'bking' ) {
-                    return false;
-                }
+//                if (targetPiece === 'wking' || targetPiece === 'bking' ) {
+//                    return false;
+//                }
             }
         }
         var from = CHESSBOARD.pieces[pieceId].sqId;
@@ -381,10 +382,33 @@ var CHESSBOARD = {
     },
 
     _isCheck: function(pieceId,destinationId) {
-        // TODO : everything !
+        if (pieceId !== 'wking' && pieceId !== 'bking') {
+            return false;
+        }
+        for (var p in CHESSBOARD.pieces) {     // parse the pieces array
+            if (CHESSBOARD.pieces[p].type === 'king' || CHESSBOARD.pieces[p].sqId[0] !== 's' || p[0] === pieceId[0]) {  // the piece is not on a square or is of the same color as the king
+                continue;
+            } else if (CHESSBOARD._canMove(p,destinationId)) {
+                console.log(pieceId + ' checked at square ' + destinationId + ' by ' + p);
+                return true;
+            }
+        }
         return false;
     },
-            
+
+    _verifyCheck: function() {
+        var kings = ['bking','wking'];
+        kings.forEach(function(king,index) {
+            if (CHESSBOARD._isCheck(king, CHESSBOARD.pieces[king].sqId)) {
+                $("#"+CHESSBOARD.pieces[king].sqId).addClass("check");
+                console.log(king + ' is check');
+            } else {
+                $("#"+CHESSBOARD.pieces[king].sqId).removeClass("check");
+            }
+        });
+        return false;
+    },
+                
     _createPieces: function() {
         for (var c in CHESSBOARD.colors) {
             CHESSBOARD.pieces[c+'king'] = {
