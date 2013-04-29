@@ -69,31 +69,29 @@
     float:left;
     display:block;
     text-align:center;
+    box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    -webkit-box-sizing:border-box;
 }
-
-
+      
 .chessBoardSquare0 {
     background-image: url('/client/img/blackSq49x49.png');
 }
     .chessBoardSquare0.selected {
-        background-color: green;
-        background-image:none;
+        border:3pt solid white;    
     }
     .chessBoardSquare0.check {
-        background-color: red;
-        background-image:none;
+        border:3pt solid red;    
     }
     
 .chessBoardSquare1 {
     background-image: url('/client/img/whiteSq49x49.png');
 }
     .chessBoardSquare1.selected {
-        background-color: green;
-        background-image:none;
+        border:3pt solid white;    
     }
     .chessBoardSquare1.check {
-        background-color: red;
-        background-image:none;
+        border:3pt solid red;    
     }
 
 .piece {

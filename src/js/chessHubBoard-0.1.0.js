@@ -94,7 +94,14 @@ var CHESSBOARD = {
             } else if (pieceSelector.attr('id') === 'brookh' ) {
                 CHESSBOARD.blackCanCastleKingSide = false;
             }
-            
+
+            // reflect the move into the chessBoard array
+            CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.pieces[pieceSelector.attr('id')].sqId)] = '';
+            if (destinationSelector.attr('id')[0] === 's') { // it's a square, not a graveyard
+                CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationSelector.attr('id'))] = CHESSBOARD.pieces[pieceSelector.attr('id')].id;
+            }
+            CHESSBOARD._verifyCheck(); 
+
             var marginLeft = destinationSelector.width() * 0.05;  // change this if you change the width of the pieces in chessboard.css
             // JQUERY
             pieceSelector.animate({ top: "+=" + (destinationSelector.position().top - pieceSelector.position().top) +"px" , left : "+=" + (destinationSelector.position().left - pieceSelector.position().left + marginLeft) +"px" }, 
@@ -103,15 +110,8 @@ var CHESSBOARD = {
                         function () {
                             pieceSelector.prependTo(destinationSelector);
                             pieceSelector.css( { top : "0px", left : "0px"} );
-                            CHESSBOARD._verifyCheck(); 
                         }
                     );
-
-            // reflect the move into the chessBoard array
-            CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.pieces[pieceSelector.attr('id')].sqId)] = '';
-            if (destinationSelector.attr('id')[0] === 's') { // it's a square, not a graveyard
-                CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationSelector.attr('id'))] = CHESSBOARD.pieces[pieceSelector.attr('id')].id;
-            }
                                 
             CHESSBOARD.pieces[pieceSelector.attr('id')].sqId = destinationSelector.attr('id');
             if(destinationSelector.attr('id') !== 'wGraveyard' && destinationSelector.attr('id') !== 'bGraveyard') {
