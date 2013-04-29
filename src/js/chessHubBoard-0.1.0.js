@@ -57,17 +57,25 @@ var CHESSBOARD = {
     _markSquare: function(squareId,cssClass,bool) {
         if(bool) {
             try {
-                $("#"+squareId).addClass(cssClass); // JQUERY
+                if (squareId === 'ALL') {
+                    $('.chessBoardSquare').addClass(cssClass); // JQUERY
+                } else { 
+                    $("#"+squareId).addClass(cssClass); // JQUERY
+                }
             } catch(err) {
-                console.log(squareId + ' cannot be marked as checked.');
+                console.log(squareId + ' cannot be marked as ' + cssClass);
                 return false;
             }
             return true;
         } else {
             try {
-                $("#"+squareId).removeClass(cssClass);  // JQUERY
+                if (squareId === 'ALL') {
+                    $('.chessBoardSquare').removeClass(cssClass); // JQUERY
+                } else { 
+                    $("#"+squareId).removeClass(cssClass);  // JQUERY
+                }
             } catch(err) {
-                console.log(squareId + ' cannot be unmarked as checked.');
+                console.log(squareId + ' cannot be unmarked as ' + cssClass);
                 return false;
             }
             return true;
@@ -100,7 +108,6 @@ var CHESSBOARD = {
             if (destinationSelector.attr('id')[0] === 's') { // it's a square, not a graveyard
                 CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationSelector.attr('id'))] = CHESSBOARD.pieces[pieceSelector.attr('id')].id;
             }
-            CHESSBOARD._verifyCheck(); 
 
             var marginLeft = destinationSelector.width() * 0.05;  // change this if you change the width of the pieces in chessboard.css
             // JQUERY
@@ -154,7 +161,7 @@ var CHESSBOARD = {
                 || CHESSBOARD.pieces[ev.target.id].sqId === 'wGraveyard' || CHESSBOARD.pieces[ev.target.id].sqId === 'bGraveyard'
                 || ev.target.id[0] === "w" && CHESSBOARD.whitePlayer !== CONTEXT.user  
                 || ev.target.id[0] === "b" && CHESSBOARD.blackPlayer !== CONTEXT.user)) {
-            return 0;
+            return false;
         }
         
         // user is not holding a piece yet and is clicking on one
@@ -185,7 +192,11 @@ var CHESSBOARD = {
                     
                     if (!CHESSBOARD._canMove(CHESSBOARD.selectedPiece.attr('id'),target.id)) { 
                         // if held piece cannot be moved to target square, exit
-                        return 1;
+                        return false;
+                    }
+                    if (CHESSBOARD._isCheck(CHESSBOARD.selectedPiece.attr('id'),target.id)) {
+                        // is the current player's king in check if he moves this piece to this destination ? if so, reject the move.
+                        return false;
                     }
                     var emptyFunction = function() {};
 
@@ -204,6 +215,7 @@ var CHESSBOARD = {
 
                     CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
                     CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));   // JQUERY
+                    CHESSBOARD._verifyCheck();
                     // send the move to the server
                     CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
                          CHESSBOARD.gameID,
@@ -245,6 +257,7 @@ var CHESSBOARD = {
 //		c2 = 32
 //      For example, a white pawn can move forward, one case at a time, which means its move must be equal to 1 (a3 - a2 == 13 - 12 == 1),
 //      except if has not moved yet, in which case its move can be 2, or if it's taking a black piece. Its numerical move will then be either 11 or -9
+		
 		
         switch(CHESSBOARD.pieces[pieceId].type) {
             case 'pawn':
@@ -403,6 +416,9 @@ var CHESSBOARD = {
                     || numericMove === -10
                     || numericMove === 10) {
 
+                    if (CHESSBOARD._isCheck(pieceId,destinationId)) {
+                        return false;
+                    }
                     return true;
                     
                 } else if (CHESSBOARD._isCheck(pieceId,from) || CHESSBOARD._isCheck(pieceId,destinationId)) {
@@ -435,30 +451,58 @@ var CHESSBOARD = {
     },
 
     _isCheck: function(pieceId,destinationId) {
-        if (pieceId !== 'wking' && pieceId !== 'bking') {
-            return false;
-        }
-        for (var p in CHESSBOARD.pieces) {     // parse the pieces array
-            if (CHESSBOARD.pieces[p].type === 'king' || CHESSBOARD.pieces[p].sqId[0] !== 's' || p[0] === pieceId[0]) {  
-                // the piece is a king, or not on a square, or of the same color as the king
-                continue;
-            } else if (CHESSBOARD._canMove(p,destinationId)) {
-                console.log(pieceId + ' checked at square ' + destinationId + ' by ' + p);
-                return true;
+        if (pieceId === 'wking' || pieceId === 'bking') {
+        // testing if a king is check
+            for (var p in CHESSBOARD.pieces) {     // parse the pieces array
+                // if the piece is a king, and on a square, and of a different color than the king && can capture the king
+                if (CHESSBOARD.pieces[p].type !== 'king' 
+                        && CHESSBOARD.pieces[p].sqId[0] === 's'
+                        && p[0] !== pieceId[0]
+                        && CHESSBOARD._canMove(p,destinationId)) {
+                    // the piece can capture the king
+                    console.log(pieceId + ' checked at square ' + destinationId + ' by ' + p);
+                    return p;
+                }
             }
+            return false;
+        } else {
+        // testing if moving the piece puts its king to check
+            var color = pieceId[0];
+            var result = false;
+            var previousSqId = CHESSBOARD.pieces[pieceId].sqId;
+            var previousDestinationSquareOccupant = CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)];
+                        
+            // simulate the move (shouldn't this use a copy of the arrays ?)
+            CHESSBOARD.chessBoard[CHESSBOARD.pieces[pieceId].sqId] = '';
+            CHESSBOARD.pieces[pieceId].sqId = destinationId;
+            CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)] = pieceId;
+            // test if it puts the king into check
+            if (CHESSBOARD._isCheck(color+'king', CHESSBOARD.pieces[color+'king'].sqId)) {
+                result = true;
+            } else {
+                result = false;
+            }
+            CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)] = previousDestinationSquareOccupant;
+            CHESSBOARD.pieces[pieceId].sqId = previousSqId;
+            return result;
         }
-        return false;
+        
     },
 
     _verifyCheck: function() {
         var kings = ['bking','wking'];
+        CHESSBOARD._markSquare('ALL','check',false);    // remove all check markers
         kings.forEach(function(king,index) {
-            if (CHESSBOARD._isCheck(king, CHESSBOARD.pieces[king].sqId)) {
-                CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',true);
+            var p = CHESSBOARD._isCheck(king, CHESSBOARD.pieces[king].sqId);    // p is the "checker"
+            if (p) {
+                CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',true);  // mark the king as checked
+                CHESSBOARD._markSquare(CHESSBOARD.pieces[p].sqId,'check',true);     // mark the "checker" as ... checked :p
+                CHESSBOARD.pieces[king].isCheck = true;
                 console.log(king + ' is check');
             } else {
 //                console.log(king + ' is NOT check');
                 CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',false);
+                CHESSBOARD.pieces[king].isCheck = false;
             }
         });
         return false;
@@ -474,7 +518,8 @@ var CHESSBOARD = {
                     class : c + 'king',
                     sqId : 'sq' + 'e' + (c==="w"?1:8),
                     initx : 5,
-                    inity : (c==="w"?1:8)
+                    inity : (c==="w"?1:8),
+                    isCheck : false
             };
             CHESSBOARD.pieces[c + 'queen'] = {
                     id: c+'queen',

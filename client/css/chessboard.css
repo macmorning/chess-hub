@@ -15,6 +15,9 @@
     width:16em; 
     height:16em; 
 }
+.piece {
+    width: 90%;
+}
 
 #wSit,#bSit {
     z-index:1000;
@@ -77,21 +80,21 @@
 .chessBoardSquare0 {
     background-image: url('/client/img/blackSq49x49.png');
 }
-    .chessBoardSquare0.selected {
-        border:3pt solid white;    
-    }
     .chessBoardSquare0.check {
-        border:3pt solid red;    
+        border:2pt solid red;    
     }
-    
+    .chessBoardSquare0.selected {
+        border:2pt solid green;
+    }
+
 .chessBoardSquare1 {
     background-image: url('/client/img/whiteSq49x49.png');
 }
-    .chessBoardSquare1.selected {
-        border:3pt solid white;    
-    }
     .chessBoardSquare1.check {
-        border:3pt solid red;    
+        border:2pt solid red;    
+    }
+    .chessBoardSquare1.selected {
+        border:2pt solid green;    
     }
 
 .piece {
@@ -160,7 +163,7 @@ img.bpawn {
         width:2em;
         height:2em;
     }
-    .piece {
+    #wGraveyard > .piece ,#bGraveyard > .piece {
         width: 1.8em;
     }
     #wGraveyard, #bGraveyard {
@@ -192,7 +195,7 @@ img.bpawn {
     #bSit {
         top: 6em;
     }
-    .piece {
+    #wGraveyard > .piece ,#bGraveyard > .piece {
         width: 2.7em;
     }
     #wGraveyard, #bGraveyard {
@@ -220,7 +223,7 @@ img.bpawn {
     #bSit {
         top: 7em;
     }
-    .piece {
+    #wGraveyard > .piece ,#bGraveyard > .piece {
         width: 3.6em;
     }
     #wGraveyard, #bGraveyard {
@@ -249,7 +252,7 @@ img.bpawn {
     #bSit {
         top: 11em;
     }
-    .piece {
+    #wGraveyard > .piece ,#bGraveyard > .piece {
         width: 4.5em;
     }
     #wGraveyard, #bGraveyard {
