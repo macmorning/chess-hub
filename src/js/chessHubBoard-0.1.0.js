@@ -20,8 +20,17 @@ var CHESSBOARD = {
     whiteCanCastleKingSide: true,
     whiteCanCastleQueenSide: true,
     currentGameTurn: '',            // 'w' or 'b'
-    gameHistory: [],                // turns history array
-
+    gameHistory: [],                // turns history
+    chessBoard: { 11:'', 12:'', 13:'', 14:'', 15:'', 16:'', 17:'', 18:'', 
+                    21:'', 22:'', 23:'', 24:'', 25:'', 26:'', 27:'', 28:'', 
+                    31:'', 32:'', 33:'', 34:'', 35:'', 36:'', 37:'', 38:'', 
+                    41:'', 42:'', 43:'', 44:'', 45:'', 46:'', 47:'', 48:'', 
+                    51:'', 52:'', 53:'', 54:'', 55:'', 56:'', 57:'', 58:'', 
+                    61:'', 62:'', 63:'', 64:'', 65:'', 66:'', 67:'', 68:'', 
+                    71:'', 72:'', 73:'', 74:'', 75:'', 76:'', 77:'', 78:'', 
+                    81:'', 82:'', 83:'', 84:'', 85:'', 86:'', 87:'', 88:'' },
+    
+    
     ///////////////////////////////
     // UTILITIES
     ///////////////////////////////
@@ -97,6 +106,13 @@ var CHESSBOARD = {
                             CHESSBOARD._verifyCheck(); 
                         }
                     );
+
+            // reflect the move into the chessBoard array
+            CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.pieces[pieceSelector.attr('id')].sqId)] = '';
+            if (destinationSelector.attr('id')[0] === 's') { // it's a square, not a graveyard
+                CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationSelector.attr('id'))] = CHESSBOARD.pieces[pieceSelector.attr('id')].id;
+            }
+                                
             CHESSBOARD.pieces[pieceSelector.attr('id')].sqId = destinationSelector.attr('id');
             if(destinationSelector.attr('id') !== 'wGraveyard' && destinationSelector.attr('id') !== 'bGraveyard') {
                 CHESSBOARD.gameHistory.push(pieceSelector.attr('id') + '-' + destinationSelector.attr('id'));
@@ -172,23 +188,20 @@ var CHESSBOARD = {
                         return 1;
                     }
                     var emptyFunction = function() {};
-                    for(var i=0; i<target.childNodes.length; i++) { // check if a piece is taken
-                        if (target.childNodes[i].tagName === 'IMG' && target.childNodes[i].id !== CHESSBOARD.selectedPiece.attr('id')) {
-                            // a piece is taken, move it to its graveyard
-                            var p = target.childNodes[i];
-                            console.log('piece taken : ' + p.title);
-                            var pieceSelector = $('#'+p.id);    // JQUERY
-                            var destinationSelector = $('#'+p.id[0]+'Graveyard');
-                            CHESSBOARD.move(pieceSelector,destinationSelector);
-                            CHESSHUB.sendMessage("move-" + pieceSelector.attr('id') + "-" + destinationSelector.attr('id'),
-                                 CHESSBOARD.gameID,
-                                 'game',
-                                 emptyFunction,
-                                 emptyFunction
-                                 );
-                            break;
-                        }
+
+                    var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(target.id)];
+                    if ( targetPiece !== '') {
+                        var pieceSelector = $('#' + targetPiece);
+                        var destinationSelector = $('#'+CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard');
+                        CHESSBOARD.move(pieceSelector,destinationSelector);
+                        CHESSHUB.sendMessage("move-" + pieceSelector.attr('id') + "-" + destinationSelector.attr('id'),
+                             CHESSBOARD.gameID,
+                             'game',
+                             emptyFunction,
+                             emptyFunction
+                             );
                     }
+
                     CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
                     CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));   // JQUERY
                     // send the move to the server
@@ -215,14 +228,12 @@ var CHESSBOARD = {
         var targetPiece = '';
         var tmpId = "";
         var operator = 0;
-        for(var i=0; i<target.childNodes.length; i++) {
-            if (target.childNodes[i].tagName === 'IMG' && target.childNodes[i].id !== pieceId) {
-                targetPiece = target.childNodes[i].id;
+        var i = "";
+        var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)];
 //                if (targetPiece === 'wking' || targetPiece === 'bking' ) {
 //                    return false;
 //                }
-            }
-        }
+
         var from = CHESSBOARD.pieces[pieceId].sqId;
 		var numericFrom = parseInt(CHESSBOARD._numeric(from),10);
 		var numericTo = parseInt(CHESSBOARD._numeric(destinationId),10); 
@@ -244,8 +255,7 @@ var CHESSBOARD = {
                         return false;   // there is a piece here, but the pawn cannot take it this way
                     }						
                     if ( numericMove === 2 ) { // double move : check that there is not something blocking the way
-                        tmpId = CHESSBOARD._unnumeric(numericFrom + 1);
-                        if (window.document.getElementById(tmpId).childNodes.length > 0) {
+                        if (CHESSBOARD.chessBoard[numericFrom + 1]) {
                             return false;
                         }
                     }
@@ -257,8 +267,7 @@ var CHESSBOARD = {
                         return false;   // there is a piece here, but the pawn cannot take it this way
                     }						
                     if ( numericMove === -2 ) { // double move : check that there is not something blocking the way
-                        tmpId = CHESSBOARD._unnumeric(numericFrom - 1);
-                        if (window.document.getElementById(tmpId).childNodes.length > 0) {
+                        if (CHESSBOARD.chessBoard[numericFrom - 1]) {
                             return false;
                         }
                     }
@@ -309,9 +318,7 @@ var CHESSBOARD = {
                         operator = -9;
                     }
                     for (i = numericFrom+operator ; (i < numericTo && numericMove > 0) || (i > numericTo && numericMove < 0); i += operator) {
-                        tmpId = CHESSBOARD._unnumeric(i);
-                        if (window.document.getElementById(tmpId).childNodes.length > 0
-                            && window.document.getElementById(tmpId).childNodes[0].tagName === 'IMG') {
+                        if (CHESSBOARD.chessBoard[i]) {
                             return false;
                         }
                     }  
@@ -335,9 +342,7 @@ var CHESSBOARD = {
 					}
 
 					for (i = numericFrom+operator ; (i < numericTo && numericMove > 0) || (i > numericTo && numericMove < 0); i += operator) {
-						tmpId = CHESSBOARD._unnumeric(i);
-						if (window.document.getElementById(tmpId).childNodes.length > 0
-                            && window.document.getElementById(tmpId).childNodes[0].tagName === 'IMG') {
+                        if (CHESSBOARD.chessBoard[i]) {
 							return false;
 						}
 					}  
@@ -378,9 +383,7 @@ var CHESSBOARD = {
                     }
 
                     for (i = numericFrom+operator ; (i < numericTo && numericMove > 0) || (i > numericTo && numericMove < 0); i += operator) {
-                        tmpId = CHESSBOARD._unnumeric(i);
-                        if (window.document.getElementById(tmpId).childNodes.length > 0
-                            && window.document.getElementById(tmpId).childNodes[0].tagName === 'IMG') {
+                        if (CHESSBOARD.chessBoard[i]) {
                             return false;
                         }
                     }  
@@ -422,10 +425,7 @@ var CHESSBOARD = {
                 if (!operator) { return false; }
                 
                 for (i = numericFrom+operator ; (i <= numericTo && numericMove > 0) || (i >= numericTo && numericMove < 0); i += operator) {
-                    tmpId = CHESSBOARD._unnumeric(i);
-                    
-                    if (window.document.getElementById(tmpId).childNodes.length > 0
-                        && window.document.getElementById(tmpId).childNodes[0].tagName === 'IMG') {
+                    if (CHESSBOARD.chessBoard[i]) {
                         return false;
                     }
                 }
@@ -457,7 +457,7 @@ var CHESSBOARD = {
                 CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',true);
                 console.log(king + ' is check');
             } else {
-                console.log(king + ' is NOT check');
+//                console.log(king + ' is NOT check');
                 CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',false);
             }
         });
@@ -559,6 +559,20 @@ var CHESSBOARD = {
                     };
             }
         }
+
+        // init chessBoard array
+        CHESSBOARD.chessBoard = { 11:'', 12:'', 13:'', 14:'', 15:'', 16:'', 17:'', 18:'', 
+                21:'', 22:'', 23:'', 24:'', 25:'', 26:'', 27:'', 28:'', 
+                31:'', 32:'', 33:'', 34:'', 35:'', 36:'', 37:'', 38:'', 
+                41:'', 42:'', 43:'', 44:'', 45:'', 46:'', 47:'', 48:'', 
+                51:'', 52:'', 53:'', 54:'', 55:'', 56:'', 57:'', 58:'', 
+                61:'', 62:'', 63:'', 64:'', 65:'', 66:'', 67:'', 68:'', 
+                71:'', 72:'', 73:'', 74:'', 75:'', 76:'', 77:'', 78:'', 
+                81:'', 82:'', 83:'', 84:'', 85:'', 86:'', 87:'', 88:'' };
+        for (var piece in CHESSBOARD.pieces) {
+            CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.pieces[piece].sqId)] = CHESSBOARD.pieces[piece].id;
+        }
+        
     },
     _spawnPieces:function() {
         var bGraveyard = $('#bGraveyard');  // JQUERY
