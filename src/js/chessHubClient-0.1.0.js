@@ -256,5 +256,26 @@ CHESSHUB = {
                 errorCallBack(); 
             }
          });
+    },
+
+    //
+    //  function : joinGame(gameId,successCallBack, errorCallBack)
+    //  
+    //
+    joinGame: function (gameId, successCallBack, errorCallBack) {
+        var data = { user: CHESSHUB.user, key: CHESSHUB.key, gameId: gameId} ;
+        $.ajax({
+            type: 'POST',
+            url : '/join',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify(data),
+            success: function(response) { successCallBack(response); },
+            error: function(data,status,error) { 
+                console.log('CHESSHUB.joinGame error - ' + status);
+                console.log(error);
+                errorCallBack(); 
+            }
+         });
     }
 };

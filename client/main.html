@@ -94,12 +94,23 @@
         );
     }
     
+    function joinGame(gameId) {
+        var output = $('#board_chat_output');
+        CHESSHUB.joinGame(gameId,
+                function(response) {
+                    output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '". Please sit and let the game start.</p>'+ output.html());
+                },
+                function() {
+                    output.html("<p class='chat_sys'>Error joining the game :(</p>" + output.html());
+                }
+        );
+    }
+    
     function searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref) {
         $('#game_search').button('disable');
         var output = $('#board_chat_output');
         CHESSHUB.searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref,
                 function(response) {
-                    console.log(response);
                     if (isNaN(response.gameDetails.gameLevel)) {
                         output.html('<p class="chat_sys">There was an error when retrieving game informations. Please reconnect and retry.</p>'+ output.html());
                     } else if(response.returncode == "new") {
@@ -175,7 +186,7 @@
                         '<p class="chat_activity"> == ['
                         + message.time + '] '
                         + message.user + ' created a game (' + (command[2] == "0" ? "unlimited" : command[2] + " minutes") + ' / level ' + command[3] + ')'
-                        + '</p>'
+                        + '&nbsp;<a href="#" onclick="joinGame(\'' + command[1] + '\')">join or watch</a></p>'
                         + output.html());
                 } else if (command[0] == "move") {
                     if (message.user != CONTEXT.user) { CHESSBOARD.move($('#' + command[1]), $('#' + command[2])); }

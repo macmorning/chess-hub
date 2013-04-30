@@ -102,6 +102,12 @@ function sendMessage(from, msg, category, to ) {
     if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... sent message to ' + i + ' client(s)');}
 }
 
+function joinGame(gameId) {
+}
+
+function createGame() {
+}
+
 function disconnect(user,reason) {
     delete users[user];    // remove the user from the users array
     if(!reason) { reason = 'quit'; }
@@ -372,6 +378,7 @@ http.createServer(function (req, res) {
                         && (playerTimerPref === -1 || playerTimerPref === channel.gameTimer)  // player has not set a timer pref (-1) or the game matches his search
                         ) {
                     if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);}
+
                     channel.addUser(player);
                     sendMessage(player,'join','game',channel.id);    // send the information to users in that channel
                     channel.playerB = player;
@@ -428,7 +435,80 @@ http.createServer(function (req, res) {
             }
         });
     } 
-    
+
+//
+// JOIN GAME SERVICE
+//
+    else if(url_parts.pathname.substr(0, 5) === '/join') {
+        // user : user issuing the messages
+        // key : user's key
+        // channel : channel to dispatch the message to
+        // category : message category; either chat_msg or game
+        // msg : message
+        if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] new message'); }
+        var user = "";
+        var key = "";
+        var gameId = "";
+        var data = "";
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
+        req.on('end', function() {
+            var json = {};      // then analyze the message
+            try { json = JSON.parse(data); }    // we were unable to analyze the json string
+            catch(err) { 
+                res.writeHead(400, { 'Content-type': 'application/json'});
+                res.end(JSON.stringify( {
+                        returncode: 'ko'
+                }));
+                console.log(err); 
+                console.log(data); 
+                return 1;                
+            }
+            user = escapeHtml(json.user);
+            key = escapeHtml(json.key);
+            gameId = escapeHtml(json.gameId);
+            if (!user || !gameId) {
+                res.writeHead(400, { 'Content-type': 'application/json'});
+                res.end(JSON.stringify( {
+                        returncode: 'ko'
+                }));
+                return 1;                
+            }
+            try { if(channels[gameId].open) {
+                    var channel = channels[gameId];
+                    var tmpChannel = {name: channel.name, 
+                                open: channel.open, 
+                                id: channel.id, 
+                                messages: channel.messages, 
+                                playerA: channel.playerA, 
+                                playerB: channel.playerB,
+                                whitePlayer: channel.whitePlayer,
+                                blackPlayer: channel.blackPlayer,
+                                gameLevel: channel.gameLevel,
+                                gameAcceptHigher: channel.gameAcceptHigher,
+                                gameAcceptLower: channel.gameAcceptLower,
+                                gameTimer: channel.gameTimer,
+                                gameStarted: channel.gameStarted};
+
+                    res.writeHead(200, { 'Content-type': 'application/json'});
+                    res.end(JSON.stringify( {
+                            returncode: 'ok',
+                            gameDetails: tmpChannel
+                    }));
+                    return 0;
+                }
+            } catch(err) {
+                res.writeHead(404, { 'Content-type': 'application/json'});
+                res.end(JSON.stringify( {
+                        returncode: 'game not found or closed'
+                }));
+                console.log(err); 
+                console.log(data); 
+                return 1;                
+            }
+        });
+    }
 //
 // INBOUND MESSAGES SERVICE
 //
