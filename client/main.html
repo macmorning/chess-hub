@@ -170,7 +170,14 @@
                 + output.html());
         } else if (message.category == "game") {
                 var command = message.msg.split('-');
-                if(command[0] == "move") {
+                if(command[0] == "created") {
+                    output.html(
+                        '<p class="chat_activity"> == ['
+                        + message.time + '] '
+                        + message.user + ' created a game (' + (command[2] == "0" ? "unlimited" : command[2] + " minutes") + ' / level ' + command[3] + ')'
+                        + '</p>'
+                        + output.html());
+                } else if (command[0] == "move") {
                     if (message.user != CONTEXT.user) { CHESSBOARD.move($('#' + command[1]), $('#' + command[2])); }
                 } else if (command[0] == "sit") {
                     CHESSBOARD.setPlayer(command[1],message.user);

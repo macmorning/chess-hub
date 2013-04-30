@@ -82,7 +82,7 @@ function sendMessage(from, msg, category, to ) {
     // msg : message
     // category : message category : 
     //        - chat_msg (by default), simple message sent to a chat channel or a user
-    //        - chat_sys, system message to be broadcasted in all opened chat channels
+    //        - chat_sys, system message
     //        - chat_activity, chat channel activity : join, leave, quit
     //        - game, game channel activity : sit-[w|b] ; move-piece-square ; leave
     // to : target for the message : a user, a game channel id, or main channel (by default)
@@ -423,6 +423,7 @@ http.createServer(function (req, res) {
                         returncode: 'new',
                         gameDetails: channels[gameId]
                     }));
+                sendMessage(player,'created-'+gameId+'-'+playerTimerPref+'-'+playerLevel,'game','MAIN');    // send the information to users in the MAIN channel
                 return 0;
             }
         });
