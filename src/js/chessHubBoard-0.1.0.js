@@ -82,31 +82,33 @@ var CHESSBOARD = {
         }
     },
 
-    move: function(pieceSelector,destinationSelector) {
+    move: function(pieceId,destinationId,dontSwitchTurn) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
- 
+            var destinationSelector = $('#' + destinationId);
+            var pieceSelector = $('#' + pieceId);
+            
             // player moves his king or a rook, castling is now forbidden
-            if (pieceSelector.attr('id') === 'wking' ) { 
+            if (pieceId === 'wking' ) { 
                 CHESSBOARD.whiteCanCastleKingSide = false;
                 CHESSBOARD.whiteCanCastleQueenSide = false;
-            } else if (pieceSelector.attr('id') === 'bking' ) {
+            } else if (pieceId === 'bking' ) {
                 CHESSBOARD.blackCanCastleKingSide = false;
                 CHESSBOARD.blackCanCastleQueenSide = false;
-            } else if (pieceSelector.attr('id') === 'wrooka' ) {
+            } else if (pieceId === 'wrooka' ) {
                 CHESSBOARD.whiteCanCastleQueenSide = false;
-            } else if (pieceSelector.attr('id') === 'wrookh' ) {
+            } else if (pieceId === 'wrookh' ) {
                 CHESSBOARD.whiteCanCastleKingSide = false;
-            } else if (pieceSelector.attr('id') === 'brooka' ) {
+            } else if (pieceId === 'brooka' ) {
                 CHESSBOARD.blackCanCastleQueenSide = false;
-            } else if (pieceSelector.attr('id') === 'brookh' ) {
+            } else if (pieceId === 'brookh' ) {
                 CHESSBOARD.blackCanCastleKingSide = false;
             }
 
             // reflect the move into the chessBoard array
-            CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.pieces[pieceSelector.attr('id')].sqId)] = '';
-            if (destinationSelector.attr('id')[0] === 's') { // it's a square, not a graveyard
-                CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationSelector.attr('id'))] = CHESSBOARD.pieces[pieceSelector.attr('id')].id;
+            CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.pieces[pieceId].sqId)] = '';
+            if (destinationId[0] === 's') { // it's a square, not a graveyard
+                CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)] = pieceId;
             }
 
             var marginLeft = destinationSelector.width() * 0.05;  // change this if you change the width of the pieces in chessboard.css
@@ -120,10 +122,10 @@ var CHESSBOARD = {
                         }
                     );
                                 
-            CHESSBOARD.pieces[pieceSelector.attr('id')].sqId = destinationSelector.attr('id');
-            if(destinationSelector.attr('id') !== 'wGraveyard' && destinationSelector.attr('id') !== 'bGraveyard') {
-                CHESSBOARD.gameHistory.push(pieceSelector.attr('id') + '-' + destinationSelector.attr('id'));
-                CHESSBOARD.currentGameTurn=(CHESSBOARD.currentGameTurn === 'w' ? 'b' : 'w'); // switch game turn
+            CHESSBOARD.pieces[pieceId].sqId = destinationId;
+            if(!dontSwitchTurn) {
+                CHESSBOARD.gameHistory.push(pieceId + '-' + destinationId);
+                CHESSBOARD.currentGameTurn=(pieceId[0] === 'w' ? 'b' : 'w'); // switch game turn
             }
             CHESSBOARD._verifyCheck();
     },
@@ -187,37 +189,79 @@ var CHESSBOARD = {
         // user is holding a piece and is clicking on an empty square or a piece of different color
         else if((ev.target.tagName === 'DIV' || ev.target.tagName === 'IMG' && CHESSBOARD.selectedPiece.attr('id')[0] !== ev.target.id[0] && CHESSBOARD.pieces[ev.target.id].sqId !== '') && CHESSBOARD.selectedPiece) {
                     var target = ev.target;
+                    var pieceId = CHESSBOARD.selectedPiece.attr('id');
                     while(target.tagName !== 'DIV'){     // if the target was not a DIV, go up in the DOM to find the first DIV
                         target=target.parentNode;
                     }
                     
-                    var canMoveResult = CHESSBOARD._canMove(CHESSBOARD.selectedPiece.attr('id'),target.id);
+                    var canMoveResult = CHESSBOARD._canMove(pieceId,target.id);
                     
                     if (!canMoveResult) { 
                         // if held piece cannot be moved to target square, exit
                         return false;
                     }
-                    if (CHESSBOARD._isCheck(CHESSBOARD.selectedPiece.attr('id'),target.id)) {
+                    if (CHESSBOARD._isCheck(pieceId,target.id)) {
                         // is the current player's king in check if he moves this piece to this destination ? if so, reject the move.
                         return false;
                     }
-                    var emptyFunction = function() {};
 
+
+
+
+                    // Move is accepted
+                    var emptyFunction = function() {};
+                    
+                    // piece capture
                     var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(target.id)];
                     if ( targetPiece !== '') {
-                        var pieceSelector = $('#' + targetPiece);
-                        var destinationSelector = $('#'+CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard');
-                        CHESSBOARD.move(pieceSelector,destinationSelector);
-                        CHESSHUB.sendMessage("move-" + pieceSelector.attr('id') + "-" + destinationSelector.attr('id'),
+                        CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true);
+                        CHESSHUB.sendMessage("move-" + targetPiece + "-" + CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',
                              CHESSBOARD.gameID,
                              'game',
                              emptyFunction,
                              emptyFunction
                              );
                     } 
+                    
+                    // castling
+                    if (pieceId === 'bking' || pieceId === 'wking') {
+                        var from = CHESSBOARD.pieces[pieceId].sqId;
+                        var numericFrom = parseInt(CHESSBOARD._numeric(from),10);
+                        var numericTo = parseInt(CHESSBOARD._numeric(target.id),10); 
+                        var numericMove = numericTo - numericFrom;
+                        var rookId = "";
+                        var rookDestId = "";
+                        if (numericMove === 20 && CHESSBOARD.whiteCanCastleKingSide && pieceId[0] === 'w') {
+                            // white castling on the king side
+                            rookId = 'wrookh';
+                            rookDestId = 'sqf1';
+                        } else if (numericMove === 20 && CHESSBOARD.blackCanCastleKingSide && pieceId[0] === 'b') {
+                            // black castling on the king side
+                            rookId = 'brookh';
+                            rookDestId = 'sqf8';
+                        } else if (numericMove === -20 && CHESSBOARD.whiteCanCastleQueenSide && pieceId[0] === 'w') {
+                            // white castling on the queen side
+                            rookId = 'wrooka';
+                            rookDestId = 'sqd1';
+                        } else if (numericMove === -20 && CHESSBOARD.blackCanCastleQueenSide && pieceId[0] === 'b') {
+                            // black castling on the queen side
+                            rookId = 'brooka';
+                            rookDestId = 'sqd8';
+                        }
+                        if (rookId && rookDestId) {
+                            CHESSBOARD.move(rookId,rookDestId,true);
+                            CHESSHUB.sendMessage("move-" + rookId + "-" + rookDestId,
+                                 CHESSBOARD.gameID,
+                                 'game',
+                                 emptyFunction,
+                                 emptyFunction
+                             );
+                         }
+                    }
+
 
                     CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
-                    CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));   // JQUERY
+                    CHESSBOARD.move(pieceId,target.id);   // JQUERY
 
                     // send the move to the server
                     CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
@@ -289,9 +333,7 @@ var CHESSBOARD = {
                 }
                 // capturing a piece sideways
                 else if ((pieceId[0] === "w" && (numericMove === 11 || numericMove === -9)) || (pieceId[0] === "b" && (numericMove === -11 || numericMove === 9))) {
-                    console.log('canMove ' + pieceId + ' => ' + destinationId + ' ? targetPiece = ' + targetPiece); //TEST
                     if (targetPiece) {
-                        console.log('canMove ... yes'); //TEST
                         return true;
                     }
                     return false;
@@ -428,16 +470,16 @@ var CHESSBOARD = {
                     // the king cannot castle out of check, nor into check
                     return false; 
                 } else if (numericMove === 20 && CHESSBOARD.whiteCanCastleKingSide && pieceId[0] === 'w') {
-                    // white castling on the king size
+                    // white castling on the king side
                     operator = 10;
                 } else if (numericMove === 20 && CHESSBOARD.blackCanCastleKingSide && pieceId[0] === 'b') {
-                    // black castling on the king size
+                    // black castling on the king side
                     operator = 10;
                 } else if (numericMove === -20 && CHESSBOARD.whiteCanCastleQueenSide && pieceId[0] === 'w') {
-                    // white castling on the queen size
+                    // white castling on the queen side
                     operator = -10;
                 } else if (numericMove === -20 && CHESSBOARD.blackCanCastleQueenSide && pieceId[0] === 'b') {
-                    // black castling on the queen size
+                    // black castling on the queen side
                     operator = -10;
                 }
                 
@@ -454,7 +496,6 @@ var CHESSBOARD = {
     },
 
     _isCheck: function(pieceId,destinationId) {
-        console.log('isCheck ' + pieceId + ' => ' + destinationId + ' ?');//TEST
         var color = pieceId[0];
         var result = false;
         var previousSqId = CHESSBOARD.pieces[pieceId].sqId;

@@ -189,7 +189,7 @@
                         + '&nbsp;<a href="#" onclick="joinGame(\'' + command[1] + '\')">join or watch</a></p>'
                         + output.html());
                 } else if (command[0] == "move") {
-                    if (message.user != CONTEXT.user) { CHESSBOARD.move($('#' + command[1]), $('#' + command[2])); }
+                    if (message.user != CONTEXT.user) { CHESSBOARD.move(command[1], command[2]); }
                 } else if (command[0] == "sit") {
                     CHESSBOARD.setPlayer(command[1],message.user);
                     output.html(
