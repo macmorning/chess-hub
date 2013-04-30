@@ -233,12 +233,10 @@ var CHESSBOARD = {
     },
     
     
-    _canMove: function(pieceId, destinationId) {
+    _canMove: function(pieceId, destinationId, captureOnly) {
     // check if the selected piece can be moved to the destination
+    // set captureOnly to true if only capture move is allowed (useful for pawns)
     // returns true if yes, false if no
-        var target = window.document.getElementById(destinationId);
-        var targetPiece = '';
-        var tmpId = "";
         var operator = 0;
         var i = "";
         var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)];
@@ -263,7 +261,7 @@ var CHESSBOARD = {
             case 'pawn':
                 // simple or double move
                 // ... for white pawns
-                if (pieceId[0] === "w" && (numericMove === 1 || numericMove === 2 && from[3] === "2")) {
+                if (!captureOnly && pieceId[0] === "w" && (numericMove === 1 || numericMove === 2 && from[3] === "2")) {
                     if (targetPiece) {
                         return false;   // there is a piece here, but the pawn cannot take it this way
                     }						
@@ -275,7 +273,7 @@ var CHESSBOARD = {
                     return true;
                 }
                 // ... for black pawns
-                else if (pieceId[0] === "b" && (numericMove === -1 || numericMove === -2 && from[3] === "7")) {
+                else if (!captureOnly && pieceId[0] === "b" && (numericMove === -1 || numericMove === -2 && from[3] === "7")) {
                     if (targetPiece) {
                         return false;   // there is a piece here, but the pawn cannot take it this way
                     }						
@@ -286,9 +284,11 @@ var CHESSBOARD = {
                     }
                     return true;
                 }
-                // taking a piece sideways
+                // capturing a piece sideways
                 else if ((pieceId[0] === "w" && (numericMove === 11 || numericMove === -9)) || (pieceId[0] === "b" && (numericMove === -11 || numericMove === 9))) {
+                    console.log('canMove ' + pieceId + ' => ' + destinationId + ' ? targetPiece = ' + targetPiece); //TEST
                     if (targetPiece) {
+                        console.log('canMove ... yes'); //TEST
                         return true;
                     }
                     return false;
@@ -451,42 +451,51 @@ var CHESSBOARD = {
     },
 
     _isCheck: function(pieceId,destinationId) {
+        console.log('isCheck ' + pieceId + ' => ' + destinationId + ' ?');//TEST
+        var color = pieceId[0];
+        var result = false;
+        var previousSqId = CHESSBOARD.pieces[pieceId].sqId;
+        var previousDestinationSquareOccupant = CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)];
+                    
+        // simulate the move (shouldn't this use a copy of the arrays ?)
+        CHESSBOARD.chessBoard[CHESSBOARD.pieces[pieceId].sqId] = '';
+        CHESSBOARD.pieces[pieceId].sqId = destinationId;
+        CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)] = pieceId;
+        if (previousDestinationSquareOccupant) {
+            CHESSBOARD.pieces[previousDestinationSquareOccupant].sqId = 'out';
+        }
+
         if (pieceId === 'wking' || pieceId === 'bking') {
         // testing if a king is check
             for (var p in CHESSBOARD.pieces) {     // parse the pieces array
                 // if the piece is a king, and on a square, and of a different color than the king && can capture the king
+                // simulate the move (shouldn't this use a copy of the arrays ?)
                 if (CHESSBOARD.pieces[p].type !== 'king' 
                         && CHESSBOARD.pieces[p].sqId[0] === 's'
                         && p[0] !== pieceId[0]
-                        && CHESSBOARD._canMove(p,destinationId)) {
+                        && CHESSBOARD._canMove(p,destinationId,true)) {
                     // the piece can capture the king
                     console.log(pieceId + ' checked at square ' + destinationId + ' by ' + p);
-                    return p;
+                    result = p;
                 }
             }
-            return false;
         } else {
         // testing if moving the piece puts its king to check
-            var color = pieceId[0];
-            var result = false;
-            var previousSqId = CHESSBOARD.pieces[pieceId].sqId;
-            var previousDestinationSquareOccupant = CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)];
-                        
-            // simulate the move (shouldn't this use a copy of the arrays ?)
-            CHESSBOARD.chessBoard[CHESSBOARD.pieces[pieceId].sqId] = '';
-            CHESSBOARD.pieces[pieceId].sqId = destinationId;
-            CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)] = pieceId;
             // test if it puts the king into check
             if (CHESSBOARD._isCheck(color+'king', CHESSBOARD.pieces[color+'king'].sqId)) {
                 result = true;
             } else {
                 result = false;
             }
-            CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)] = previousDestinationSquareOccupant;
-            CHESSBOARD.pieces[pieceId].sqId = previousSqId;
-            return result;
         }
-        
+
+        // restore the arrays and return result
+        if (previousDestinationSquareOccupant) {
+            CHESSBOARD.pieces[previousDestinationSquareOccupant].sqId = destinationId;
+        }
+        CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)] = previousDestinationSquareOccupant;
+        CHESSBOARD.pieces[pieceId].sqId = previousSqId;
+        return result;
     },
 
     _verifyCheck: function() {
