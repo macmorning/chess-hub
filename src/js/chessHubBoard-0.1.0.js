@@ -86,7 +86,7 @@ var CHESSBOARD = {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
  
-            // player moves his king, castling is now forbidden
+            // player moves his king or a rook, castling is now forbidden
             if (pieceSelector.attr('id') === 'wking' ) { 
                 CHESSBOARD.whiteCanCastleKingSide = false;
                 CHESSBOARD.whiteCanCastleQueenSide = false;
@@ -190,7 +190,9 @@ var CHESSBOARD = {
                         target=target.parentNode;
                     }
                     
-                    if (!CHESSBOARD._canMove(CHESSBOARD.selectedPiece.attr('id'),target.id)) { 
+                    var canMoveResult = CHESSBOARD._canMove(CHESSBOARD.selectedPiece.attr('id'),target.id);
+                    
+                    if (!canMoveResult) { 
                         // if held piece cannot be moved to target square, exit
                         return false;
                     }
@@ -211,7 +213,7 @@ var CHESSBOARD = {
                              emptyFunction,
                              emptyFunction
                              );
-                    }
+                    } 
 
                     CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
                     CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));   // JQUERY
@@ -458,7 +460,7 @@ var CHESSBOARD = {
         var previousDestinationSquareOccupant = CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)];
                     
         // simulate the move (shouldn't this use a copy of the arrays ?)
-        CHESSBOARD.chessBoard[CHESSBOARD.pieces[pieceId].sqId] = '';
+        CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.pieces[pieceId].sqId)] = '';
         CHESSBOARD.pieces[pieceId].sqId = destinationId;
         CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)] = pieceId;
         if (previousDestinationSquareOccupant) {
