@@ -125,6 +125,7 @@ var CHESSBOARD = {
                 CHESSBOARD.gameHistory.push(pieceSelector.attr('id') + '-' + destinationSelector.attr('id'));
                 CHESSBOARD.currentGameTurn=(CHESSBOARD.currentGameTurn === 'w' ? 'b' : 'w'); // switch game turn
             }
+            CHESSBOARD._verifyCheck();
     },
 
     flip: function() {
@@ -217,7 +218,7 @@ var CHESSBOARD = {
 
                     CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
                     CHESSBOARD.move(CHESSBOARD.selectedPiece,$('#' + target.id));   // JQUERY
-                    CHESSBOARD._verifyCheck();
+
                     // send the move to the server
                     CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
                          CHESSBOARD.gameID,
@@ -495,6 +496,7 @@ var CHESSBOARD = {
         if (previousDestinationSquareOccupant) {
             CHESSBOARD.pieces[previousDestinationSquareOccupant].sqId = destinationId;
         }
+        CHESSBOARD.chessBoard[CHESSBOARD._numeric(previousSqId)] = pieceId;
         CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)] = previousDestinationSquareOccupant;
         CHESSBOARD.pieces[pieceId].sqId = previousSqId;
         return result;
