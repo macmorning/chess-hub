@@ -56,11 +56,21 @@ Channel.prototype = {
         },
 
     removeUser: function(user) {
-            if(user && this.users[user] ) {
-                delete this.users[user];
-                return true;
+            if(!user) {
+                return false;
             }
-            return false;
+            if(this.playerA === user) {
+                this.playerA = '';
+            } else if (this.playerB === user) {
+                this.playerB = '';
+            }
+            if (this.blackPlayer === user || this.whitePlayer === user) {        // the user was a seated player, close the game
+                this.switchOpen(false);
+            }
+            if(this.users[user] ) {
+                delete this.users[user];
+            }
+            return true;
         },
 
     startGame: function() {

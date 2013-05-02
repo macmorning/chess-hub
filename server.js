@@ -34,12 +34,12 @@ var MAXMESSAGES     = 20;          // maximum number of messages sent at once
 
 var LOGSTATIC       = false;       // enable or disable static files serving logs
 var LOGCONNECT      = true;        // enable or disable connections logs
-var LOGMESSAGING    = true;        // enable or disable messaging logs
+var LOGMESSAGING    = false;       // enable or disable messaging logs
 var LOGPOLLING      = false;       // enable or disable polling logs
-var LOGCHANNEL      = true;        // enable or disable channel activity logs
+var LOGCHANNEL      = false;       // enable or disable channel activity logs
 var LOGSEARCHING    = false;       // enable or disable game searches logs
 var LOGSTATS        = false;       // enable or disable game stats logs
-var LOGHOUSEKEEPING = false;        // enable or disable house keeping logs
+var LOGHOUSEKEEPING = false;       // enable or disable house keeping logs
 
 function escapeHtml(unsafe) {
     if(unsafe && isNaN(unsafe)) {// escapes Html characters
@@ -75,6 +75,25 @@ function currTime() {
     return(hours + ":" + minutes);
 }
 
+function resBadRequest(res,err,data) {
+    res.writeHead(400, { 'Content-type': 'text/txt'});
+    res.end('Bad request');
+    console.log(currTime() + ' [BADREQ] ... error : ' + err);
+    console.log(data);
+}
+function resNotFound(res,err,data) {
+    res.writeHead(404, { 'Content-type': 'text/txt'});
+    res.end('Not found');
+    console.log(currTime() + ' [NOTFOU] ... error : ' + err);
+    console.log(data);
+}
+function resInternalError(res,err,data) {
+    res.writeHead(500, { 'Content-type': 'text/txt'});
+    res.end('Internal server error');
+    console.log(currTime() + ' [INTERN] ... error : ' + err);
+    console.log(data);
+}
+
 function sendMessage(from, msg, category, to ) {
     // adds a message to the messages array and send it to polling clients
     // sendMessage(from, msg, [category, [to]])
@@ -102,10 +121,37 @@ function sendMessage(from, msg, category, to ) {
     if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... sent message to ' + i + ' client(s)');}
 }
 
-function joinGame(gameId) {
+function leaveGame(i,user) {
+    return channels[i].removeUser(user);    // remove the user from the users array
 }
 
-function createGame() {
+function joinGame(user,gameId) {
+    return channels[gameId].addUser(user);
+}
+
+function createGame(user, open, level, acceptLower, acceptHigher, timer) {
+    // creates a new game channel; returns its id as a string
+    var count = 0;  // count the number of channels
+    for (var i in channels) {
+        count++;
+    }
+    if(count >= MAXGAMES) {      // there are too many games, do not create a new one
+        console.log(currTime() + ' [LIMIT ] Cannot create a new game, MAXGAMES reached !(' + MAXGAMES + ')');
+        return false;
+    } else {
+        // create the new game channel and push it
+        GAMEINDEX++;
+        var gameId = "GAME" + GAMEINDEX;
+            channels[gameId] = new Channel(user + "'s table",gameId);
+            channels[gameId].gameTimer = (timer >= 0 ? timer : 0);  // if user has set his pref to indifferent (-1), then don't set a timer
+            channels[gameId].gameLevel = level;
+            channels[gameId].playerA = user;
+            channels[gameId].gameAcceptHigher = acceptHigher;
+            channels[gameId].gameAcceptLower = acceptLower;
+            channels[gameId].addUser(user);
+            channels[gameId].switchOpen(open);
+        return gameId;
+    }
 }
 
 function disconnect(user,reason) {
@@ -113,17 +159,8 @@ function disconnect(user,reason) {
     if(!reason) { reason = 'quit'; }
     for (var i in channels) {               // remove the user from any game he's in
         if(channels[i].users[user]) {
-            var channel = channels[i];
-            channel.removeUser(user);    // remove the user from the users array
-            sendMessage(user,'leave-'+reason,'game',channel.id);    // send the information to users in that channel
-            if(channel.playerA === user) {
-                channel.playerA = '';
-            } else if (channel.playerB === user) {
-                channel.playerB = '';
-            }
-            if (channel.blackPlayer === user || channel.whitePlayer === user) {        // the user was a seated player, close the game
-                channel.switchOpen(false);
-            }
+            leaveGame(i,user);
+            sendMessage(user,'leave-'+reason,'game',i);    // send the information to users in that channel
         }
     } 
 }
@@ -352,16 +389,14 @@ http.createServer(function (req, res) {
             } catch(err) {
                 if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... error, incorrect format, dumping data below');}
                 if(LOGSEARCHING) { console.log(json); }
-                res.writeHead(400, { 'Content-type': 'text/txt'});
-                res.end('Bad request');
-                return 1;                
+                resBadRequest(res);
+                return false;
             }
             if (isNaN(playerTimerPref)) { playerTimerPref = -1; }
             if (!player || isNaN(playerLevel))  {   // no username, no level => send Bad Request HTTP code
                 if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... error, dumping data below'); }
                 if(LOGSEARCHING) { console.log(json); }
-                res.writeHead(400, { 'Content-type': 'text/txt'});
-                res.end('Bad request');
+                resBadRequest(res);
                 return 1;
             }
             if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + playerLevel, ' timer = ' + playerTimerPref +  ' allow higher/lower = ' + playerAcceptHigher + '/' + playerAcceptLower);}
@@ -379,9 +414,8 @@ http.createServer(function (req, res) {
                         ) {
                     if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);}
 
-                    channel.addUser(player);
+                    joinGame(i,user);
                     sendMessage(player,'join','game',channel.id);    // send the information to users in that channel
-                    channel.playerB = player;
                     if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... playerB = ' + channel.playerB);}
                     res.writeHead(200, {'Content-Type': 'application/json'});
                     console.log(channel);
@@ -406,33 +440,25 @@ http.createServer(function (req, res) {
                 }
             }
 
-            // no game found, create one if MAXGAMES has not been reached yet
-            if(count > MAXGAMES) {      // there are too many games, send http/500 and return
-                console.log(currTime() + ' [LIMIT ] Cannot create a new game, MAXGAMES reached !(' + MAXGAMES + ')');
-                res.writeHead(500, {'Content-Type': 'application/json'});
-                res.end('Sorry, there are to many games right now. Please try again later');
-                return 0;
-            } else {
-                // create the new game channel and push it
-                GAMEINDEX++;
-                var gameId = "GAME" + GAMEINDEX;
-                    channels[gameId] = new Channel(player + "'s table",gameId);
-                    channels[gameId].gameTimer = (playerTimerPref >= 0 ? playerTimerPref : 0);  // if user has set his pref to indifferent (-1), then don't set a timer
-                    channels[gameId].gameLevel = playerLevel;
-                    channels[gameId].playerA = player;
-                    channels[gameId].gameAcceptHigher = playerAcceptHigher;
-                    channels[gameId].gameAcceptLower = playerAcceptLower;
-                    channels[gameId].addUser(player);
+            // CREATE GAME
+            var newGame = createGame(player, true, playerLevel, playerAcceptLower, playerAcceptHigher, playerTimerPref);
+            if (newGame) {
                 if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] New game created, see details below.'); }
-                if(LOGSEARCHING) { console.log(channels[gameId]); }
+                if(LOGSEARCHING) { console.log(channels[newGame]); }
                 res.writeHead(200, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
                         returncode: 'new',
-                        gameDetails: channels[gameId]
+                        gameDetails: channels[newGame]
                     }));
-                sendMessage(player,'created-'+gameId+'-'+playerTimerPref+'-'+playerLevel,'game','MAIN');    // send the information to users in the MAIN channel
+                sendMessage(player,'created-'+newGame+'-'+channels[newGame].gameTimer+'-'+channels[newGame].gameLevel,'game','MAIN');    // send the information to users in the MAIN channel
                 return 0;
-            }
+            } else {
+                res.writeHead(500, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify( {
+                        returncode: 'unable to create a new game',
+                        gameDetails: {}
+                    }));
+            }            
         });
     } 
 
@@ -457,23 +483,15 @@ http.createServer(function (req, res) {
             var json = {};      // then analyze the message
             try { json = JSON.parse(data); }    // we were unable to analyze the json string
             catch(err) { 
-                res.writeHead(400, { 'Content-type': 'application/json'});
-                res.end(JSON.stringify( {
-                        returncode: 'ko'
-                }));
-                console.log(err); 
-                console.log(data); 
-                return 1;                
+                resBadRequest(res,err,data);
+                return false;
             }
             user = escapeHtml(json.user);
             key = escapeHtml(json.key);
             gameId = escapeHtml(json.gameId);
             if (!user || !gameId) {
-                res.writeHead(400, { 'Content-type': 'application/json'});
-                res.end(JSON.stringify( {
-                        returncode: 'ko'
-                }));
-                return 1;                
+                resBadRequest(res,'invalid user or gameId',data);
+                return false;             
             }
             try { if(channels[gameId].open) {
                     var channel = channels[gameId];
@@ -496,16 +514,11 @@ http.createServer(function (req, res) {
                             returncode: 'ok',
                             gameDetails: tmpChannel
                     }));
-                    return 0;
+                    return true;
                 }
             } catch(err) {
-                res.writeHead(404, { 'Content-type': 'application/json'});
-                res.end(JSON.stringify( {
-                        returncode: 'game not found or closed'
-                }));
-                console.log(err); 
-                console.log(data); 
-                return 1;                
+                resNotFound(res,'game not found or closed',data);
+                return false;
             }
         });
     }
@@ -532,35 +545,24 @@ http.createServer(function (req, res) {
             var json = {};      // then analyze the message
             try { json = JSON.parse(data); }    // we were unable to analyze the json string
             catch(err) { 
-                res.writeHead(400, { 'Content-type': 'application/json'});
-                res.end(JSON.stringify( {
-                        returncode: 'ko'
-                }));
-                console.log(err); 
-                console.log(data); 
-                return 1;                
+                resBadRequest(res,err,data);
+                return false;
             }
             msg = escapeHtml(json.msg);         // escaping html chars
             user = escapeHtml(json.user);
             category = escapeHtml(json.category) || 'chat_msg' ;        // default : chat message
             channel = escapeHtml(json.channel) || 'MAIN';                  // default : main channel
             if (!msg || !user) {
-                res.writeHead(400, { 'Content-type': 'application/json'});
-                res.end(JSON.stringify( {
-                        returncode: 'ko'
-                }));
-                return 1;                
+                resBadRequest(res,'no message or no user provided',data);
+                return false;
             }
             
             if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user + " / channel = " + channel + " / category = " + category); }
             if (category === 'game') {
                 if (!checkCommand(channel,user,msg)) {  // the command is invalid
-                    res.writeHead(400, { 'Content-type': 'application/json'});
-                    res.end(JSON.stringify( {
-                            returncode: 'ko'
-                    }));
+                    resBadRequest(res,'invalid game command',msg);
                     console.log(currTime() + ' [MESSAG] incorrect game command from user ' + user + ' : ' + msg);
-                    return 1;   
+                    return false;
                 }
             }
 
