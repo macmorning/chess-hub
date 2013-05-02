@@ -127,7 +127,13 @@ function leaveGame(i,user) {
 }
 
 function joinGame(user,gameId) {
-    try { return channels[gameId].addUser(user); }
+    try { 
+        if (!channels[gameId].addUser(user)) {
+            return false;
+        }
+        sendMessage(user,'join','game',gameId);    // send the information to users in that channel
+        return true;
+    }
     catch(err) { 
         console.log(currTime() + ' [JOIN ] Cannot join game ' + gameId);
         console.log(err);        
@@ -336,7 +342,9 @@ http.createServer(function (req, res) {
             if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel); }
             users[user].lastActivity = new Date();       // update user's last polling request
             if (!channels[channel].users[user]) {        // user is polling this channel for the first time
-                joinGame(user,channel);         // add him to the users list
+                if (!joinGame(user,channel)) {         // add him to the users list
+                    resInternalError(res, 'error joing game ' + channel, data);
+                }
             }
             channels[channel].users[user].lastActivity = new Date();       // update user's last polling request
 
@@ -418,13 +426,6 @@ http.createServer(function (req, res) {
                         && (playerTimerPref === -1 || playerTimerPref === channel.gameTimer)  // player has not set a timer pref (-1) or the game matches his search
                         ) {
                     if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);}
-
-                    if (!joinGame(player,i)) {
-                        resInternalError(res, 'error joing game ' + i, data);
-                        return false;
-                    }
-                    sendMessage(player,'join','game',channel.id);    // send the information to users in that channel
-                    if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... playerB = ' + channel.playerB);}
 
                     var tmpChannel = {name: channel.name, 
                                                     open: channel.open, 

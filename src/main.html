@@ -105,7 +105,8 @@
                     CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
                     $('#boardpage_header').text(response.gameDetails.name);
                     $.mobile.changePage($("#boardpage"));
-                    return 0;                    
+                    $('#game_search').button('enable');
+                    return 0;
                 },
                 function() {
                     output.html("<p class='chat_sys'>Error joining the game :(</p>" + output.html());
@@ -125,21 +126,8 @@
                     } else if(response.returncode !== "new") {
                         output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '". Please sit and let the game start.</p>'+ output.html());
                     }
-                    CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)
-                    CHESSHUB.listen(response.gameDetails.id,
-                                function(message) { addMessage(message); }  // start polling the game channel
-                            );
-                    CONTEXT.currentGameID = response.gameDetails.id;    // set the game informations
-                    CHESSBOARD.initChessBoard(response.gameDetails.id);
-                    CHESSBOARD.setPlayer('A',response.gameDetails.playerA);
-                    CHESSBOARD.setPlayer('B',response.gameDetails.playerB);
-                    CHESSBOARD.setPlayer('w',response.gameDetails.whitePlayer);
-                    CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
-
-                    $('#game_search').button('enable');
-                    $('#boardpage_header').text(response.gameDetails.name);
-                    $.mobile.changePage($("#boardpage"));
-                    return 0;
+                    joinGame(response.gameDetails.id);
+                    return true;
                 },
                 function() {                       // callback function for error event
                     output.html("<p class='chat_sys'>Error connecting you to the server :(</p>" + output.html());
