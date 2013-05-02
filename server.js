@@ -11,6 +11,7 @@
 *	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+
 var PORT = process.env.PORT || 8080;
 var ADDRESS = process.env.IP;
 var SERVERDIR = "";
@@ -126,16 +127,17 @@ function leaveGame(i,user) {
 }
 
 function joinGame(user,gameId) {
-    return channels[gameId].addUser(user);
+    try { return channels[gameId].addUser(user); }
+    catch(err) { 
+        console.log(currTime() + ' [JOIN ] Cannot join game ' + gameId);
+        console.log(err);        
+        return false; 
+    }
 }
 
 function createGame(user, open, level, acceptLower, acceptHigher, timer) {
     // creates a new game channel; returns its id as a string
-    var count = 0;  // count the number of channels
-    for (var i in channels) {
-        count++;
-    }
-    if(count >= MAXGAMES) {      // there are too many games, do not create a new one
+    if(Object.keys(channels).length >= MAXGAMES) {      // there are too many games, do not create a new one
         console.log(currTime() + ' [LIMIT ] Cannot create a new game, MAXGAMES reached !(' + MAXGAMES + ')');
         return false;
     } else {
@@ -177,6 +179,12 @@ function houseKeeper() {
             disconnect(user);
         }
     }
+    for (var game in channels) {
+        if (channels[game].id !== 'MAIN' && !channels[game].playerA && !channels[game].playerB) {
+            console.log(currTime() + ' [HOUSEK] ... delete game without players ' + game);
+            delete channels[game];
+        }
+    }
 }
 
 function checkCommand(channel,user,msg) {
@@ -205,7 +213,7 @@ channels['MAIN'].addMessage({ time : currTime(), user : "ADMIN", msg : "Welcome 
 channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
 
 
-// start the housekeeping interval, every 1000ms
+// start the housekeeping interval, every 10s
 setInterval(function() {
         houseKeeper();
     }, 10000);
@@ -214,9 +222,7 @@ setInterval(function() {
 http.createServer(function (req, res) {
 
     if(Object.keys(users).length > MAXCLIENTS_2) {
-          console.log(currTime() + ' [LIMIT ] Cannot accept request, MAXCLIENT_2 reached !(' + MAXCLIENTS_2 + ')');
-          res.writeHead(500, { 'Content-type': 'text/txt'});
-          res.end('Sorry, there are too many users right now ! Please try again later.');
+          resInternalError(res,'Cannot accept request, MAXCLIENT_2 reached !(' + MAXCLIENTS_2 + ')','');
     }
 
 //
@@ -236,7 +242,8 @@ http.createServer(function (req, res) {
                 res.end(JSON.stringify( {
                     returncode: 'ko',
                     returnmessage: 'Sorry, there are too many users right now. Please try again in a few minutes.',
-                    user: ''
+                    user: '',
+                    key: ''
                 }));
         }
         var user = "";
@@ -269,7 +276,8 @@ http.createServer(function (req, res) {
                 res.end(JSON.stringify( {
                     returncode: 'ko',
                     returnmessage: 'Sorry, ' + user + ' is already used. Please pick another name.',
-                    user: user
+                    user: user,
+                    keyid: ''
                 }));
             }
             if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... current users : ' + Object.keys(users).length); }
@@ -317,29 +325,26 @@ http.createServer(function (req, res) {
             key = escapeHtml(json.key);
             counter = json.counter;
             if (isNaN(counter) || !channel || !channels[channel])  {   // no counter provided or no channel id, send Bad Request HTTP code
-                if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... error, dumping data below');}
-                if(LOGPOLLING) { console.log(json); }
-                res.writeHead(400, { 'Content-type': 'text/txt'});
-                res.end('Bad request');
-                return 1;
+                resBadRequest(res,'bad counter or unknown channel',data);
+                return false;
             }
             if (!users[user]) {
-                if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... unknown user');}
-                if(LOGPOLLING) { console.log(json); }
                 res.writeHead(401, { 'Content-type': 'text/txt'});
                 res.end('Unauthorized');
-                return 1;
+                return false;
             }
             if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel); }
             users[user].lastActivity = new Date();       // update user's last polling request
+            if (!channels[channel].users[user]) {        // user is polling this channel for the first time
+                joinGame(user,channel);         // add him to the users list
+            }
             channels[channel].users[user].lastActivity = new Date();       // update user's last polling request
 
             var n = 0;
             try { n = channels[channel].messages.length - counter; }        // try to get the messages list for the channel
             catch(err) {                                        // the channel doesn't exit
-                res.writeHead(500, {'Content-Type': 'text/txt'});
-                res.end("This channel doesn't exist or has been destroyed.");
-                return 1;
+                resInternalError(res,'This channel doesnt exist or has been destroyed',data);
+                return false;
             }
                         
             if(n > 0) {
@@ -414,11 +419,13 @@ http.createServer(function (req, res) {
                         ) {
                     if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);}
 
-                    joinGame(i,user);
+                    if (!joinGame(player,i)) {
+                        resInternalError(res, 'error joing game ' + i, data);
+                        return false;
+                    }
                     sendMessage(player,'join','game',channel.id);    // send the information to users in that channel
                     if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... playerB = ' + channel.playerB);}
-                    res.writeHead(200, {'Content-Type': 'application/json'});
-                    console.log(channel);
+
                     var tmpChannel = {name: channel.name, 
                                                     open: channel.open, 
                                                     id: channel.id, 
@@ -432,6 +439,8 @@ http.createServer(function (req, res) {
                                                     gameAcceptLower: channel.gameAcceptLower,
                                                     gameTimer: channel.gameTimer,
                                                     gameStarted: channel.gameStarted};
+
+                    res.writeHead(200, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify( {
                             returncode: 'joined',
                             gameDetails: tmpChannel
@@ -463,15 +472,14 @@ http.createServer(function (req, res) {
     } 
 
 //
-// JOIN GAME SERVICE
+// GET GAME STATUS
 //
-    else if(url_parts.pathname.substr(0, 5) === '/join') {
+    else if(url_parts.pathname.substr(0, 8) === '/getGame') {
         // user : user issuing the messages
         // key : user's key
         // channel : channel to dispatch the message to
         // category : message category; either chat_msg or game
         // msg : message
-        if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] new message'); }
         var user = "";
         var key = "";
         var gameId = "";
@@ -582,55 +590,13 @@ http.createServer(function (req, res) {
         // user : user issuing the messages
         // key : user's key
         if(LOGSTATS) { console.log(currTime() + ' [STATS ] get stats'); }
-        var user = "";
-        var data = "";
-        req.on('data', function(chunk) {
-            data += chunk;
-        });
         req.on('end', function() {
-            var json = {};
-            try { json = JSON.parse(data); }
-            catch(err) { console.log(err); console.log(data); var json= {};}
-            user = escapeHtml(json.user) || 'unknown';
-            var gamesTimed10Started = 0;
-            var gamesTimed10Pending = 0;
-            var gamesTimed5Started = 0;
-            var gamesTimed5Pending = 0;
-            var gamesNonTimedStarted = 0;
-            var gamesNonTimedPending = 0;
-            for (var i in channels) {
-                if (channels[i].id === "MAIN") {
-                    continue;
-                } else if (channels[i].gameStarted === true) {
-                    if (channels[i].gameTimer === 10) {
-                        gamesTimed10Started++;
-                    } if (channels[i].gameTimer === 5) {
-                        gamesTimed5Started++;                        
-                    } else {
-                        gamesNonTimedStarted++;                        
-                    }
-                } else if (channels[i].gameStarted === false) {
-                    if (channels[i].gameTimer === 10) {
-                        gamesTimed10Pending++;
-                    } if (channels[i].gameTimer === 5) {
-                        gamesTimed5Pending++;                        
-                    } else {
-                        gamesNonTimedPending++;                        
-                    }
-                }
-            }
-            if(LOGSTATS) { console.log(currTime() + " [STATS ] ... user = " + user); }
-            res.writeHead(200, { 'Content-type': 'text/html'});
+            res.writeHead(200, { 'Content-type': 'application/json'});
             res.end(JSON.stringify( {
                     users: Object.keys(users).length,
-                    gamesTimed10Started: gamesTimed10Started,
-                    gamesTimed10Pending: gamesTimed10Pending,
-                    gamesTimed5Started: gamesTimed5Started,
-                    gamesTimed5Pending: gamesTimed5Pending,
-                    gamesNonTimedStarted: gamesNonTimedStarted,
-                    gamesNonTimedPending: gamesNonTimedPending
+                    games: Object.keys(channels).length - 1
                 }));
-            return 0;
+            return true;
         });
     }
     

@@ -81,13 +81,7 @@
     function getStats(destinationDiv) {
         CHESSHUB.getStats(function(response) {
                     console.log(response);
-                    var totalGames = parseInt(response.gamesTimed10Pending) 
-                            + parseInt(response.gamesTimed10Started)
-                            + parseInt(response.gamesTimed5Pending)
-                            + parseInt(response.gamesTimed5Started)
-                            + parseInt(response.gamesNonTimedPending)
-                            + parseInt(response.gamesNonTimedStarted);
-                    $('#'+destinationDiv).html('There are currently ' + response.users + ' players in this hub, seated at ' + totalGames + ' tables.');
+                    $('#'+destinationDiv).html('There are currently ' + response.users + ' players in this hub, seated at ' + response.games + ' tables.');
                 },
                 function() {    // callback function for error event
                 }
@@ -95,10 +89,23 @@
     }
     
     function joinGame(gameId) {
-        var output = $('#board_chat_output');
+        var output = $('#chat_output');
         CHESSHUB.joinGame(gameId,
                 function(response) {
-                    output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '". Please sit and let the game start.</p>'+ output.html());
+                    output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '"...</p>'+ output.html());
+                    CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)
+                    CHESSHUB.listen(response.gameDetails.id,
+                                function(message) { addMessage(message); }  // start polling the game channel
+                            );
+                    CONTEXT.currentGameID = response.gameDetails.id;    // set the game informations
+                    CHESSBOARD.initChessBoard(response.gameDetails.id);
+                    CHESSBOARD.setPlayer('A',response.gameDetails.playerA);
+                    CHESSBOARD.setPlayer('B',response.gameDetails.playerB);
+                    CHESSBOARD.setPlayer('w',response.gameDetails.whitePlayer);
+                    CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
+                    $('#boardpage_header').text(response.gameDetails.name);
+                    $.mobile.changePage($("#boardpage"));
+                    return 0;                    
                 },
                 function() {
                     output.html("<p class='chat_sys'>Error joining the game :(</p>" + output.html());
@@ -113,9 +120,9 @@
                 function(response) {
                     if (isNaN(response.gameDetails.gameLevel)) {
                         output.html('<p class="chat_sys">There was an error when retrieving game informations. Please reconnect and retry.</p>'+ output.html());
-                    } else if(response.returncode == "new") {
+                    } else if(response.returncode === "new") {
                         output.html('<p class="chat_sys">A new game was created : "' + response.gameDetails.name + '". Please sit and wait for another player...</p>'+ output.html());
-                    } else if(response.returncode != "new") {
+                    } else if(response.returncode !== "new") {
                         output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '". Please sit and let the game start.</p>'+ output.html());
                     }
                     CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)

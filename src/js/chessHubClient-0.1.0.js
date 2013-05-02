@@ -266,7 +266,7 @@ CHESSHUB = {
         var data = { user: CHESSHUB.user, key: CHESSHUB.key, gameId: gameId} ;
         $.ajax({
             type: 'POST',
-            url : '/join',
+            url : '/getGame',
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
             data: JSON.stringify(data),
