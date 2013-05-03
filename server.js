@@ -524,7 +524,7 @@ http.createServer(function (req, res) {
                 resBadRequest(res,'invalid user or gameId',data);
                 return false;             
             }
-            try { if(channels[gameId].open) {
+            try { 
                     var channel = channels[gameId];
                     var tmpChannel = {name: channel.name, 
                                 open: channel.open, 
@@ -546,7 +546,6 @@ http.createServer(function (req, res) {
                             gameDetails: tmpChannel
                     }));
                     return true;
-                }
             } catch(err) {
                 resNotFound(res,'game not found or closed',data);
                 return false;
