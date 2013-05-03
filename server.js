@@ -669,7 +669,7 @@ http.createServer(function (req, res) {
                         }
                         else {
                             res.setHeader('Content-Length', data.length);
-                            res.setHeader('Cache-Control', 'public, max-age:3600');
+                            res.setHeader('Cache-Control', 'public, max-age=3600');
                             res.setHeader('ETag', etag);
                             res.statusCode = 200;
                             res.end(data);
