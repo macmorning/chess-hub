@@ -19,7 +19,9 @@
         key:"",
         history: [],
         currentHistoryIndex: 0,
-        currentGameID: ''
+        currentGameId: '',
+        getGameId:'',
+        getUserName:''
     };
 
     // current browser doesn't have a console
@@ -32,9 +34,17 @@
         alert('Sorry, the browser you are using is not supported.'); 
     }
     
-    
+    function getUrlVar(key){
+        var result = new RegExp(key + "=([^&]*)", "i").exec(window.location.search);
+        return result && unescape(result[1]) || "";
+    }    
+
     $(document).ready(function() {
-        window.onunload = function(){logoff();};
+        
+        window.onunload = function(){
+            logoff();
+            $.mobile.changePage($("#loginpage"));
+        };
         
         $("#login_submit").click(function(event) {
                 event.preventDefault();
@@ -44,11 +54,23 @@
                 event.preventDefault();
                 searchGame($('#game_user_level').val(),$('#game_lower_ok').val(),$('#game_higher_ok').val(),$('#game_timer').val());
         });
+        $("#game_create").click(function(event) {
+                event.preventDefault();
+                searchGame($('#game_user_level').val(),$('#game_lower_ok').val(),$('#game_higher_ok').val(),$('#game_timer').val(),true);
+        });
         $("#loginpage_footer").html(CHESSHUB.name + " version " + CHESSHUB.version);
         getStats('login_stats');
-//        logoff();
+        
         $('#login_username').focus();
+        
+        CONTEXT.getUserName = getUrlVar('user');
+        CONTEXT.getGameId = getUrlVar('game');
+        
+        if(CONTEXT.getUserName) {
+            $('#login_username').val(CONTEXT.getUserName);
+        }
     });
+
     
     function connect(user) {
         $('#login_submit').button('disable');
@@ -67,6 +89,11 @@
                                 function(message) { addMessage(message); }
                             );
                         $.mobile.changePage($("#mainpage"));
+                        
+                        // if a game id was passed as a GET parameter, try joining the gameAcceptHigher
+                        if(CONTEXT.getGameId) { 
+                            joinGame(CONTEXT.getGameId);
+                        }
                     }
 				},
                 function() {    // callback function for error event
@@ -75,7 +102,7 @@
                     $('#login_returnmessage').text("Error connecting you to the server :(");
                 }
         );
-        return 0;
+        return true;
     }
 
     function getStats(destinationDiv) {
@@ -94,11 +121,11 @@
         CHESSHUB.joinGame(gameId,
                 function(response) {
                     output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '"...</p>'+ output.html());
-                    CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)
+                    //CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)
                     CHESSHUB.listen(response.gameDetails.id,
                                 function(message) { addMessage(message); }  // start polling the game channel
                             );
-                    CONTEXT.currentGameID = response.gameDetails.id;    // set the game informations
+                    CONTEXT.currentGameId = response.gameDetails.id;    // set the game informations
                     CHESSBOARD.initChessBoard(response.gameDetails.id);
                     CHESSBOARD.setPlayer('A',response.gameDetails.playerA);
                     CHESSBOARD.setPlayer('B',response.gameDetails.playerB);
@@ -107,7 +134,8 @@
                     $('#boardpage_header').text(response.gameDetails.name);
                     $.mobile.changePage($("#boardpage"));
                     $('#game_search').button('enable');
-                    return 0;
+                    $('#game_create').button('enable');
+                    return true;
                 },
                 function() {
                     output.html("<p class='chat_sys'>Error joining the game :(</p>" + output.html());
@@ -116,10 +144,13 @@
     }
     
     // searchGame
-    function searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref) {
+    function searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref,createFlag) {
+        // if createFlag is TRUE then this is a creation request
+        if(!createFlag) { createFlag = false;}
         $('#game_search').button('disable');
+        $('#game_create').button('disable');
         var output = $('#board_chat_output');
-        CHESSHUB.searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref,
+        CHESSHUB.searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref,createFlag,
                 function(response) {
                     if (isNaN(response.gameDetails.gameLevel)) {
                         output.html('<p class="chat_sys">There was an error when retrieving game informations. Please reconnect and retry.</p>'+ output.html());
@@ -134,6 +165,7 @@
                 function() {                       // callback function for error event
                     output.html("<p class='chat_sys'>Error connecting you to the server :(</p>" + output.html());
                     $('#game_search').button('enable');
+                    $('#game_create').button('enable');
                     return 1;
                 });
     }
@@ -149,8 +181,7 @@
     
     function addMessage(message) {
         // adds a message to the chat_output div of the current page
-        console.log('addMessage : ') ;
-        console.log(message);
+
         var directMessage = false;
         
         if (message.to == 'MAIN' || !message.to) { 
@@ -264,13 +295,12 @@
         CONTEXT.key = '';
         CONTEXT.history = [];
         CONTEXT.currentHistoryIndex = 0;
-        $.mobile.changePage($('#loginpage'));
-        return 0;
+        return true;
     }
 
     function chatSpecialKeys(event,channel) {
         var key = window.event ? event.keyCode : event.which;
-        if(!channel) { channel = CONTEXT.currentGameID; };      // if channel is empty, get the current game ID
+        if(!channel) { channel = CONTEXT.currentGameId; };      // if channel is empty, get the current game ID
         var input = $('#'+event.target.id);
         if (key==13) {                                          // user pressed enter
             sendMessage(input.val(),channel);
@@ -292,14 +322,14 @@
 <body>
 
 <!-- ############### Login Page ###############-->
-<div data-role="page" id="loginpage">
+<div data-role="page" id="loginpage" data-theme="a">
     <header data-role="header">
 		<h1>Login</h1>
 	</header>
         <div id='loginpage_main'>
             <h2>Please enter a username</h2>
                 <input type='text' id="login_username" onkeypress="{if (event.keyCode==13 && this.value !== '') connect(this.value)}">
-                <button id="login_submit" type="submit" data-theme="a">Submit</button>
+                <button id="login_submit" type="submit">Submit</button>
                 <span class="info" id="login_returnmessage"></span>
                 <span class="info" id="login_stats"></span>
         </div>
@@ -309,11 +339,11 @@
 
 
 <!-- ############### Main Page ###############-->
-<div data-role="page" id="mainpage">
+<div data-role="page" id="mainpage" data-theme="a">
     <header data-role="header">
         <h1>Chess Hub</h1>
-		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();">Exit</a>
-		<a href="#configpage" data-icon="gear" data-iconpos="notext">Configuration</a>
+		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();$.mobile.changePage($('#loginpage'));">Exit</a>
+<!--		<a href="#configpage" data-icon="gear" data-iconpos="notext">Configuration</a>-->
 	</header>
 
     <div data-role="popup" id="mainpage_popupHelpLevel" class="ui-content">
@@ -324,22 +354,8 @@
             <li>veteran : You are a seasoned player and probably know most openings and end games.</li>
     </div>
 
-    <div id="mainpage_side">
-        <span class="mainpage_stats" id="mainpage_stats"></span>
-
-        <h3>To search for a game, fill this form and press "search".</h3>
-                <!--<label for="game_search_user">Are you searching for a friend ?</label>
-                <input type="search" name="game_search_user" id="game_search_user"> -->
-                <form method="POST" action="" data-ajax="false">
-                        <label for="game_user_level">What is your self estimated skill ?
-                            <a href="#mainpage_popupHelpLevel" data-wrapperels="span" data-mini="true" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
-                        </label>
-                        <select id="game_user_level" data-mini="true">
-                            <option value=2>veteran</option>
-                            <option value=1 selected=true>amateur</option>
-                            <option value=0>beginner</option>
-                        </select>
-                        <label for="game_timer">Timer ?</label>
+    <div data-role="popup" id="mainpage_hiddenFeatures" class="ui-content">
+                            <label for="game_timer">Timer ?</label>
                         <select id="game_timer" data-mini="true">
                             <option value=10>10 minutes</option>
                             <option value=5>5 minutes</option>
@@ -355,8 +371,26 @@
                             <select name="game_higher_ok" id="game_higher_ok" data-role="slider">
                                 <option value=1>Yes</option>
                                 <option value=0>No</option>
-                            </select>                
-            		    <button id="game_search" type="submit" data-theme="a">search</button>
+                            </select><br/>
+    </div>
+    
+    <div id="mainpage_side">
+        <span class="mainpage_stats" id="mainpage_stats"></span>
+
+        <h3>To search for a game, fill this form and press "search".</h3>
+                <!--<label for="game_search_user">Are you searching for a friend ?</label>
+                <input type="search" name="game_search_user" id="game_search_user"> -->
+                <form method="POST" action="" data-ajax="false">
+                        <label for="game_user_level">What is your self estimated skill ?
+                            <a href="#mainpage_popupHelpLevel" data-wrapperels="span" data-mini="false" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
+                        </label>
+                        <select id="game_user_level" data-mini="true">
+                            <option value=2>veteran</option>
+                            <option value=1 selected=true>amateur</option>
+                            <option value=0>beginner</option>
+                        </select>
+            		    <button id="game_search" type="submit" data-inline="true">search</button>
+            		    <button id="game_create" type="submit" data-inline="true">create</button>
                 </form>
     </div>
     <div id="mainpage_chat">
@@ -367,16 +401,17 @@
 
 
 <!-- ############### Board Page ###############-->
-<div data-role="page" id="boardpage">
+<div data-role="page" id="boardpage" data-theme="a">
     <header data-role="header">
 		<h1 id="boardpage_header"></h1>
-		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();">Exit</a>
+		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();$.mobile.changePage($('#loginpage'));">Exit</a>
 		<a href="#boardpage_popupConf" data-wrapperels="span" data-mini="true" data-rel="popup" data-icon="gear" data-iconpos="notext">Configuration</a>
 	</header>
         <div data-role="popup" id="boardpage_popupConf" class="ui-content">
-            <button id="boardpage_flip" onclick="CHESSBOARD.flip();">flip board</button>
-            <button id="boardpage_history" onclick="">show history</button>
+            <button data-icon="refresh" id="boardpage_flip" onclick="CHESSBOARD.flip();$('#boardpage_popupConf').popup('close');">flip board</button>
+            <button data-icon="chesshub-twitter" id="boardpage_twitter" onclick="window.open('https://twitter.com/intent/tweet?text=Up%20for%20a%20game%20%3F&hashtags=chesshub&url=http%3A%2F%2Fwww.chess-hub.net%2F%3Fgame%3D'+CONTEXT.currentGameId, '_blank');$('#boardpage_popupConf').popup('close');">share with twitter</button>
         </div>
+
 
         <div id='chessBoardHidden'>
                 Sorry, this game requires a higher resolution. 

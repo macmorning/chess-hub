@@ -19,7 +19,7 @@ div#loginpage_footer {
 *************************/
 
 label {
-    color:#000000;  
+/*    color:#000000;  */
 }
 
 #chat_output {
@@ -56,4 +56,13 @@ a.chat_user:hover {
 span.chat_msg, span.game {
 }
 
+.ui-icon-chesshub-twitter {
+	background-image: url("/client/img/tweet-18x18.png");
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+	.ui-icon-chesshub-twitter {
+		background-image: url("/client/img/tweet-36x36.png");
+		background-size: 18px 18px;
+	}
+}
 

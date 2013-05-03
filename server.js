@@ -31,10 +31,10 @@ var channels = [];      // init the channels array
 var MAXCLIENTS_2    = 70;          // absolute maximum number of clients; any request will be dropped once this number is reached
 var MAXCLIENTS_1    = 50;          // maximum number of clients before refusing new connections
 var MAXGAMES        = 20;          // maximum number of games
-var MAXMESSAGES     = 20;          // maximum number of messages sent at once
+var MAXMESSAGES     = 20;          // maximum number of messages sent at once for the MAIN channel only
 
-var LOGSTATIC       = true;       // enable or disable static files serving logs
-var LOGCONNECT      = true;        // enable or disable connections logs
+var LOGSTATIC       = false;       // enable or disable static files serving logs
+var LOGCONNECT      = false;        // enable or disable connections logs
 var LOGMESSAGING    = false;       // enable or disable messaging logs
 var LOGPOLLING      = false;       // enable or disable polling logs
 var LOGCHANNEL      = false;       // enable or disable channel activity logs
@@ -81,18 +81,21 @@ function resBadRequest(res,err,data) {
     res.end('Bad request');
     console.log(currTime() + ' [BADREQ] ... error : ' + err);
     console.log(data);
+    return true;
 }
 function resNotFound(res,err,data) {
     res.writeHead(404, { 'Content-type': 'text/txt'});
     res.end('Not found');
     console.log(currTime() + ' [NOTFOU] ... error : ' + err);
     console.log(data);
+    return true;
 }
 function resInternalError(res,err,data) {
     res.writeHead(500, { 'Content-type': 'text/txt'});
     res.end('Internal server error');
     console.log(currTime() + ' [INTERN] ... error : ' + err);
     console.log(data);
+    return true;
 }
 
 function sendMessage(from, msg, category, to ) {
@@ -106,6 +109,10 @@ function sendMessage(from, msg, category, to ) {
     //        - chat_activity, chat channel activity : join, leave, quit
     //        - game, game channel activity : sit-[w|b] ; move-piece-square ; leave
     // to : target for the message : a user, a game channel id, or main channel (by default)
+    if (!channels[to]) {
+        if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... channel ' + to + ' does not exist.');}
+        return false;
+    }
     var message = [];
     if (!category) { category = "chat_msg"; }
     message = {time: currTime(), user: from, msg: msg, category: category, to: to };
@@ -120,6 +127,7 @@ function sendMessage(from, msg, category, to ) {
         i++;
     }
     if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... sent message to ' + i + ' client(s)');}
+    return true;
 }
 
 function leaveGame(i,user) {
@@ -182,12 +190,13 @@ function houseKeeper() {
             console.log(currTime() + ' [HOUSEK] ... disconnect ' + user);
             if(LOGHOUSEKEEPING) { console.log(currTime() + ' [HOUSEK] ... last activity = ' + users[user].lastActivity);}
             if(LOGHOUSEKEEPING) { console.log(currTime() + ' [HOUSEK] ... limit time = ' + limitTime);}
-            disconnect(user);
+            disconnect(user,'timeout');
         }
     }
     for (var game in channels) {
         if (channels[game].id !== 'MAIN' && !channels[game].playerA && !channels[game].playerB) {
             console.log(currTime() + ' [HOUSEK] ... delete game without players ' + game);
+            sendMessage('SYSTEM','This game has been closed.', 'chat_sys', game);
             delete channels[game];
         }
     }
@@ -224,6 +233,14 @@ setInterval(function() {
         houseKeeper();
     }, 10000);
 
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+//                              Create http server
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
 http.createServer(function (req, res) {
 
@@ -357,9 +374,9 @@ http.createServer(function (req, res) {
                         
             if(n > 0) {
                 var lastMessages = {};
-                if ( n <= MAXMESSAGES ) {
+                if ( n <= MAXMESSAGES || channel !== 'MAIN') {       // do not limit the max number of messages for a game channel
                     lastMessages = channels[channel].messages.slice(counter);
-                } else if ( n > MAXMESSAGES ) {       // if there are too many messages to send
+                } else if ( n > MAXMESSAGES && channel === 'MAIN' ) {       // if there are too many messages to send
                     lastMessages = channels[channel].messages.slice(channels[channel].messages.length - MAXMESSAGES);
                 }
                 if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... sending ' + lastMessages.length + ' new message(s)'); }
@@ -384,6 +401,7 @@ http.createServer(function (req, res) {
         var playerAcceptLower=0;
         var playerAcceptHigher=0;
         var playerTimerPref=0;
+        var createFlag=false;
         var data="";
         if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] search a game'); }
         req.on('data', function(chunk) {
@@ -399,6 +417,7 @@ http.createServer(function (req, res) {
                 playerAcceptLower = parseInt(json.playerAcceptLower,10);
                 playerAcceptHigher = parseInt(json.playerAcceptHigher,10);
                 playerTimerPref = parseInt(json.playerTimerPref,10);
+                createFlag = json.createFlag;
             } catch(err) {
                 if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... error, incorrect format, dumping data below');}
                 if(LOGSEARCHING) { console.log(json); }
@@ -415,43 +434,46 @@ http.createServer(function (req, res) {
             if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + playerLevel, ' timer = ' + playerTimerPref +  ' allow higher/lower = ' + playerAcceptHigher + '/' + playerAcceptLower);}
             
             // searching for an existing game
-            var count = 0;  // count the number of channels
-            for (var i in channels) {
-                count++;
-                var channel = channels[i];
-                if(channel.open         // the channel is open
-                        && channel.playerA && !channel.playerB && channel.playerA !== player     // this is a game channel with only a player A, who is not the user who searches for a game
-                        && ((playerAcceptLower === 1 && channel.gameAcceptHigher === 1 && channel.gameLevel < playerLevel) || channel.gameLevel === playerLevel)      // this game allows lower level players to join, or is wihtin accepted range
-                        && ((playerAcceptHigher === 1 && channel.gameAcceptLower === 1 && channel.gameLevel > playerLevel) || channel.gameLevel === playerLevel)      // this game allows higher level players to join, or is wihtin accepted range
-                        && (playerTimerPref === -1 || playerTimerPref === channel.gameTimer)  // player has not set a timer pref (-1) or the game matches his search
-                        ) {
-                    if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);}
+            if(!createFlag) {
+                var count = 0;  // count the number of channels
+                for (var i in channels) {
+                    count++;
+                    var channel = channels[i];
+                    if(channel.open         // the channel is open
+                            && channel.playerA && !channel.playerB && channel.playerA !== player     // this is a game channel with only a player A, who is not the user who searches for a game
+                            && ((playerAcceptLower === 1 && channel.gameAcceptHigher === 1 && channel.gameLevel < playerLevel) || channel.gameLevel === playerLevel)      // this game allows lower level players to join, or is wihtin accepted range
+                            && ((playerAcceptHigher === 1 && channel.gameAcceptLower === 1 && channel.gameLevel > playerLevel) || channel.gameLevel === playerLevel)      // this game allows higher level players to join, or is wihtin accepted range
+                            && (playerTimerPref === -1 || playerTimerPref === channel.gameTimer)  // player has not set a timer pref (-1) or the game matches his search
+                            ) {
+                        if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... found a game ! name = ' + channel.name + ', playerA = ' + channel.playerA + ', level = ' + channel.gameLevel);}
 
-                    var tmpChannel = {name: channel.name, 
-                                                    open: channel.open, 
-                                                    id: channel.id, 
-                                                    messages: channel.messages, 
-                                                    playerA: channel.playerA, 
-                                                    playerB: channel.playerB,
-                                                    whitePlayer: channel.whitePlayer,
-                                                    blackPlayer: channel.blackPlayer,
-                                                    gameLevel: channel.gameLevel,
-                                                    gameAcceptHigher: channel.gameAcceptHigher,
-                                                    gameAcceptLower: channel.gameAcceptLower,
-                                                    gameTimer: channel.gameTimer,
-                                                    gameStarted: channel.gameStarted};
+                        var tmpChannel = {name: channel.name, 
+                                                        open: channel.open, 
+                                                        id: channel.id, 
+                                                        messages: channel.messages, 
+                                                        playerA: channel.playerA, 
+                                                        playerB: channel.playerB,
+                                                        whitePlayer: channel.whitePlayer,
+                                                        blackPlayer: channel.blackPlayer,
+                                                        gameLevel: channel.gameLevel,
+                                                        gameAcceptHigher: channel.gameAcceptHigher,
+                                                        gameAcceptLower: channel.gameAcceptLower,
+                                                        gameTimer: channel.gameTimer,
+                                                        gameStarted: channel.gameStarted};
 
-                    res.writeHead(200, {'Content-Type': 'application/json'});
-                    res.end(JSON.stringify( {
-                            returncode: 'joined',
-                            gameDetails: tmpChannel
-                        }));
-                    return 0;   // found a game, exit the loop
+                        res.writeHead(200, {'Content-Type': 'application/json'});
+                        res.end(JSON.stringify( {
+                                returncode: 'joined',
+                                gameDetails: tmpChannel
+                            }));
+                        return true;   // found a game, exit the loop
+                    }
                 }
             }
-
+            
             // CREATE GAME
-            var newGame = createGame(player, true, playerLevel, playerAcceptLower, playerAcceptHigher, playerTimerPref);
+            // if its a request for a new game, do not open it
+            var newGame = createGame(player, (createFlag ? false:true), playerLevel, playerAcceptLower, playerAcceptHigher, playerTimerPref);
             if (newGame) {
                 if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] New game created, see details below.'); }
                 if(LOGSEARCHING) { console.log(channels[newGame]); }

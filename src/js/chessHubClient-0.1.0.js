@@ -85,7 +85,7 @@ CHESSHUB = {
                     // or if the request is aborted (status = abort)
                     console.log('CHESSHUB._poll : error - ' + status);
                     console.log(error);
-                    if (status === 'error') {
+                    if (error !== 'Bad Request') {
                         setTimeout(function() {CHESSHUB._poll(channel,newMessageCallBack);},10000); // retry after 10 seconds
                     }
             }
@@ -104,10 +104,10 @@ CHESSHUB = {
     //  function : searchGame(playerLevel,playerAcceptLower,playerAcceptHigher)
     //  asks for a game
     //
-    searchGame: function(playerLevel,playerAcceptLower,playerAcceptHigher,playerTimerPref,successCallBack,errorCallBack) {
+    searchGame: function(playerLevel,playerAcceptLower,playerAcceptHigher,playerTimerPref,createFlag,successCallBack,errorCallBack) {
         console.log('CHESSHUB.searchGame');
         var data = {};
-        data = { user: CHESSHUB.user, key: CHESSHUB.key, playerLevel: playerLevel, playerAcceptLower: playerAcceptLower, playerAcceptHigher: playerAcceptHigher, playerTimerPref: playerTimerPref } ;
+        data = { user: CHESSHUB.user, key: CHESSHUB.key, playerLevel: playerLevel, playerAcceptLower: playerAcceptLower, playerAcceptHigher: playerAcceptHigher, playerTimerPref: playerTimerPref, createFlag : createFlag } ;
         console.log(data);
         CHESSHUB.ajaxSearchGame = $.ajax({
             type: 'POST',
