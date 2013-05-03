@@ -39,7 +39,7 @@ var LOGMESSAGING    = false;       // enable or disable messaging logs
 var LOGPOLLING      = false;       // enable or disable polling logs
 var LOGCHANNEL      = false;       // enable or disable channel activity logs
 var LOGSEARCHING    = false;       // enable or disable game searches logs
-var LOGSTATS        = true;       // enable or disable game stats logs
+var LOGSTATS        = false;       // enable or disable game stats logs
 var LOGHOUSEKEEPING = false;       // enable or disable house keeping logs
 
 function escapeHtml(unsafe) {
@@ -591,6 +591,10 @@ http.createServer(function (req, res) {
         // user : user issuing the messages
         // key : user's key
         if(LOGSTATS) { console.log(currTime() + ' [STATS ] get stats'); }
+        var data = "";
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
         req.on('end', function() {
             if(LOGSTATS) { console.log(currTime() + ' users : ' + Object.keys(users).length + ' / channels : ' + Object.keys(channels).length - 1); }
             res.writeHead(200, { 'Content-type': 'application/json'});
