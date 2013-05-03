@@ -33,7 +33,7 @@ var MAXCLIENTS_1    = 50;          // maximum number of clients before refusing 
 var MAXGAMES        = 20;          // maximum number of games
 var MAXMESSAGES     = 20;          // maximum number of messages sent at once
 
-var LOGSTATIC       = false;       // enable or disable static files serving logs
+var LOGSTATIC       = true;       // enable or disable static files serving logs
 var LOGCONNECT      = true;        // enable or disable connections logs
 var LOGMESSAGING    = false;       // enable or disable messaging logs
 var LOGPOLLING      = false;       // enable or disable polling logs
@@ -659,6 +659,8 @@ http.createServer(function (req, res) {
                     else {
                         var etag = stat.size + '-' + Date.parse(stat.mtime);
                         res.setHeader('Last-Modified', stat.mtime);
+                        if(LOGSTATIC) { console.log(currTime() + ' [STATIC] ... etag : ' + etag); }
+                        if(LOGSTATIC) { console.log(currTime() + ' [STATIC] ... req if-none-match : ' + req.headers['if-none-match']); }
 
                         if (req.headers['if-none-match'] === etag) {
                             res.statusCode = 304;
