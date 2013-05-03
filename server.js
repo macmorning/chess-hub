@@ -33,7 +33,7 @@ var MAXCLIENTS_1    = 50;          // maximum number of clients before refusing 
 var MAXGAMES        = 20;          // maximum number of games
 var MAXMESSAGES     = 20;          // maximum number of messages sent at once
 
-var LOGSTATIC       = false;       // enable or disable static files serving logs
+var LOGSTATIC       = true;       // enable or disable static files serving logs
 var LOGCONNECT      = true;        // enable or disable connections logs
 var LOGMESSAGING    = false;       // enable or disable messaging logs
 var LOGPOLLING      = false;       // enable or disable polling logs
@@ -669,7 +669,7 @@ http.createServer(function (req, res) {
                         }
                         else {
                             res.setHeader('Content-Length', data.length);
-                            res.setHeader('Cache-Control', 'public, max-age=3600');
+                            res.setHeader('Cache-Control', 'public, max-age=600');
                             res.setHeader('ETag', etag);
                             res.statusCode = 200;
                             res.end(data);
