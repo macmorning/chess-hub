@@ -661,6 +661,7 @@ http.createServer(function (req, res) {
                         res.setHeader('Last-Modified', stat.mtime);
                         if(LOGSTATIC) { console.log(currTime() + ' [STATIC] ... etag : ' + etag); }
                         if(LOGSTATIC) { console.log(currTime() + ' [STATIC] ... req if-none-match : ' + req.headers['If-None-Match']); }
+                        if(LOGSTATIC) { console.log(req.headers); }
 
                         if (req.headers['If-None-Match'] === etag) {
                             res.statusCode = 304;
