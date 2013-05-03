@@ -621,6 +621,7 @@ http.createServer(function (req, res) {
 //
     else {
         // file serving
+        // thanks http://blog.phyber.com/2012/03/30/supporting-cache-controls-in-node-js/ for the cache control code
         if(LOGSTATIC) { console.log(currTime() + ' [STATIC] client file request'); }
         var file='';
         if(url_parts.pathname === '/' || url_parts.pathname === '/client' || url_parts.pathname === '/client/') {
@@ -640,14 +641,33 @@ http.createServer(function (req, res) {
             if(err) {
                 console.log(currTime() + ' [STATIC] ... ' + err);
                 if(err.code === "ENOENT") {      // file is simply missing
-                    res.writeHead(404, { 'Content-type': 'text/txt'});
-                    res.end('file not found');
+                    resNotFound(res,'file not found',err);
                 } else {                        // other error; could be EACCES or anything
-                    res.writeHead(503, { 'Content-type': 'text/txt'});
-                    res.end('Unhandled server error (' + err.code + ')');
+                    resInternalError(res,'internal server error',err);
                 }
             }
-            res.end(data);
+            else {
+                fs.stat(SERVERDIR+'client/'+file, function (err, stat) {
+                    if (err) {
+                        resInternalError(res,'internal server error',err);
+                    }
+                    else {
+                        var etag = stat.size + '-' + Date.parse(stat.mtime);
+                        res.setHeader('Last-Modified', stat.mtime);
+
+                        if (req.headers['if-none-match'] === etag) {
+                            res.statusCode = 304;
+                            res.end();
+                        }
+                        else {
+                            res.setHeader('Content-Length', data.length);
+                            res.setHeader('ETag', etag);
+                            res.statusCode = 200;
+                            res.end(data);
+                        }
+                    }
+                });
+            }
         });
     } 
 
