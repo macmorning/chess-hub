@@ -660,9 +660,9 @@ http.createServer(function (req, res) {
                         var etag = stat.size + '-' + Date.parse(stat.mtime);
                         res.setHeader('Last-Modified', stat.mtime);
                         if(LOGSTATIC) { console.log(currTime() + ' [STATIC] ... etag : ' + etag); }
-                        if(LOGSTATIC) { console.log(currTime() + ' [STATIC] ... req if-none-match : ' + req.headers['if-none-match']); }
+                        if(LOGSTATIC) { console.log(currTime() + ' [STATIC] ... req if-none-match : ' + req.headers['If-None-Match']); }
 
-                        if (req.headers['if-none-match'] === etag) {
+                        if (req.headers['If-None-Match'] === etag) {
                             res.statusCode = 304;
                             res.end();
                         }
