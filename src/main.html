@@ -20,6 +20,7 @@
         history: [],
         currentHistoryIndex: 0,
         currentGameId: '',
+        currentGameName: '',
         getGameId:'',
         getUserName:''
     };
@@ -126,6 +127,7 @@
                                 function(message) { addMessage(message); }  // start polling the game channel
                             );
                     CONTEXT.currentGameId = response.gameDetails.id;    // set the game informations
+                    CONTEXT.currentGameName = response.gameDetails.name;
                     CHESSBOARD.initChessBoard(response.gameDetails.id);
                     CHESSBOARD.setPlayer('A',response.gameDetails.playerA);
                     CHESSBOARD.setPlayer('B',response.gameDetails.playerB);
@@ -178,6 +180,18 @@
         }
         return 0;
     }
+
+    function notify(message) {
+        var counter = 0;
+        var titleTimerId = setInterval(function(){
+            document.title = (document.title === CONTEXT.currentGameName ? message : CONTEXT.currentGameName);
+            counter++;
+            if(counter == 5){
+                clearInterval(titleTimerId);
+                document.title = CONTEXT.currentGameName;
+            }
+        }, 1000);
+    }
     
     function addMessage(message) {
         // adds a message to the chat_output div of the current page
@@ -185,7 +199,7 @@
         var directMessage = false;
         
         if (message.to == 'MAIN' || !message.to) { 
-            var output = $('#chat_output');         // will have to fix this part if multiple boards are possible
+            var output = $('#chat_output');
         } else {
             var output = $('#board_chat_output');
         }
@@ -217,8 +231,21 @@
                         + '&nbsp;<a href="#" onclick="joinGame(\'' + command[1] + '\')">join or watch</a></p>'
                         + output.html());
                 } else if (command[0] == "move") {
-                    if (message.user != CONTEXT.user) { CHESSBOARD.move(command[1], command[2]); }
+                    var notifMessage = message.user + ' plays ' + CHESSBOARD.pieces[command[1]].name + " - " + CHESSBOARD.pieces[command[1]].sqId.substring(2,4);
+                    if (message.user != CONTEXT.user) { 
+                        CHESSBOARD.move(command[1], command[2]);
+                        notify(notifMessage);
+                    }
+                    output.html(
+                        '<p class="chat_activity"> == ['
+                        + message.time + "] "
+                        + notifMessage
+                        + '</p>'
+                        + output.html());
                 } else if (command[0] == "sit") {
+                    if (message.user !== CONTEXT.user) { 
+                        notify(message.user + ' sits as ' + (command[1] == 'w' ? 'White' : 'Black'));
+                    }
                     CHESSBOARD.setPlayer(command[1],message.user);
                     output.html(
                         '<p class="chat_activity"> == ['
@@ -246,6 +273,9 @@
                         + message.user + (command[0] === 'leave' ? ' left' + color + reason : ' joined')
                         + '</p>'
                         + output.html());
+                    if (message.user != CONTEXT.user) { 
+                        notify(message.user + (command[0] === 'leave' ? ' left' + color + reason : ' joined'));
+                    }
                 }
         } else {
             output.html(
@@ -259,8 +289,12 @@
                 + message.msg
                 + '</span></p>'
                 + output.html() );
+            if (message.user != CONTEXT.user) { 
+                notify(message.user + " - " + message.msg);
+            }
         }
-        return 0;
+        
+        return true;
     }
 
     function sendMessage(text,channel) {
