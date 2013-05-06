@@ -106,8 +106,7 @@ CHESSHUB = {
     //
     searchGame: function(playerLevel,playerAcceptLower,playerAcceptHigher,playerTimerPref,createFlag,successCallBack,errorCallBack) {
         console.log('CHESSHUB.searchGame');
-        var data = {};
-        data = { user: CHESSHUB.user, key: CHESSHUB.key, playerLevel: playerLevel, playerAcceptLower: playerAcceptLower, playerAcceptHigher: playerAcceptHigher, playerTimerPref: playerTimerPref, createFlag : createFlag } ;
+        var data = { user: CHESSHUB.user, key: CHESSHUB.key, playerLevel: playerLevel, playerAcceptLower: playerAcceptLower, playerAcceptHigher: playerAcceptHigher, playerTimerPref: playerTimerPref, createFlag : createFlag } ;
         console.log(data);
         CHESSHUB.ajaxSearchGame = $.ajax({
             type: 'POST',

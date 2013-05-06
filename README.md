@@ -49,7 +49,7 @@ Nice to have :
 
 TODO
 ---------
-- [ ] handle the user key (to avoid user impersonnification)
+- [x] handle the user key (to avoid user impersonnification)
 - [x] handle user timeout
 - [x] handle multiple channel polling for each client
 - [ ] share code with clients (pieces and board classes)
@@ -67,7 +67,7 @@ Library that handles connection and messaging with the Hub.
 
 TODO
 ---------
-- [ ] handle the user key (to avoid user impersonnification)
+- [x] handle the user key (to avoid user impersonnification)
 
 
 ___

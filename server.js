@@ -63,7 +63,12 @@ function s4() {
 }
 
 function guid() {
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
+
+function checkUserKey(user,key) {
+    if (!user || !users[user] || !key || users[user].key !== key) { return false; } 
+    else { return true; }
 }
 
 function currTime() {
@@ -97,7 +102,13 @@ function resInternalError(res,err,data) {
     console.log(data);
     return true;
 }
-
+function resUnauthorized(res,err,data) {
+    res.writeHead(401, { 'Content-type': 'text/txt'});
+    res.end('Unauthorized');
+    console.log(currTime() + ' [UNAUTH] ... error : ' + err);
+    console.log(data);
+    return true;
+}
 function sendMessage(from, msg, category, to ) {
     // adds a message to the messages array and send it to polling clients
     // sendMessage(from, msg, [category, [to]])
@@ -275,23 +286,28 @@ http.createServer(function (req, res) {
             data += chunk;
         });
         req.on('end', function() {
-            var json = JSON.parse(data);
+            var json = {};
+            try { json = JSON.parse(data); }
+            catch(err) { console.log(err); console.log(data); var json= {};}
             user = escapeHtml(json.user);
             if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... connect ' + user); }
 
-            if (!users[user]) {
+            if (!user) {
+                resBadRequest(res,'no username provided',data);
+            } else if(!users[user]) {
                 users[user] = {};
+                users[user].key = guid();
                 users[user].lastActivity = new Date();
                 sendMessage(user,'join','game','MAIN');    // send the information to users in that channel
                 channels['MAIN'].addUser(user);
                 console.log(currTime() + ' [CONNEC] user: ' + user + ' connected, client: ' + json.clientLib + ', version: ' + json.clientVersion);
-                var uuid = guid();
+
                 res.writeHead(200, { 'Content-type': 'application/json'});
                 res.end(JSON.stringify( {
                     returncode: 'ok',
                     returnmessage: 'Welcome ' + user,
                     user: user,
-                    key: uuid
+                    key: users[user].key
                 }));
             } else {
                 if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved'); }
@@ -302,7 +318,7 @@ http.createServer(function (req, res) {
                     user: user,
                     keyid: ''
                 }));
-            }
+            } 
             if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... current users : ' + Object.keys(users).length); }
         });
     } 
@@ -313,13 +329,21 @@ http.createServer(function (req, res) {
     else if(url_parts.pathname.substr(0, 11) === '/disconnect') {
         if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] disconnect'); }
         var user = "";
+        var key = "";
         var data = "";
         req.on('data', function(chunk) {
             data += chunk;
         });
         req.on('end', function() {
-            var json = JSON.parse(data);
+            var json = {};
+            try { json = JSON.parse(data); }
+            catch(err) { console.log(err); console.log(data); var json= {};}
             user = escapeHtml(json.user);
+            key = escapeHtml(json.key);
+            if (!checkUserKey(user, key)) {
+                resUnauthorized(res,'The provided key for user ' + user + '  does not match the registered one for the user','provided key for user ' + user + '  = ' + key);
+                return false;
+            }
             if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... disconnect user ' + user); }
             res.writeHead(200, { 'Content-Type': 'application/json'});
             res.end(JSON.stringify([]));    // first, release the client
@@ -342,18 +366,19 @@ http.createServer(function (req, res) {
             data += chunk;
         });
         req.on('end', function() {
-            var json = JSON.parse(data);
+            var json = {};
+            try { json = JSON.parse(data); }
+            catch(err) { console.log(err); console.log(data); var json= {};}
             channel = escapeHtml(json.channel);
             user = escapeHtml(json.user);
             key = escapeHtml(json.key);
             counter = json.counter;
-            if (isNaN(counter) || !channel || !channels[channel])  {   // no counter provided or no channel id, send Bad Request HTTP code
-                resBadRequest(res,'bad counter or unknown channel',data);
+            if (!checkUserKey(user, key)) {
+                resUnauthorized(res,'The provided key for user ' + user + '  does not match the registered one for the user','provided key for user ' + user + '  = ' + key);
                 return false;
             }
-            if (!users[user]) {
-                res.writeHead(401, { 'Content-type': 'text/txt'});
-                res.end('Unauthorized');
+            if (isNaN(counter) || !channel || !channels[channel])  {   // no counter provided or no channel id, send Bad Request HTTP code
+                resBadRequest(res,'bad counter or unknown channel',data);
                 return false;
             }
             if(LOGPOLLING) { console.log(currTime() + ' [POLLIN] ... counter = ' + counter + ' from user = ' + user + ' for channel = ' + channel); }
@@ -396,7 +421,8 @@ http.createServer(function (req, res) {
 // SEARCH GAME SERVICE
 //
     else if(url_parts.pathname.substr(0, 11) === '/searchGame') {
-        var player="";
+        var user="";
+        var key="";
         var playerLevel=0;
         var playerAcceptLower=0;
         var playerAcceptHigher=0;
@@ -411,8 +437,9 @@ http.createServer(function (req, res) {
             var json = {};
             try { json = JSON.parse(data); }
             catch(err) { console.log(err); console.log(data); var json= {};}
-            player = escapeHtml(json.user);
             try {
+                user = escapeHtml(json.user);
+                key = escapeHtml(json.key);
                 playerLevel = parseInt(json.playerLevel,10);
                 playerAcceptLower = parseInt(json.playerAcceptLower,10);
                 playerAcceptHigher = parseInt(json.playerAcceptHigher,10);
@@ -425,13 +452,17 @@ http.createServer(function (req, res) {
                 return false;
             }
             if (isNaN(playerTimerPref)) { playerTimerPref = -1; }
-            if (!player || isNaN(playerLevel))  {   // no username, no level => send Bad Request HTTP code
+            if (!user || isNaN(playerLevel))  {   // no username, no level => send Bad Request HTTP code
                 if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... error, dumping data below'); }
                 if(LOGSEARCHING) { console.log(json); }
                 resBadRequest(res);
                 return 1;
             }
-            if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... for player = ' + player + ', level = ' + playerLevel, ' timer = ' + playerTimerPref +  ' allow higher/lower = ' + playerAcceptHigher + '/' + playerAcceptLower);}
+            if (!checkUserKey(user, key)) {
+                resUnauthorized(res,'The provided key for user ' + user + '  does not match the registered one for the user','provided key for user ' + user + '  = ' + key);
+                return false;
+            }
+            if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] ... for player = ' + user + ', level = ' + playerLevel, ' timer = ' + playerTimerPref +  ' allow higher/lower = ' + playerAcceptHigher + '/' + playerAcceptLower);}
             
             // searching for an existing game
             if(!createFlag) {
@@ -440,7 +471,7 @@ http.createServer(function (req, res) {
                     count++;
                     var channel = channels[i];
                     if(channel.open         // the channel is open
-                            && channel.playerA && !channel.playerB && channel.playerA !== player     // this is a game channel with only a player A, who is not the user who searches for a game
+                            && channel.playerA && !channel.playerB && channel.playerA !== user     // this is a game channel with only a player A, who is not the user who searches for a game
                             && ((playerAcceptLower === 1 && channel.gameAcceptHigher === 1 && channel.gameLevel < playerLevel) || channel.gameLevel === playerLevel)      // this game allows lower level players to join, or is wihtin accepted range
                             && ((playerAcceptHigher === 1 && channel.gameAcceptLower === 1 && channel.gameLevel > playerLevel) || channel.gameLevel === playerLevel)      // this game allows higher level players to join, or is wihtin accepted range
                             && (playerTimerPref === -1 || playerTimerPref === channel.gameTimer)  // player has not set a timer pref (-1) or the game matches his search
@@ -473,7 +504,7 @@ http.createServer(function (req, res) {
             
             // CREATE GAME
             // if its a request for a new game, do not open it
-            var newGame = createGame(player, (createFlag ? false:true), playerLevel, playerAcceptLower, playerAcceptHigher, playerTimerPref);
+            var newGame = createGame(user, (createFlag ? false:true), playerLevel, playerAcceptLower, playerAcceptHigher, playerTimerPref);
             if (newGame) {
                 if(LOGSEARCHING) { console.log(currTime() + ' [SEARCH] New game created, see details below.'); }
                 if(LOGSEARCHING) { console.log(channels[newGame]); }
@@ -482,7 +513,7 @@ http.createServer(function (req, res) {
                         returncode: 'new',
                         gameDetails: channels[newGame]
                     }));
-                sendMessage(player,'created-'+newGame+'-'+channels[newGame].gameTimer+'-'+channels[newGame].gameLevel,'game','MAIN');    // send the information to users in the MAIN channel
+                sendMessage(user,'created-'+newGame+'-'+channels[newGame].gameTimer+'-'+channels[newGame].gameLevel,'game','MAIN');    // send the information to users in the MAIN channel
                 return 0;
             } else {
                 res.writeHead(500, {'Content-Type': 'application/json'});
@@ -524,6 +555,10 @@ http.createServer(function (req, res) {
                 resBadRequest(res,'invalid user or gameId',data);
                 return false;             
             }
+            if (!checkUserKey(user, key)) {
+                resUnauthorized(res,'The provided key for user ' + user + '  does not match the registered one for the user','provided key for user ' + user + '  = ' + key);
+                return false;
+            }
             try { 
                     var channel = channels[gameId];
                     var tmpChannel = {name: channel.name, 
@@ -564,6 +599,7 @@ http.createServer(function (req, res) {
         // msg : message
         if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] new message'); }
         var user = "";
+        var key = "";
         var msg = "";
         var channel = "";
         var data = "";
@@ -580,10 +616,15 @@ http.createServer(function (req, res) {
             }
             msg = escapeHtml(json.msg);         // escaping html chars
             user = escapeHtml(json.user);
+            key = escapeHtml(json.key);
             category = escapeHtml(json.category) || 'chat_msg' ;        // default : chat message
             channel = escapeHtml(json.channel) || 'MAIN';                  // default : main channel
             if (!msg || !user) {
                 resBadRequest(res,'no message or no user provided',data);
+                return false;
+            }
+            if (!checkUserKey(user, key)) {
+                resUnauthorized(res,'The provided key for user ' + user + '  does not match the registered one for the user','provided key for user ' + user + '  = ' + key);
                 return false;
             }
             
@@ -627,21 +668,6 @@ http.createServer(function (req, res) {
         });
     }
     
-//
-// ADMIN SERVICE
-//
-    else if(url_parts.pathname.substr(0) === '/admin') {
-        console.log(currTime() + ' [ADMIN ] dumping objects to console');
-        console.log(currTime() + ' [ADMIN ] ... users');
-        console.log(users);
-        //console.log(currTime() + ' [ADMIN ] ... clients');
-        //console.log(clients);
-        console.log(currTime() + ' [ADMIN ] ... channels');
-        console.log(channels);
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end(currTime() + ' Objects dumped to console');
-    }
-
 //
 // STATIC FILES SERVING
 //
