@@ -32,7 +32,7 @@
         var testJSON = JSON.parse('{}');        // test if the browser knows about JSON
     }
     catch(err) { 
-        alert('Sorry, the browser you are using is not supported.'); 
+        window.location = '/compatibility';
     }
     
     function getUrlVar(key){
@@ -42,6 +42,18 @@
 
     $(document).ready(function() {
         
+
+        try { 
+            if (!$.mobile.gradeA()) {
+                console.log('browser is not grade A');
+                window.location = '/compatibility';
+            }
+        }
+        catch(err) { 
+            console.log('browser did not load jQuery Mobile');
+            window.location = '/compatibility';
+        }
+
         window.onunload = function(){
             logoff();
             $.mobile.changePage($("#loginpage"));
@@ -108,7 +120,6 @@
 
     function getStats(destinationDiv) {
         CHESSHUB.getStats(function(response) {
-                    console.log(response);
                     $('#'+destinationDiv).html('There are currently ' + response.users + ' players in this hub, seated at ' + response.games + ' tables.');
                 },
                 function() {    // callback function for error event
