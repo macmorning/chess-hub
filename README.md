@@ -13,9 +13,9 @@ ___
 Current state
 ---------
 
-    server  : |=====================================================================>                              | 70%
+    server  : |===============================================================================>                    | 80%
 
-    client  : |==========================================================================>                         | 75%
+    client  : |====================================================================================>               | 85%
 
 
 
@@ -51,9 +51,8 @@ TODO
 ---------
 - [ ] handle the user key (to avoid user impersonnification)
 - [x] handle user timeout
-- [ ] handle multiple channel polling for each client
+- [x] handle multiple channel polling for each client
 - [ ] share code with clients (pieces and board classes)
-- [ ] add a periodic stats updater to replace the ondemand function
 - [ ] handle timed games
 
 ___
@@ -69,7 +68,6 @@ Library that handles connection and messaging with the Hub.
 TODO
 ---------
 - [ ] handle the user key (to avoid user impersonnification)
-- [ ] handle multiple channel polling for each client
 
 
 ___
@@ -88,12 +86,12 @@ TODO
 - [x] spawn the pieces and place them
 - [x] handle the moves
 - [x] enforce pieces move restrictions
-  - [ ] rethink the _canMove and _isCheck functions; should not rely on the dom
-  - [ ] maintain an array of squares with their pieces for fast search
+  - [x] rethink the _canMove and _isCheck functions; should not rely on the dom
+  - [x] maintain an array of squares with their pieces for fast search
 - [x] finish the "sit" process
-- [ ] enforce other rules (check, check mate, castling, en passant)
+- [x] enforce other rules (check, check mate, castling, en passant)
 - [ ] display whose turn it is
-- [ ] allow to show last move
+- [x] allow to show last move
 - [ ] create classes for pieces and squares, shared with the server
 - [ ] handle timed games
 
@@ -122,8 +120,16 @@ TODO
 ---------
 - [x] correctly place & render the board
 - [x] add chat to games
+- [x] add a "create" function
+- [x] allow users to join a specific game
+   - [x] via an url
+   - [x] via a link in the main chat page
+- [ ] add a "invite" button
+   - [x] via Twitter, 
+   - [ ] email, 
+   - [ ] or other services
 - [ ] finish the main page design
 - [ ] work on the login page; describe the app, show the stats
 - [ ] save the context into local storage
 - [ ] handle reconnection (or page refresh)
-- [ ] show a list of users in the game channel (not in MAIN)
+
