@@ -52,6 +52,7 @@ TODO
 - [x] handle the user key (to avoid user impersonnification)
 - [x] handle user timeout
 - [x] handle multiple channel polling for each client
+- [ ] receive array of moves (for composite moves like castling or promoting) instead of one service call per move
 - [ ] share code with clients (pieces and board classes)
 - [ ] handle timed games
 
@@ -68,6 +69,7 @@ Library that handles connection and messaging with the Hub.
 TODO
 ---------
 - [x] handle the user key (to avoid user impersonnification)
+- [ ] send an array of moves (for composite moves like castling or promoting) instead of one service call per move
 
 
 ___
