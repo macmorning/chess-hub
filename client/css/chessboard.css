@@ -40,6 +40,10 @@
     border: 0.2em solid black;
     margin-top:0.2em;
 }
+    #wGraveyard.selected, #bGraveyard.selected {
+        border:2pt solid red;    
+    }
+    
 #wGraveyard {
     background-color:black;
     overflow-x: hidden;

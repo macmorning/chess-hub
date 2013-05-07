@@ -300,7 +300,7 @@ http.createServer(function (req, res) {
                 users[user].lastActivity = new Date();
                 sendMessage(user,'join','game','MAIN');    // send the information to users in that channel
                 channels['MAIN'].addUser(user);
-                console.log(currTime() + ' [CONNEC] user: ' + user + ' connected, client: ' + json.clientLib + ', version: ' + json.clientVersion);
+                console.log(currTime() + ' [CONNEC] user: ' + user + ' connected, client: ' + json.clientLib + ', version: ' + json.clientVersion + ', user-agent: ' + req.headers['user-agent']);
 
                 res.writeHead(200, { 'Content-type': 'application/json'});
                 res.end(JSON.stringify( {

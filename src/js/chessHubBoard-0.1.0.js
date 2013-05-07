@@ -7,7 +7,8 @@
 var CHESSBOARD = {
     chessBoardColumns: {1:'a', 2:'b', 3:'c', 4:'d', 5:'e', 6:'f', 7:'g', 8:'h'},
     chessBoardRows: [8, 7, 6, 5, 4, 3, 2, 1],
-    colors: {'w':'white','b':'black'},
+    colors: {'w':'white', 'b':'black'},
+    promoting: {'w':false, 'b':false},
     pieces: [],
     gameID: '',
     selectedPiece: '',              // selector for the piece held by the user
@@ -158,8 +159,44 @@ var CHESSBOARD = {
     mouseDownHandler: function(ev) {            // using a mouse down event here : it's more user friendly than drag&drop when you are using a touch-enabled device
         ev.stopPropagation();   // stop propagation : we don't want the click event to bubble
 
-        // user is not holding a piece yet and is clicking on one, but the clicked piece is not the right color
+        var emptyFunction = function() {};
+
+        // user is promoting a pawn
         if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece 
+            && ((CHESSBOARD.pieces[ev.target.id].sqId === 'wGraveyard' && CHESSBOARD.whitePlayer === CONTEXT.user && CHESSBOARD.promoting['w']) 
+                || (CHESSBOARD.pieces[ev.target.id].sqId === 'bGraveyard'  && CHESSBOARD.blackPlayer === CONTEXT.user && CHESSBOARD.promoting['b']))) {
+            CHESSBOARD.selectedPiece = $("#" + ev.target.id);   // JQUERY
+            CHESSBOARD._markSquare(CHESSBOARD.pieces[ev.target.id].sqId,"selected",false);
+
+            // move the pawn to the graveyard
+            var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.promoting[ev.target.id[0]])];
+            if ( targetPiece !== '') {
+                CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true);
+                CHESSHUB.sendMessage("move-" + targetPiece + "-" + CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',
+                     CHESSBOARD.gameID,
+                     'game',
+                     emptyFunction,
+                     emptyFunction
+                     );
+            } 
+
+            // then move the piece from the graveyard to replace the pawn
+            CHESSBOARD.move(ev.target.id,CHESSBOARD.promoting[ev.target.id[0]]);
+            // send the move to the server
+            CHESSHUB.sendMessage('move-' + ev.target.id + "-" + CHESSBOARD.promoting[ev.target.id[0]],
+                 CHESSBOARD.gameID,
+                 'game',
+                 emptyFunction,
+                 emptyFunction
+                 );
+            CHESSBOARD.selectedPiece='';
+            CHESSBOARD.promoting[ev.target.id[0]] = false;
+            
+            return true;
+        } 
+
+        // user is not holding a piece yet and is clicking on one, but the clicked piece is not the right color
+        else if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece 
             && (ev.target.id[0] !== CHESSBOARD.currentGameTurn 
                 || CHESSBOARD.pieces[ev.target.id].sqId === 'wGraveyard' || CHESSBOARD.pieces[ev.target.id].sqId === 'bGraveyard'
                 || ev.target.id[0] === "w" && CHESSBOARD.whitePlayer !== CONTEXT.user  
@@ -168,9 +205,10 @@ var CHESSBOARD = {
         }
         
         // user is not holding a piece yet and is clicking on one
-        if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece) {
+        else if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece) {
             CHESSBOARD.selectedPiece = $("#" + ev.target.id);   // JQUERY
             CHESSBOARD._markSquare(CHESSBOARD.pieces[ev.target.id].sqId,"selected",true);
+            return true;
         } 
         
         // user is holding a piece and is selecting another one, of the same color
@@ -178,104 +216,116 @@ var CHESSBOARD = {
             CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
             CHESSBOARD.selectedPiece = $("#" + ev.target.id);   // JQUERY
             CHESSBOARD._markSquare(CHESSBOARD.pieces[ev.target.id].sqId,"selected",true);
+            return true;
         } 
         
         // user is holding a piece and is selecting the same piece again
         else if(ev.target.tagName === 'IMG' && CHESSBOARD.selectedPiece && CHESSBOARD.selectedPiece.attr('id') === ev.target.id) {
             CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
             CHESSBOARD.selectedPiece = '';
+            return true;
         } 
         
         // user is holding a piece and is clicking on an empty square or a piece of different color
         else if((ev.target.tagName === 'DIV' || ev.target.tagName === 'IMG' && CHESSBOARD.selectedPiece.attr('id')[0] !== ev.target.id[0] && CHESSBOARD.pieces[ev.target.id].sqId !== '') && CHESSBOARD.selectedPiece) {
-                    var target = ev.target;
-                    var pieceId = CHESSBOARD.selectedPiece.attr('id');
-                    while(target.tagName !== 'DIV'){     // if the target was not a DIV, go up in the DOM to find the first DIV
-                        target=target.parentNode;
-                    }
-                    
-                    var canMoveResult = CHESSBOARD._canMove(pieceId,target.id);
-                    
-                    if (!canMoveResult) { 
-                        // if held piece cannot be moved to target square, exit
-                        return false;
-                    }
-                    if (CHESSBOARD._isCheck(pieceId,target.id)) {
-                        // is the current player's king in check if he moves this piece to this destination ? if so, reject the move.
-                        return false;
-                    }
+            var target = ev.target;
+            var pieceId = CHESSBOARD.selectedPiece.attr('id');
+            while(target.tagName !== 'DIV'){     // if the target was not a DIV, go up in the DOM to find the first DIV
+                target=target.parentNode;
+            }
+            
+            var canMoveResult = CHESSBOARD._canMove(pieceId,target.id);
+            
+            if (!canMoveResult) { 
+                // if held piece cannot be moved to target square, exit
+                return false;
+            }
+            if (CHESSBOARD._isCheck(pieceId,target.id)) {
+                // is the current player's king in check if he moves this piece to this destination ? if so, reject the move.
+                return false;
+            }
 
 
 
 
-                    // Move is accepted
-                    var emptyFunction = function() {};
-                    
-                    // piece capture
-                    var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(target.id)];
-                    if ( targetPiece !== '') {
-                        CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true);
-                        CHESSHUB.sendMessage("move-" + targetPiece + "-" + CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',
-                             CHESSBOARD.gameID,
-                             'game',
-                             emptyFunction,
-                             emptyFunction
-                             );
-                    } 
-                    
-                    // castling
-                    if (pieceId === 'bking' || pieceId === 'wking') {
-                        var from = CHESSBOARD.pieces[pieceId].sqId;
-                        var numericFrom = parseInt(CHESSBOARD._numeric(from),10);
-                        var numericTo = parseInt(CHESSBOARD._numeric(target.id),10); 
-                        var numericMove = numericTo - numericFrom;
-                        var rookId = "";
-                        var rookDestId = "";
-                        if (numericMove === 20 && CHESSBOARD.whiteCanCastleKingSide && pieceId[0] === 'w') {
-                            // white castling on the king side
-                            rookId = 'wrookh';
-                            rookDestId = 'sqf1';
-                        } else if (numericMove === 20 && CHESSBOARD.blackCanCastleKingSide && pieceId[0] === 'b') {
-                            // black castling on the king side
-                            rookId = 'brookh';
-                            rookDestId = 'sqf8';
-                        } else if (numericMove === -20 && CHESSBOARD.whiteCanCastleQueenSide && pieceId[0] === 'w') {
-                            // white castling on the queen side
-                            rookId = 'wrooka';
-                            rookDestId = 'sqd1';
-                        } else if (numericMove === -20 && CHESSBOARD.blackCanCastleQueenSide && pieceId[0] === 'b') {
-                            // black castling on the queen side
-                            rookId = 'brooka';
-                            rookDestId = 'sqd8';
-                        }
-                        if (rookId && rookDestId) {
-                            CHESSBOARD.move(rookId,rookDestId,true);
-                            CHESSHUB.sendMessage("move-" + rookId + "-" + rookDestId,
-                                 CHESSBOARD.gameID,
-                                 'game',
-                                 emptyFunction,
-                                 emptyFunction
-                             );
-                         }
-                    }
-
-
-                    CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
-                    CHESSBOARD.move(pieceId,target.id);   // JQUERY
-
-                    // send the move to the server
-                    CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
+            // Move is accepted
+            
+            // piece capture
+            var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(target.id)];
+            if ( targetPiece !== '') {
+                CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true);
+                CHESSHUB.sendMessage("move-" + targetPiece + "-" + CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',
+                     CHESSBOARD.gameID,
+                     'game',
+                     emptyFunction,
+                     emptyFunction
+                     );
+            } 
+            
+            // castling
+            if (pieceId === 'bking' || pieceId === 'wking') {
+                var from = CHESSBOARD.pieces[pieceId].sqId;
+                var numericFrom = parseInt(CHESSBOARD._numeric(from),10);
+                var numericTo = parseInt(CHESSBOARD._numeric(target.id),10); 
+                var numericMove = numericTo - numericFrom;
+                var rookId = "";
+                var rookDestId = "";
+                if (numericMove === 20 && CHESSBOARD.whiteCanCastleKingSide && pieceId[0] === 'w') {
+                    // white castling on the king side
+                    rookId = 'wrookh';
+                    rookDestId = 'sqf1';
+                } else if (numericMove === 20 && CHESSBOARD.blackCanCastleKingSide && pieceId[0] === 'b') {
+                    // black castling on the king side
+                    rookId = 'brookh';
+                    rookDestId = 'sqf8';
+                } else if (numericMove === -20 && CHESSBOARD.whiteCanCastleQueenSide && pieceId[0] === 'w') {
+                    // white castling on the queen side
+                    rookId = 'wrooka';
+                    rookDestId = 'sqd1';
+                } else if (numericMove === -20 && CHESSBOARD.blackCanCastleQueenSide && pieceId[0] === 'b') {
+                    // black castling on the queen side
+                    rookId = 'brooka';
+                    rookDestId = 'sqd8';
+                }
+                if (rookId && rookDestId) {
+                    CHESSBOARD.move(rookId,rookDestId,true);
+                    CHESSHUB.sendMessage("move-" + rookId + "-" + rookDestId,
                          CHESSBOARD.gameID,
                          'game',
                          emptyFunction,
                          emptyFunction
-                         );
-                    CHESSBOARD.selectedPiece='';
+                     );
+                 }
+            }
+            
+
+            // promoting
+            if (CHESSBOARD.pieces[pieceId].class === 'wpawn' && target.id[3] === "8"
+                || CHESSBOARD.pieces[pieceId].class === 'bpawn' && target.id[3] === "1") {
+                CHESSBOARD.promoting[pieceId[0]] = target.id;   // player can promote a pawn; save the destination square id
+                CHESSBOARD._markSquare(pieceId[0]+"Graveyard","selected",true);    
+            }
+            
+
+            CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
+            CHESSBOARD.move(pieceId,target.id,(CHESSBOARD.promoting[pieceId[0]] ? true:false));    // if player can promote a pawn, do not switch turn
+
+            // send the move to the server
+            CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
+                 CHESSBOARD.gameID,
+                 'game',
+                 emptyFunction,
+                 emptyFunction
+                 );
+            CHESSBOARD.selectedPiece='';
+
+            return true;
         } 
         
         // unexpected click event
         else {
             console.log('Unhandled case : ' + ev.target.id);
+            return false;
         }
     },
     
