@@ -682,11 +682,8 @@ http.createServer(function (req, res) {
             // serving the favicon
             file = 'img/favicon.ico';
         }  else if(url_parts.pathname === '/about') {
-            // serving the favicon
+            // deprecated
             file = 'about/index.html';
-        }  else if(url_parts.pathname === '/compatibility') {
-            // serving the favicon
-            file = 'about/compatibility.html';
         }  else {
             if(url_parts.pathname.substr(0,7) === "/client") {   // remove the potential "/client" reference
                 file = escapeHtml(url_parts.pathname.substr(8)); 

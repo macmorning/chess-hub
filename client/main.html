@@ -13,7 +13,8 @@
     <script src="js/chessHubBoard-0.1.0.min.js"></script>
 
     <script>
-
+    var compatPage = "https://github.com/macmorning/chess-hub/wiki/Browser-compatibility";
+    
     ;CONTEXT = {
         user:"",
         key:"",
@@ -32,7 +33,7 @@
         var testJSON = JSON.parse('{}');        // test if the browser knows about JSON
     }
     catch(err) { 
-        window.location = '/compatibility';
+        window.location = compatPage;
     }
     
     function getUrlVar(key){
@@ -46,12 +47,12 @@
         try { 
             if (!$.mobile.gradeA()) {
                 console.log('browser is not grade A');
-                window.location = '/compatibility';
+                window.location = compatPage;
             }
         }
         catch(err) { 
             console.log('browser did not load jQuery Mobile');
-            window.location = '/compatibility';
+            window.location = compatPage;
         }
 
         window.onunload = function(){
