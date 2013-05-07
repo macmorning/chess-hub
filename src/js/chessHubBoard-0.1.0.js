@@ -9,8 +9,9 @@ var CHESSBOARD = {
     chessBoardRows: [8, 7, 6, 5, 4, 3, 2, 1],
     colors: {'w':'white', 'b':'black'},
     promoting: {'w':false, 'b':false},
+    arrayOfMoves: [],               // array of pending moves
     pieces: [],
-    gameID: '',
+    gameId: '',
     selectedPiece: '',              // selector for the piece held by the user
     playerA: '',                    // playerA username
     playerB: '',                    // playerB username
@@ -86,6 +87,13 @@ var CHESSBOARD = {
     move: function(pieceId,destinationId,dontSwitchTurn) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
+            console.log('move ' + pieceId + '-' + destinationId + ' ' + dontSwitchTurn);//TEST
+            if(pieceId[0] === 'w' && CHESSBOARD.whitePlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'w'
+                || pieceId[0] === 'b' && CHESSBOARD.blackPlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'b') {
+                // only record moves of current player pieces to send to the server
+                CHESSBOARD.arrayOfMoves.push(pieceId + '-' + destinationId);
+            }
+            
             var destinationSelector = $('#' + destinationId);
             var pieceSelector = $('#' + pieceId);
             
@@ -106,6 +114,14 @@ var CHESSBOARD = {
                 CHESSBOARD.blackCanCastleKingSide = false;
             }
 
+            // piece capture
+            if(destinationId[0] === 's') {  // this is not already a piece capture (moving to bGraveyard or wGraveyard
+                var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)];
+                console.log('targetPiece ' + targetPiece);//TEST
+                if ( targetPiece !== '') {
+                    CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true); // move opponents piece to the graveyard, don't commit
+                } 
+            }
             // reflect the move into the chessBoard array
             CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.pieces[pieceId].sqId)] = '';
             if (destinationId[0] === 's') { // it's a square, not a graveyard
@@ -115,7 +131,7 @@ var CHESSBOARD = {
             var marginLeft = destinationSelector.width() * 0.05;  // change this if you change the width of the pieces in chessboard.css
             // JQUERY
             pieceSelector.animate({ top: "+=" + (destinationSelector.position().top - pieceSelector.position().top) +"px" , left : "+=" + (destinationSelector.position().left - pieceSelector.position().left + marginLeft) +"px" }, 
-                        "slow", 
+                        "fast", 
                         undefined, 
                         function () {
                             pieceSelector.prependTo(destinationSelector);
@@ -124,9 +140,9 @@ var CHESSBOARD = {
                     );
                                 
             CHESSBOARD.pieces[pieceId].sqId = destinationId;
+
             if(!dontSwitchTurn) {
-                CHESSBOARD.gameHistory.push(pieceId + '-' + destinationId);
-                CHESSBOARD.currentGameTurn=(pieceId[0] === 'w' ? 'b' : 'w'); // switch game turn
+                CHESSBOARD._commitMoves(CHESSBOARD.gameId);
             }
             CHESSBOARD._verifyCheck();
     },
@@ -172,23 +188,10 @@ var CHESSBOARD = {
             var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.promoting[ev.target.id[0]])];
             if ( targetPiece !== '') {
                 CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true);
-                CHESSHUB.sendMessage("move-" + targetPiece + "-" + CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',
-                     CHESSBOARD.gameID,
-                     'game',
-                     emptyFunction,
-                     emptyFunction
-                     );
             } 
 
             // then move the piece from the graveyard to replace the pawn
             CHESSBOARD.move(ev.target.id,CHESSBOARD.promoting[ev.target.id[0]]);
-            // send the move to the server
-            CHESSHUB.sendMessage('move-' + ev.target.id + "-" + CHESSBOARD.promoting[ev.target.id[0]],
-                 CHESSBOARD.gameID,
-                 'game',
-                 emptyFunction,
-                 emptyFunction
-                 );
             CHESSBOARD.selectedPiece='';
             CHESSBOARD.promoting[ev.target.id[0]] = false;
             
@@ -250,17 +253,6 @@ var CHESSBOARD = {
 
             // Move is accepted
             
-            // piece capture
-            var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(target.id)];
-            if ( targetPiece !== '') {
-                CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true);
-                CHESSHUB.sendMessage("move-" + targetPiece + "-" + CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',
-                     CHESSBOARD.gameID,
-                     'game',
-                     emptyFunction,
-                     emptyFunction
-                     );
-            } 
             
             // castling
             if (pieceId === 'bking' || pieceId === 'wking') {
@@ -289,12 +281,6 @@ var CHESSBOARD = {
                 }
                 if (rookId && rookDestId) {
                     CHESSBOARD.move(rookId,rookDestId,true);
-                    CHESSHUB.sendMessage("move-" + rookId + "-" + rookDestId,
-                         CHESSBOARD.gameID,
-                         'game',
-                         emptyFunction,
-                         emptyFunction
-                     );
                  }
             }
             
@@ -309,14 +295,6 @@ var CHESSBOARD = {
 
             CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
             CHESSBOARD.move(pieceId,target.id,(CHESSBOARD.promoting[pieceId[0]] ? true:false));    // if player can promote a pawn, do not switch turn
-
-            // send the move to the server
-            CHESSHUB.sendMessage('move-' + CHESSBOARD.selectedPiece.attr('id') + "-" + target.id,
-                 CHESSBOARD.gameID,
-                 'game',
-                 emptyFunction,
-                 emptyFunction
-                 );
             CHESSBOARD.selectedPiece='';
 
             return true;
@@ -329,6 +307,25 @@ var CHESSBOARD = {
         }
     },
     
+    _commitMoves: function() {
+        console.log('commitMoves :');//TEST
+        console.log(CHESSBOARD.arrayOfMoves);//TEST
+        if(CHESSBOARD.arrayOfMoves.length > 0) {
+             CHESSBOARD.arrayOfMoves.forEach(function(value) {
+                CHESSHUB.sendMessage('move-' + value,
+                     CHESSBOARD.gameId,
+                     'game',
+                     function(){console.log('successfully sent move-' + value);},
+                     function(error){
+                        console.log('error sending move-' + value);
+                        console.log(error);
+                    }
+                 );
+             });
+        }
+        CHESSBOARD.arrayOfMoves = [];
+        CHESSBOARD.currentGameTurn=(CHESSBOARD.currentGameTurn === 'w' ? 'b' : 'w'); // switch game turn
+    },
     
     _canMove: function(pieceId, destinationId, captureOnly) {
     // check if the selected piece can be moved to the destination
@@ -762,7 +759,7 @@ var CHESSBOARD = {
          $(".chessBoardSquare").bind('vmousedown',function(event) { CHESSBOARD.mouseDownHandler(event); }); // JQUERY
     },
     
-    initChessBoard: function(gameID) {
+    initChessBoard: function(gameId) {
         CHESSBOARD.pieces=[];
         // JQUERY
         $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
@@ -773,7 +770,7 @@ var CHESSBOARD = {
         CHESSBOARD._drawBoard(); 
         CHESSBOARD._createPieces();
         CHESSBOARD._spawnPieces();
-        CHESSBOARD.gameID = gameID;
+        CHESSBOARD.gameId = gameId;
         CHESSBOARD.playerA = "";
         CHESSBOARD.playerB = "";
         CHESSBOARD.blackPlayer = '';
@@ -790,7 +787,7 @@ var CHESSBOARD = {
     sit: function(color) {
         $('#'+color+'Sit').css('display','none');   // JQUERY
         CHESSHUB.sendMessage('sit-' + color, 
-            CHESSBOARD.gameID, 
+            CHESSBOARD.gameId, 
             'game', 
             function(){ 
                 CHESSBOARD.setPlayer(color,CONTEXT.user); 

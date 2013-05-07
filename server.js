@@ -673,7 +673,7 @@ http.createServer(function (req, res) {
 //
     else {
         // file serving
-        // thanks http://blog.phyber.com/2012/03/30/supporting-cache-controls-in-node-js/ for the cache control code
+        // thanks http://blog.phyber.com/2012/03/30/supporting-cache-controls-in-node-js/ for the cache control tips
         if(LOGSTATIC) { console.log(currTime() + ' [STATIC] client file request'); }
         var file='';
         if(url_parts.pathname === '/' || url_parts.pathname === '/client' || url_parts.pathname === '/client/') {
