@@ -143,6 +143,7 @@ var CHESSBOARD = {
 
             if(!dontSwitchTurn) {
                 CHESSBOARD._commitMoves(CHESSBOARD.gameId);
+                CHESSBOARD.currentGameTurn=(pieceId[0] === 'w' ? 'b' : 'w'); // switch game turn
             }
             CHESSBOARD._verifyCheck();
     },
@@ -324,7 +325,6 @@ var CHESSBOARD = {
              });
         }
         CHESSBOARD.arrayOfMoves = [];
-        CHESSBOARD.currentGameTurn=(CHESSBOARD.currentGameTurn === 'w' ? 'b' : 'w'); // switch game turn
     },
     
     _canMove: function(pieceId, destinationId, captureOnly) {
