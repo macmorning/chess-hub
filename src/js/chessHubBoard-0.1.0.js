@@ -87,7 +87,6 @@ var CHESSBOARD = {
     move: function(pieceId,destinationId,dontSwitchTurn) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
-            console.log('move ' + pieceId + '-' + destinationId + ' ' + dontSwitchTurn);//TEST
             if(pieceId[0] === 'w' && CHESSBOARD.whitePlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'w'
                 || pieceId[0] === 'b' && CHESSBOARD.blackPlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'b') {
                 // only record moves of current player pieces to send to the server
@@ -117,7 +116,6 @@ var CHESSBOARD = {
             // piece capture
             if(destinationId[0] === 's') {  // this is not already a piece capture (moving to bGraveyard or wGraveyard
                 var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)];
-                console.log('targetPiece ' + targetPiece);//TEST
                 if ( targetPiece !== '') {
                     CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true); // move opponents piece to the graveyard, don't commit
                 } 
@@ -309,8 +307,6 @@ var CHESSBOARD = {
     },
     
     _commitMoves: function() {
-        console.log('commitMoves :');//TEST
-        console.log(CHESSBOARD.arrayOfMoves);//TEST
         if(CHESSBOARD.arrayOfMoves.length > 0) {
              CHESSBOARD.arrayOfMoves.forEach(function(value) {
                 CHESSHUB.sendMessage('move-' + value,
