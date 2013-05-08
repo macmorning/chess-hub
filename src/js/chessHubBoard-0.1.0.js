@@ -87,6 +87,11 @@ var CHESSBOARD = {
     move: function(pieceId,destinationId,dontSwitchTurn) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
+        var from = CHESSBOARD.pieces[pieceId].sqId;
+		var numericFrom = parseInt(CHESSBOARD._numeric(from),10);
+		var numericTo = parseInt(CHESSBOARD._numeric(destinationId),10); 
+		var numericMove = numericTo - numericFrom;
+
             if(pieceId[0] === 'w' && CHESSBOARD.whitePlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'w'
                 || pieceId[0] === 'b' && CHESSBOARD.blackPlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'b') {
                 // only record moves of current player pieces to send to the server
@@ -120,6 +125,26 @@ var CHESSBOARD = {
                     CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true); // move opponents piece to the graveyard, don't commit
                 } 
             }
+            // pawn double move; flag it as possibly taken "en passant"
+            if ((CHESSBOARD.pieces[pieceId].class === 'wpawn' && CHESSBOARD.pieces[pieceId].sqId[3] === '2' && destinationId[3] === '4')
+                    || (CHESSBOARD.pieces[pieceId].class === 'bpawn' && CHESSBOARD.pieces[pieceId].sqId[3] === '7' && destinationId[3] === '5')) {
+                CHESSBOARD.pieces[pieceId].enPassant = true;
+            }
+            
+            // pawn capturing "en passant"
+            if (!CHESSBOARD.chessBoard[numericTo] && pieceId[0] === "w" && CHESSBOARD.chessBoard[numericTo-1] && (numericMove === 11 || numericMove === -9)) {
+                var targetPiece = CHESSBOARD.chessBoard[numericTo-1];
+                if ( targetPiece !== '') {
+                    CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true); // move opponents piece to the graveyard, don't commit
+                }                 
+            }
+            if (!CHESSBOARD.chessBoard[numericTo] && pieceId[0] === "b" && CHESSBOARD.chessBoard[numericTo+1] && (numericMove === -11 || numericMove === 9)) {
+                var targetPiece = CHESSBOARD.chessBoard[numericTo+1];
+                if ( targetPiece !== '') {
+                    CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true); // move opponents piece to the graveyard, don't commit
+                } 
+            }
+
             // reflect the move into the chessBoard array
             CHESSBOARD.chessBoard[CHESSBOARD._numeric(CHESSBOARD.pieces[pieceId].sqId)] = '';
             if (destinationId[0] === 's') { // it's a square, not a graveyard
@@ -312,7 +337,7 @@ var CHESSBOARD = {
                 CHESSHUB.sendMessage('move-' + value,
                      CHESSBOARD.gameId,
                      'game',
-                     function(){console.log('successfully sent move-' + value);},
+                     function(){},
                      function(error){
                         console.log('error sending move-' + value);
                         console.log(error);
@@ -374,9 +399,11 @@ var CHESSBOARD = {
                     }
                     return true;
                 }
-                // capturing a piece sideways
+                // capturing a piece sideways, regular or "en passant"
                 else if ((pieceId[0] === "w" && (numericMove === 11 || numericMove === -9)) || (pieceId[0] === "b" && (numericMove === -11 || numericMove === 9))) {
-                    if (targetPiece) {
+                    if (targetPiece 
+                        || (CHESSBOARD.pieces[pieceId].class === 'wpawn' && destinationId[3] === '6' && CHESSBOARD.chessBoard[numericTo-1] && CHESSBOARD.pieces[CHESSBOARD.chessBoard[numericTo-1]].class === 'bpawn' && CHESSBOARD.pieces[CHESSBOARD.chessBoard[numericTo-1]].enPassant)
+                        || (CHESSBOARD.pieces[pieceId].class === 'bpawn' && destinationId[3] === '3' && CHESSBOARD.chessBoard[numericTo+1] && CHESSBOARD.pieces[CHESSBOARD.chessBoard[numericTo+1]].class === 'wpawn' && CHESSBOARD.pieces[CHESSBOARD.chessBoard[numericTo+1]].enPassant)) {
                         return true;
                     }
                     return false;
