@@ -24,7 +24,6 @@ var http = require('http'),
 var Channel = require('./channel.js');
 
 
-var GAMEINDEX=0;        // IDs for newly created games
 var users = {};         // init the users objects array
 var channels = [];      // init the channels array
 
@@ -67,8 +66,16 @@ function guid() {
 }
 
 function checkUserKey(user,key) {
-    if (!user || !users[user] || !key || users[user].key !== key) { return false; } 
-    else { return true; }
+    if (!user || !key || (users[user] && users[user].key !== key)) {
+        return false; 
+    } else if (user && !users[user]) {  // reconnecting user
+        users[user] = {};
+        users[user].key = key;
+        users[user].lastActivity = new Date();        
+        return true; 
+    } else {
+        return true; 
+    }
 }
 
 function currTime() {
@@ -167,8 +174,7 @@ function createGame(user, open, level, acceptLower, acceptHigher, timer) {
         return false;
     } else {
         // create the new game channel and push it
-        GAMEINDEX++;
-        var gameId = "GAME" + GAMEINDEX;
+        var gameId = guid();
             channels[gameId] = new Channel(user + "'s table",gameId);
             channels[gameId].gameTimer = (timer >= 0 ? timer : 0);  // if user has set his pref to indifferent (-1), then don't set a timer
             channels[gameId].gameLevel = level;
@@ -513,8 +519,10 @@ http.createServer(function (req, res) {
                         returncode: 'new',
                         gameDetails: channels[newGame]
                     }));
-                sendMessage(user,'created-'+newGame+'-'+channels[newGame].gameTimer+'-'+channels[newGame].gameLevel,'game','MAIN');    // send the information to users in the MAIN channel
-                return 0;
+                if (!createFlag) {
+                    sendMessage(user,'created-'+newGame+'-'+channels[newGame].gameTimer+'-'+channels[newGame].gameLevel,'game','MAIN');    // send the information to users in the MAIN channel
+                }
+                return true;
             } else {
                 res.writeHead(500, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {

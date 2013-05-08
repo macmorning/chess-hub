@@ -169,7 +169,11 @@
                     if (isNaN(response.gameDetails.gameLevel)) {
                         output.html('<p class="chat_sys">There was an error when retrieving game informations. Please reconnect and retry.</p>'+ output.html());
                     } else if(response.returncode === "new") {
-                        output.html('<p class="chat_sys">A new game was created : "' + response.gameDetails.name + '". Please sit and wait for another player...</p>'+ output.html());
+                        if(response.gameDetails.open) {
+                            output.html('<p class="chat_sys">A new game was created : "' + response.gameDetails.name + '". Please sit and wait for another player...</p>'+ output.html());
+                        } else {
+                            output.html('<p class="chat_sys">A new private game was created : "' + response.gameDetails.name + '". You can invite another player or play alone...</p>'+ output.html());
+                        }
                     } else if(response.returncode !== "new") {
                         output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '". Please sit and let the game start.</p>'+ output.html());
                     }
