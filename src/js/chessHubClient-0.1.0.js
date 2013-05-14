@@ -55,10 +55,8 @@ CHESSHUB = {
     _poll: function(channel,newMessageCallBack) {
         if(!CHESSHUB.channels[channel] || CHESSHUB.channels[channel].counter.isNaN)
         {
-            console.log('CHESSHUB._poll : ' + channel + ' is not a known channel');
             return false;
         }
-        console.log('polling ... ' + CHESSHUB.channels[channel].counter);
         var data = { user: CHESSHUB.user, key: CHESSHUB.key, counter: CHESSHUB.channels[channel].counter, channel: channel } ;
         CHESSHUB.ajaxPoll = $.ajax({
             type: 'POST',
@@ -69,7 +67,6 @@ CHESSHUB = {
             success: function (response) {              // jquery automatically parses the json answer
                 if (isNaN(response.counter)) {
                     console.log('CHESSHUB._poll : error - unexpected answer');
-                    console.log(response);
                 } else {
                     CHESSHUB.channels[channel].counter = response.counter;
                 }
@@ -105,9 +102,7 @@ CHESSHUB = {
     //  asks for a game
     //
     searchGame: function(playerLevel,playerAcceptLower,playerAcceptHigher,playerTimerPref,createFlag,successCallBack,errorCallBack) {
-        console.log('CHESSHUB.searchGame');
         var data = { user: CHESSHUB.user, key: CHESSHUB.key, playerLevel: playerLevel, playerAcceptLower: playerAcceptLower, playerAcceptHigher: playerAcceptHigher, playerTimerPref: playerTimerPref, createFlag : createFlag } ;
-        console.log(data);
         CHESSHUB.ajaxSearchGame = $.ajax({
             type: 'POST',
             url : '/searchGame',
@@ -115,8 +110,6 @@ CHESSHUB = {
             dataType: 'json',
             data: JSON.stringify(data),
             success: function (response) {              // jquery automatically parses the json answer
-                    console.log('CHESSHUB.searchGame : answer : ');
-                    console.log(response);
                     successCallBack(response);
             },
             error: function(data,status,error) {
@@ -191,7 +184,6 @@ CHESSHUB = {
                 return false;
             }
             var data = { user: CHESSHUB.user, key: CHESSHUB.key } ;
-            console.log('CHESSHUB.disconnect : leaving all channels');
             CHESSHUB.channels = [];
             $.ajax({
                 type: 'POST',
@@ -199,9 +191,7 @@ CHESSHUB = {
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
                 data: JSON.stringify(data),
-                success: function () { 
-                        console.log('CHESSHUB.disconnect : ... ok');
-                    },
+                success: function () { },
                 error: function(data,status,error) {
                         console.log('CHESSHUB.disconnect error - ' + status);
                         console.log(error);

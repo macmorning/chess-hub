@@ -95,7 +95,7 @@ var CHESSBOARD = {
             if(pieceId[0] === 'w' && CHESSBOARD.whitePlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'w'
                 || pieceId[0] === 'b' && CHESSBOARD.blackPlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'b') {
                 // only record moves of current player pieces to send to the server
-                CHESSBOARD.arrayOfMoves.push(pieceId + '-' + destinationId);
+                CHESSBOARD.arrayOfMoves.push('move-' + pieceId + '-' + destinationId);
             }
             
             var destinationSelector = $('#' + destinationId);
@@ -333,17 +333,15 @@ var CHESSBOARD = {
     
     _commitMoves: function() {
         if(CHESSBOARD.arrayOfMoves.length > 0) {
-             CHESSBOARD.arrayOfMoves.forEach(function(value) {
-                CHESSHUB.sendMessage('move-' + value,
-                     CHESSBOARD.gameId,
-                     'game',
-                     function(){},
-                     function(error){
-                        console.log('error sending move-' + value);
-                        console.log(error);
-                    }
-                 );
-             });
+            CHESSHUB.sendMessage(JSON.stringify(CHESSBOARD.arrayOfMoves),
+                 CHESSBOARD.gameId,
+                 'game',
+                 function(){},
+                 function(error){
+                    console.log('error sending move');
+                    console.log(error);
+                }
+             );
         }
         CHESSBOARD.arrayOfMoves = [];
     },
@@ -589,7 +587,7 @@ var CHESSBOARD = {
                         && p[0] !== pieceId[0]
                         && CHESSBOARD._canMove(p,destinationId,true)) {
                     // the piece can capture the king
-                    console.log(pieceId + ' checked at square ' + destinationId + ' by ' + p);
+//                    console.log(pieceId + ' checked at square ' + destinationId + ' by ' + p);
                     result = p;
                 }
             }
@@ -622,7 +620,7 @@ var CHESSBOARD = {
                 CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',true);  // mark the king as checked
                 CHESSBOARD._markSquare(CHESSBOARD.pieces[p].sqId,'check',true);     // mark the "checker" as ... checked :p
                 CHESSBOARD.pieces[king].isCheck = true;
-                console.log(king + ' is check');
+//                console.log(king + ' is check');
             } else {
 //                console.log(king + ' is NOT check');
                 CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',false);
@@ -821,7 +819,7 @@ var CHESSBOARD = {
     },
     
     setPlayer: function(parameter,value) {
-        console.log('setPlayer : ' + parameter + '=' + value);
+//        console.log('setPlayer : ' + parameter + '=' + value);
         if (parameter === 'A') {
             CHESSBOARD.playerA = value;
         } else if (parameter === 'B') {

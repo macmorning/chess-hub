@@ -20,7 +20,8 @@ if (process.env.C9_PID) {       // for running the server on c9.io
 }
 var http = require('http'),
     url = require('url'),
-    fs = require('fs');
+    fs = require('fs'),
+    util = require('util');
 var Channel = require('./channel.js');
 
 
@@ -617,12 +618,13 @@ http.createServer(function (req, res) {
         });
         req.on('end', function() {
             var json = {};      // then analyze the message
-            try { json = JSON.parse(data); }    // we were unable to analyze the json string
-            catch(err) { 
+            try { json = JSON.parse(data); }
+            catch(err) {     // we were unable to analyze the json string
                 resBadRequest(res,err,data);
                 return false;
             }
-            msg = escapeHtml(json.msg);         // escaping html chars
+
+            msg = json.msg;
             user = escapeHtml(json.user);
             key = escapeHtml(json.key);
             category = escapeHtml(json.category) || 'chat_msg' ;        // default : chat message
@@ -635,18 +637,28 @@ http.createServer(function (req, res) {
                 resUnauthorized(res,'The provided key for user ' + user + '  does not match the registered one for the user','provided key for user ' + user + '  = ' + key);
                 return false;
             }
-            
-            if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... msg = ' + msg + " / user = " + user + " / channel = " + channel + " / category = " + category); }
-            if (category === 'game') {
-                if (!checkCommand(channel,user,msg)) {  // the command is invalid
-                    resBadRequest(res,'invalid game command',msg);
-                    console.log(currTime() + ' [MESSAG] incorrect game command from user ' + user + ' : ' + msg);
-                    return false;
-                }
-            }
 
+            // we are now testing if msg is an array of messages or a single message
+            var arrayOfMsg = [];
+            try { arrayOfMsg = JSON.parse(msg); }
+            catch(err) {     // this is not a json string
+                arrayOfMsg.push(msg);
+            }
+            
+            arrayOfMsg.forEach(function(element){
+                var tmpMsg = escapeHtml(element);
+                if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... msg = ' + tmpMsg + " / user = " + user + " / channel = " + channel + " / category = " + category); }
+                if (category === 'game') {
+                    if (!checkCommand(channel,user,tmpMsg)) {  // the command is invalid
+                        resBadRequest(res,'invalid game command',tmpMsg);
+                        console.log(currTime() + ' [MESSAG] incorrect game command from user ' + user + ' : ' + tmpMsg);
+                        return false;
+                    }
+                }
+                sendMessage(user, tmpMsg, category, channel);
+            });
+            
             // Every thing seems alright. Forward the message via the specified channel and reply with "ok"
-            sendMessage(user, msg, category, channel);
             res.writeHead(200, { 'Content-type': 'application/json'});
             res.end(JSON.stringify({returncode: 'ok'}));
             return 0;

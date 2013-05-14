@@ -97,7 +97,6 @@
                     if(response.returncode == 'ok'){    // user is connected; start polling for messaging and switch to main page
                         CONTEXT.user = response.user;
                         CONTEXT.key = response.key;
-                        console.log(CONTEXT.user + ' connected; key : ' + CONTEXT.key);
                         getStats('mainpage_stats');
                         CHESSHUB.listen('MAIN',
                                 function(message) { addMessage(message); }
@@ -325,7 +324,6 @@
                     $('#chat_input').val('');
                     CONTEXT.history.push(text);
                     CONTEXT.currentHistoryIndex=CONTEXT.history.length;
-                    console.log('message sent');
                 },
                 function(){
                     output.html("<p class='chat_sys'>Error connecting you to the server :(</p>" + output.html());
