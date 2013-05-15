@@ -5,7 +5,11 @@
 *	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 var CHESSBOARD = {
+    chessBoardColumnsBlack: {1:'h', 2:'g', 3:'f', 4:'e', 5:'d', 6:'c', 7:'b', 8:'a'},
+    chessBoardColumnsWhite: {1:'a', 2:'b', 3:'c', 4:'d', 5:'e', 6:'f', 7:'g', 8:'h'},
     chessBoardColumns: {1:'a', 2:'b', 3:'c', 4:'d', 5:'e', 6:'f', 7:'g', 8:'h'},
+    chessBoardRowsBlack: [1, 2, 3, 4, 5, 6, 7, 8],
+    chessBoardRowsWhite: [8, 7, 6, 5, 4, 3, 2, 1],
     chessBoardRows: [8, 7, 6, 5, 4, 3, 2, 1],
     colors: {'w':'white', 'b':'black'},
     promoting: {'w':false, 'b':false},
@@ -171,18 +175,26 @@ var CHESSBOARD = {
             CHESSBOARD._verifyCheck();
     },
 
-    flip: function() {
-    // inverses the board without reinitializing it
-        var tmpchessBoardColumns = {1:CHESSBOARD.chessBoardColumns[8], 
-                                   2:CHESSBOARD.chessBoardColumns[7],
-                                   3:CHESSBOARD.chessBoardColumns[6], 
-                                   4:CHESSBOARD.chessBoardColumns[5], 
-                                   5:CHESSBOARD.chessBoardColumns[4], 
-                                   6:CHESSBOARD.chessBoardColumns[3], 
-                                   7:CHESSBOARD.chessBoardColumns[2], 
-                                   8:CHESSBOARD.chessBoardColumns[1]};
-        CHESSBOARD.chessBoardColumns = tmpchessBoardColumns;
-        CHESSBOARD.chessBoardRows.reverse();
+    flip: function(bottomColor) {
+        if (bottomColor === 'w') {
+            CHESSBOARD.chessBoardColumns = CHESSBOARD.chessBoardColumnsWhite;
+            CHESSBOARD.chessBoardRows = CHESSBOARD.chessBoardRowsWhite;
+        } else if (bottomColor === 'b') {
+            CHESSBOARD.chessBoardColumns = CHESSBOARD.chessBoardColumnsBlack;
+            CHESSBOARD.chessBoardRows = CHESSBOARD.chessBoardRowsBlack;
+        } else { // no bottom color or an illegal bottom color was provided
+        // inverses the board without reinitializing it
+            var tmpchessBoardColumns = {1:CHESSBOARD.chessBoardColumns[8], 
+                                       2:CHESSBOARD.chessBoardColumns[7],
+                                       3:CHESSBOARD.chessBoardColumns[6], 
+                                       4:CHESSBOARD.chessBoardColumns[5], 
+                                       5:CHESSBOARD.chessBoardColumns[4], 
+                                       6:CHESSBOARD.chessBoardColumns[3], 
+                                       7:CHESSBOARD.chessBoardColumns[2], 
+                                       8:CHESSBOARD.chessBoardColumns[1]};
+            CHESSBOARD.chessBoardColumns = tmpchessBoardColumns;
+            CHESSBOARD.chessBoardRows.reverse();
+        }
         // JQUERY
         $('#chessBoard').empty(); // remove all children (rows & colums & pieces)
         $('#wGraveyard').empty();
@@ -190,6 +202,7 @@ var CHESSBOARD = {
         CHESSBOARD._drawBoard(); 
         CHESSBOARD._spawnPieces();
     },
+
     
 
     ///////////////////////////////
@@ -811,11 +824,12 @@ var CHESSBOARD = {
             CHESSBOARD.gameId, 
             'game', 
             function(){ 
-                CHESSBOARD.setPlayer(color,CONTEXT.user); 
+                CHESSBOARD.setPlayer(color,CONTEXT.user);
+                CHESSBOARD.flip(color);
             }, 
             function() { console.log('error while sitting'); }
         );
-        return 0;
+        return true;
     },
     
     setPlayer: function(parameter,value) {
