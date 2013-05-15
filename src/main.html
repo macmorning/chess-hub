@@ -99,7 +99,7 @@
                         CONTEXT.key = response.key;
                         getStats('mainpage_stats');
                         CHESSHUB.listen('MAIN',
-                                function(message) { addMessage(message); }
+                                function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
                             );
                         $.mobile.changePage($("#mainpage"));
                         
@@ -135,7 +135,7 @@
                     output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '"...</p>'+ output.html());
                     //CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)
                     CHESSHUB.listen(response.gameDetails.id,
-                                function(message) { addMessage(message); }  // start polling the game channel
+                                function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }  // start polling the game channel
                             );
                     CONTEXT.currentGameId = response.gameDetails.id;    // set the game informations
                     CONTEXT.currentGameName = response.gameDetails.name;
@@ -208,7 +208,7 @@
         }, 1000);
     }
     
-    function addMessage(message) {
+    function addMessage(message,whiteTimer,blackTimer) {
         // adds a message to the chat_output div of the current page
 
         var directMessage = false;
@@ -247,6 +247,9 @@
                         + output.html());
                 } else if (command[0] == "move") {
                     var notifMessage = message.user + ' plays ' + CHESSBOARD.pieces[command[1]].name + " - " + CHESSBOARD.pieces[command[1]].sqId.substring(2,4);
+                    if (whiteTimer && blackTimer) {
+                        CHESSBOARD.updateTimers(whiteTimer,blackTimer);
+                    }
                     if (message.user != CONTEXT.user) { 
                         CHESSBOARD.move(command[1], command[2]);
                         notify(notifMessage);
@@ -403,43 +406,41 @@
     </div>
 
     <div data-role="popup" id="mainpage_hiddenFeatures" class="ui-content">
-                            <label for="game_timer">Timer ?</label>
-                        <select id="game_timer" data-mini="true">
-                            <option value=10>10 minutes</option>
-                            <option value=5>5 minutes</option>
-                            <option value=0 selected=true>none</option>
-                            <option value=-1>indifferent</option>
-                        </select>
-                        <label for="game_lower_ok">Allow lower level opponents ?</label>
-                        <select name="game_lower_ok" id="game_lower_ok" data-role="slider">
-                            <option value=1>Yes</option>
-                            <option value=0>No</option>
-                        </select>                
-                        <label for="game_lower_ok">Allow higher level opponents ?</label>
-                            <select name="game_higher_ok" id="game_higher_ok" data-role="slider">
-                                <option value=1>Yes</option>
-                                <option value=0>No</option>
-                            </select><br/>
     </div>
     
     <div id="mainpage_side">
         <span class="mainpage_stats" id="mainpage_stats"></span>
 
         <h3>To search for a game, fill this form and press "search".</h3>
-                <!--<label for="game_search_user">Are you searching for a friend ?</label>
-                <input type="search" name="game_search_user" id="game_search_user"> -->
                 <form method="POST" action="" data-ajax="false">
-                        <label for="game_user_level">What is your self estimated skill ?
+                    <label for="game_user_level">What is your self estimated skill ?
                             <a href="#mainpage_popupHelpLevel" data-wrapperels="span" data-mini="false" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
-                        </label>
+                    </label>
                         <select id="game_user_level" data-mini="true">
                             <option value=2>veteran</option>
                             <option value=1 selected=true>amateur</option>
                             <option value=0>beginner</option>
                         </select>
-            		    <button id="game_search" type="submit" data-inline="true">search</button>
-            		    <button id="game_create" type="submit" data-inline="true">create</button>
+                    <label for="game_timer">Timer ?</label>
+                        <select id="game_timer" data-mini="true">
+                            <option value=10>10 minutes</option>
+                            <option value=5>5 minutes</option>
+                            <option value=0 selected=true>none</option>
+                            <option value=-1>indifferent</option>
+                        </select>
+                    <label for="game_lower_ok">Allow lower level opponents ?</label>
+                        <select name="game_lower_ok" id="game_lower_ok" data-role="slider">
+                            <option value=1>yes</option>
+                            <option value=0>no</option>
+                        </select>                
+                    <label for="game_lower_ok">Allow higher level opponents ?</label>
+                        <select name="game_higher_ok" id="game_higher_ok" data-role="slider">
+                            <option value=1>yes</option>
+                            <option value=0>no</option>
+                        </select><br/>
                 </form>
+    		    <button id="game_search" type="submit" data-inline="true">search</button>
+    		    <button id="game_create" type="submit" data-inline="true">create</button>
     </div>
     <div id="mainpage_chat">
         <input type='text' id="chat_input" onkeyup="chatSpecialKeys(event,'MAIN');">

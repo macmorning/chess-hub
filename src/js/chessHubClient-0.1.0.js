@@ -71,9 +71,9 @@ CHESSHUB = {
                     CHESSHUB.channels[channel].counter = response.counter;
                 }
                 if($.isArray(response.append)) { 
-                    response.append.forEach(function(message) { newMessageCallBack(message); });
+                    response.append.forEach(function(message) { newMessageCallBack(message,response.whiteTimer,response.blackTimer); });
                 } else {
-                    newMessageCallBack(response.append);
+                    newMessageCallBack(response.append,response.whiteTimer,response.blackTimer);
                 }
                 CHESSHUB._poll(channel,newMessageCallBack);
             },

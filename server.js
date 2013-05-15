@@ -137,7 +137,12 @@ function sendMessage(from, msg, category, to ) {
     message = {time: currTime(), user: from, msg: msg, category: category, to: to };
     if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... sendMessage : ' + message.msg);}
     channels[to].messages.push(message);
-    var json = JSON.stringify( { counter: channels[to].messages.length, append: message });
+    var json = JSON.stringify( { 
+            counter: channels[to].messages.length, 
+            append: message, 
+            whiteTimer : channels[to].whiteTimer, 
+            blackTimer : channels[to].blackTimer 
+        });
     var i = 0;
     for(var user in channels[to].users) {
         try { channels[to].users[user].client.end(json); }

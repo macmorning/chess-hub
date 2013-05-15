@@ -118,14 +118,20 @@ Channel.prototype = {
             if (user === this.blackPlayer) {
                 this.switchTurn('w');
                 if(this.gameTimer > 0) {
-                    this.blackTimer = this.blackTimer - (this.blackLastMoveTime - currDate);
-                    this.blackLastMoveTime = currDate;
+                    if (this.blackLastMoveTime === 0) { this.blackLastMoveTime = currDate; }
+                    else {
+                        this.blackTimer = this.blackTimer - Math.floor((currDate-this.blackLastMoveTime)/1000) + 1;
+                        this.blackLastMoveTime = currDate;
+                    }
                 }
             } else if (user === this.whitePlayer) {
                 this.switchTurn('b');
                 if(this.gameTimer > 0) {
-                    this.whiteTimer = this.whiteTimer - (this.whiteLastMoveTime - currDate);
-                    this.whiteLastMoveTime = currDate;
+                    if (this.whiteLastMoveTime === 0) { this.whiteLastMoveTime = currDate; }
+                    else {
+                        this.whiteTimer = this.whiteTimer - Math.floor((currDate-this.whiteLastMoveTime)/1000) + 1;
+                        this.whiteLastMoveTime = currDate;
+                    }
                 }
             }
         },

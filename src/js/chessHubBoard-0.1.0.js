@@ -16,13 +16,16 @@ var CHESSBOARD = {
     arrayOfMoves: [],               // array of pending moves
     pieces: [],
     gameId: '',
+    gameTimer: 0,                   // Timer set for the current game
     selectedPiece: '',              // selector for the piece held by the user
     playerA: '',                    // playerA username
     playerB: '',                    // playerB username
     blackPlayer: '',                // blackPlayer username
+    blackTimer: 0,                  // blackPlayer timer, in seconds
     blackCanCastleKingSide: true,
     blackCanCastleQueenSide: true,
     whitePlayer: '',                // whitePlayer username
+    whiteTimer: 0,                  // whitePlayer timer, in seconds
     whiteCanCastleKingSide: true,
     whiteCanCastleQueenSide: true,
     currentGameTurn: '',            // 'w' or 'b'
@@ -208,6 +211,11 @@ var CHESSBOARD = {
     ///////////////////////////////
     // CONTROLLER
     ///////////////////////////////
+
+    updateTimers: function(whiteTimer,blackTimer) {
+        CHESSBOARD.whiteTimer = whiteTimer;
+        CHESSBOARD.blackTimer = blackTimer;
+    },
 
     mouseDownHandler: function(ev) {            // using a mouse down event here : it's more user friendly than drag&drop when you are using a touch-enabled device
         ev.stopPropagation();   // stop propagation : we don't want the click event to bubble
