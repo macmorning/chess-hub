@@ -176,7 +176,7 @@ function createGame(user, open, level, acceptLower, acceptHigher, timer) {
     } else {
         // create the new game channel and push it
         var gameId = guid();
-            channels[gameId] = new Channel(user + "'s table",gameId);
+            channels[gameId] = new Channel(user + "'s table",gameId,timer);
             channels[gameId].gameTimer = (timer >= 0 ? timer : 0);  // if user has set his pref to indifferent (-1), then don't set a timer
             channels[gameId].gameLevel = level;
             channels[gameId].playerA = user;
@@ -222,10 +222,10 @@ function houseKeeper() {
 
 function checkCommand(channel,user,msg) {
     // this function verifies the validity of the game commands sent by the clients.
-    // returns 0 if ok, 1 if ko
+    // returns true if ok, false if ko
     var command = msg.split('-');
     if(command[0] === "move") {
-        if (command[1]) {
+        if (channels[channel].isTurn(user) && command[1]) {
             return true;
         }
     } else if (command[0] === "sit") {
@@ -234,6 +234,21 @@ function checkCommand(channel,user,msg) {
         }
     } else if (command[0] === "leave") {
         return true;
+    }
+    return false;
+}
+
+function commitGameCommand(channel,user,msg) {
+    // this function commits the game commands and pushes the changes to the game channel
+    var command = msg.split('-');
+    if(command[0] === "move") {
+        return channels[channel].endTurn(user);
+    } else if (command[0] === "sit") {
+        if (command[1] === 'w' || command[1] === 'b' ) {
+            return channels[channel].sitUser(user,command[1]);
+        }
+    } else if (command[0] === "leave") {
+        return channels[channel].removeUser(user);
     }
     return false;
 }
@@ -654,6 +669,7 @@ http.createServer(function (req, res) {
                         console.log(currTime() + ' [MESSAG] incorrect game command from user ' + user + ' : ' + tmpMsg);
                         return false;
                     }
+                    commitGameCommand(channel,user,tmpMsg);
                 }
                 sendMessage(user, tmpMsg, category, channel);
             });

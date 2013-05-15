@@ -6,7 +6,7 @@
 *	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-var Channel = function(name,id) {
+var Channel = function(name,id,gameTimer) {
     this.name = name;
     this.open = true; 
     this.id = id || name;
@@ -15,12 +15,20 @@ var Channel = function(name,id) {
     this.playerA= '';
     this.playerB= '';
     this.whitePlayer= '';
+    this.whiteLastMoveTime = 0;
     this.blackPlayer= '';
+    this.blackLastMoveTime = 0;
+    this.currentTurn= 'w';
     this.gameLevel= '';
     this.gameAcceptHigher= false;
     this.gameAcceptLower= false;
-    this.gameTimer = 0;
     this.gameStarted = false;
+    this.gameTimer = gameTimer || 0;
+    if (this.gameTimer > 0) {
+        this.whiteTimer = this.gameTimer * 60;
+        this.blackTimer = this.gameTimer * 60;
+    }
+
 };
 
 Channel.prototype = {
@@ -32,7 +40,12 @@ Channel.prototype = {
     playerA: '',            // username of the game creator
     playerB: '',            // username of the game joiner
     whitePlayer: '',
+    whiteTimer: 0,
+    whiteLastMoveTime: 0,
     blackPlayer: '',
+    blackTimer: 0,
+    blackLastMoveTime: 0,
+    currentTurn: 'w',       // w or b
     gameLevel: '',          // level of the game, [0,6]
     gameAcceptHigher: false,// allow player B to join even if his level is more than 1 level higher than the game level
     gameAcceptLower: false, // allow player B to join even if his level is more than 1 level lower than the game level
@@ -51,6 +64,19 @@ Channel.prototype = {
             if(user && !this.users[user]) {
                 this.users[user] = {lastActivity: new Date()};
                 return true;
+            }
+            return false;
+        },
+
+    sitUser: function(user,color) {
+            if(user && (color === 'w' || color === 'b') && this.users[user]) {
+                if(color === 'w' && this.whitePlayer === '') {
+                    this.whitePlayer = user;
+                    return true;
+                } else if(color === 'b' && this.blackPlayer === '') {
+                    this.blackPlayer = user;
+                    return true;
+                }
             }
             return false;
         },
@@ -83,6 +109,42 @@ Channel.prototype = {
 
     addMessage: function(message) {
             this.messages.push({time:message.time,user:message.user,msg:message.msg,category:message.category,to:message.to});
+        },
+
+    endTurn: function(user) {
+            if (!user || (user !== this.blackPlayer && user !== this.whitePlayer)) {return false;}
+            var currDate = new Date();
+
+            if (user === this.blackPlayer) {
+                this.switchTurn('w');
+                if(this.gameTimer > 0) {
+                    this.blackTimer = this.blackTimer - (this.blackLastMoveTime - currDate);
+                    this.blackLastMoveTime = currDate;
+                }
+            } else if (user === this.whitePlayer) {
+                this.switchTurn('b');
+                if(this.gameTimer > 0) {
+                    this.whiteTimer = this.whiteTimer - (this.whiteLastMoveTime - currDate);
+                    this.whiteLastMoveTime = currDate;
+                }
+            }
+        },
+            
+    switchTurn: function(turn) {
+            this.currentTurn = turn;
+        },
+
+    isTurn: function(user) {
+            if (!user || (user !== this.blackPlayer && user !== this.whitePlayer)) {
+                return false;
+            }
+
+            if (user === this.blackPlayer && this.currentTurn === 'b'
+                || user === this.whitePlayer && this.currentTurn === 'w') {
+                return true;
+            } else {
+                return false;
+            }
         }
 };
 
