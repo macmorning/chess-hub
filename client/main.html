@@ -101,7 +101,7 @@
                         CHESSHUB.listen('MAIN',
                                 function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
                             );
-                        $.mobile.changePage($("#mainpage"));
+                        $.mobile.changePage($("#mainpage"),{changeHash:false});
                         
                         // if a game id was passed as a GET parameter, try joining the gameAcceptHigher
                         if(CONTEXT.getGameId) { 
@@ -419,7 +419,7 @@
         <h3>To search for a game, fill this form and press "search".</h3>
                 <form method="POST" action="" data-ajax="false">
                     <label for="game_user_level">What is your self estimated skill ?
-                            <a href="#mainpage_popupHelpLevel" data-wrapperels="span" data-mini="false" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
+<!--                            <a href="#mainpage_popupHelpLevel" data-wrapperels="span" data-mini="false" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>-->
                     </label>
                         <select id="game_user_level" data-mini="true">
                             <option value=2>veteran</option>
@@ -457,16 +457,14 @@
 <!-- ############### Board Page ###############-->
 <div data-role="page" id="boardpage" data-theme="a">
     <header data-role="header">
-		<h1 id="boardpage_header"></h1>
-		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();$.mobile.changePage($('#loginpage'));">Exit</a>
-		<a href="#boardpage_popupConf" data-wrapperels="span" data-mini="true" data-rel="popup" data-icon="gear" data-iconpos="notext">Configuration</a>
-	</header>
+        <h1 id="boardpage_header"></h1>
+        <a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();$.mobile.changePage($('#loginpage'));">Exit</a>
+        <a href="#boardpage_popupConf" data-wrapperels="span" data-mini="true" data-rel="popup" data-icon="gear" data-iconpos="notext">Configuration</a>
+    </header>
         <div data-role="popup" id="boardpage_popupConf" class="ui-content">
             <button data-icon="refresh" id="boardpage_flip" onclick="CHESSBOARD.flip();$('#boardpage_popupConf').popup('close');">flip board</button>
             <button data-icon="chesshub-twitter" id="boardpage_twitter" onclick="window.open('https://twitter.com/intent/tweet?text=Up%20for%20a%20game%20%3F&hashtags=chesshub&url=http%3A%2F%2Fwww.chess-hub.net%2F%3Fgame%3D'+CONTEXT.currentGameId, '_blank');$('#boardpage_popupConf').popup('close');">share with twitter</button>
         </div>
-
-
         <div id='chessBoardHidden'>
                 Sorry, this game requires a higher resolution. 
                 Width must be at least 256px.
@@ -492,6 +490,14 @@
         </div>
 
 <!--          <input type="button" value="init chessboard" id="initButton" onclick="CHESSBOARD.initChessBoard()"></input>-->
+</div>
+
+<!-- ############### Board Page ###############-->
+<div data-role="page" id="configpage" data-theme="a">
+        <div data-role="popup" id="boardpage_popupConf" class="ui-content">
+            <button data-icon="refresh" id="boardpage_flip" onclick="CHESSBOARD.flip();$('#boardpage_popupConf').popup('close');">flip board</button>
+            <button data-icon="chesshub-twitter" id="boardpage_twitter" onclick="window.open('https://twitter.com/intent/tweet?text=Up%20for%20a%20game%20%3F&hashtags=chesshub&url=http%3A%2F%2Fwww.chess-hub.net%2F%3Fgame%3D'+CONTEXT.currentGameId, '_blank');$('#boardpage_popupConf').popup('close');">share with twitter</button>
+        </div>
 </div>
 
 </body>

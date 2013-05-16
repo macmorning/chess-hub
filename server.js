@@ -250,7 +250,8 @@ function commitGameCommand(channel,user,msg) {
         return channels[channel].endTurn(user);
     } else if (command[0] === "sit") {
         if (command[1] === 'w' || command[1] === 'b' ) {
-            return channels[channel].sitUser(user,command[1]);
+            try { return channels[channel].sitUser(user,command[1]); }
+            catch(err) { return false; }
         }
     } else if (command[0] === "leave") {
         return channels[channel].removeUser(user);
