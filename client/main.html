@@ -144,6 +144,11 @@
                     CHESSBOARD.setPlayer('B',response.gameDetails.playerB);
                     CHESSBOARD.setPlayer('w',response.gameDetails.whitePlayer);
                     CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
+                    if(response.gameDetails.gameTimer <= 0) {
+                        $('.timer').css( { display : 'none' } );
+                    } else {
+                        $('.timer').css( { display : 'block' } );
+                    }
                     $('#boardpage_header').text(response.gameDetails.name);
                     $.mobile.changePage($("#boardpage"));
                     $('#game_search').button('enable');
@@ -469,6 +474,11 @@
         <div id='chessBoardContainer'>
             <a id="wSit" href="#" data-role="button" data-inline="true" onclick="CHESSBOARD.sit('w');">Sit White</a>
             <a id="bSit" href="#" data-role="button" data-inline="true" onclick="CHESSBOARD.sit('b');">Sit Black</a>
+            <div id='infoPanel'>
+                <div id='wTimer' class='timer'></div>
+                <div id='infoBar'></div>                
+                <div id='bTimer' class='timer'></div>
+            </div>
             <div id='chessBoard'>   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
             </div>
             <div id='bGraveyard'>

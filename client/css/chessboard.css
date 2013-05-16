@@ -15,10 +15,36 @@
     width:16em; 
     height:16em; 
 }
+#infoPanel {
+    width:16em; 
+}
+
+#infoPanel, #infoBar {
+    overflow: hidden;
+}
+
 .piece {
     width: 90%;
 }
 
+.timer {
+    background-color:white;
+    display:block;
+    width: 3em;
+    height: 2em;
+}
+#infoBar {
+    color: white;
+    display:block;
+    height: 2em;
+}
+
+#wTimer {
+    float: left;
+}
+#bTimer {
+    float: right;
+}
 #wSit,#bSit {
     z-index:1000;
     position:absolute;
@@ -26,15 +52,14 @@
     width:10em;
     left:50%;
     margin-left:-5em;
-}
-#wSit {
-    top: 14em;
-}
-#bSit {
-    top: 5em;
+    top: 10em;
 }
 
-#chessBoard,#wGraveyard,#bGraveyard {
+#wSit {
+    margin-top: 4em;
+}
+
+#infoPanel, #chessBoard,#wGraveyard,#bGraveyard {
     margin:auto;
     display:block;
     border: 0.2em solid black;
@@ -182,6 +207,9 @@ img.bpawn {
 
 /* breakpoint at 384px */
 @media all and (min-width: 24em) and (min-height: 27em){
+    #infoPanel {
+        width:24em; 
+    }    
     #chessBoard {
         width:24em; 
         height:24em; 
@@ -193,11 +221,8 @@ img.bpawn {
         width:3em;
         height:3em;
     }
-    #wSit {
-        top: 21em;
-    }
-    #bSit {
-        top: 6em;
+    #wSit,#bSit {
+        top: 14em;
     }
     #wGraveyard > .piece ,#bGraveyard > .piece {
         width: 2.7em;
@@ -210,6 +235,9 @@ img.bpawn {
 
 /* breakpoint at 512px */
 @media all and (min-width: 32em) and (min-height: 35em){
+    #infoPanel {
+        width:32em; 
+    }    
     #chessBoard {
         width:32em; 
         height:32em; 
@@ -221,11 +249,8 @@ img.bpawn {
         width:4em;
         height:4em;
     }
-    #wSit {
-        top: 27em;
-    }
-    #bSit {
-        top: 7em;
+    #wSit,#bSit {
+        top:17em;
     }
     #wGraveyard > .piece ,#bGraveyard > .piece {
         width: 3.6em;
@@ -238,10 +263,13 @@ img.bpawn {
 
 /* breakpoint at 650px*/
 @media all and (min-width: 40em) {
+    #infoPanel {
+        width:40em; 
+        margin-top: 0.3em;
+    }    
     #chessBoard {
         width:40em; 
         height:40em; 
-        margin-top: 0.3em;
     }
     .chessBoardRow {
         height:5em;
@@ -250,11 +278,8 @@ img.bpawn {
         width:5em;
         height:5em;
     }
-    #wSit {
-        top: 32em;
-    }
-    #bSit {
-        top: 11em;
+    #wSit,#bSit {
+        top: 22em;
     }
     #wGraveyard > .piece ,#bGraveyard > .piece {
         width: 4.5em;
@@ -268,6 +293,10 @@ img.bpawn {
 
 /* breakpoint at 864px width : Graveyards are moved to the right side of the board */
 @media all and (min-width: 54em) and (min-height: 42em){
+    #infoPanel {
+        margin: 0.5em 0.5em 0 0.5em;
+        float:left;
+    }    
     #chessBoard {
         margin: 0.5em 0.5em 0 0.5em;
         float:left;
@@ -284,9 +313,9 @@ img.bpawn {
         float:left;
         margin-right:2em;
     }
-    #wSit, #bSit {
-        margin-left:0;
+    #bSit,#wSit {
         margin-right:0;
+        margin-left:0;
         left: 15.25em;
     }
 }
