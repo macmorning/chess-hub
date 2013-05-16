@@ -28,6 +28,8 @@ var CHESSBOARD = {
     whiteTimer: 0,                  // whitePlayer timer, in seconds
     whiteCanCastleKingSide: true,
     whiteCanCastleQueenSide: true,
+    timer: '',                      // set the current value in seconds of the timer being counted down (white or black)
+    timerInterval: '',              // set to an interval when a countdown is required
     currentGameTurn: '',            // 'w' or 'b'
     gameHistory: [],                // turns history
     chessBoard: { 11:'', 12:'', 13:'', 14:'', 15:'', 16:'', 17:'', 18:'', 
@@ -89,6 +91,42 @@ var CHESSBOARD = {
             }
             return true;
         }
+    },
+
+    updateTimers: function(whiteTimer,blackTimer) {
+        CHESSBOARD.whiteTimer = whiteTimer;
+        CHESSBOARD.blackTimer = blackTimer;
+        CHESSBOARD.updateTimer('w',CHESSBOARD.whiteTimer);
+        CHESSBOARD.updateTimer('b',CHESSBOARD.blackTimer);
+    },
+
+    updateTimer: function(color,timer) {
+        //JQUERY
+            
+        var minutes = Math.floor(timer / 60);
+        var seconds = timer - (minutes * 60);
+        var string = (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+        $('#' + color + 'Timer').html(string);
+    },
+    
+    startTimer: function(color) {
+//        console.log('startTimer : ' + color + ' whiteTimer = ' + CHESSBOARD.whiteTimer + ' blackTimer = ' + CHESSBOARD.blackTimer);//TEST
+        CHESSBOARD.stopTimer();
+        if (color === 'w') {
+            CHESSBOARD.timerInterval = setInterval(function(){
+                CHESSBOARD.whiteTimer = CHESSBOARD.whiteTimer - 1;
+                CHESSBOARD.updateTimer(color,CHESSBOARD.whiteTimer);
+            }, 1000);
+        } else if (color === 'b') {
+            CHESSBOARD.timerInterval = setInterval(function(){
+                CHESSBOARD.blackTimer = CHESSBOARD.blackTimer - 1;
+                CHESSBOARD.updateTimer(color,CHESSBOARD.blackTimer);
+            }, 1000);
+        }
+    },
+
+    stopTimer: function() {
+        clearInterval(CHESSBOARD.timerInterval); 
     },
 
     move: function(pieceId,destinationId,dontSwitchTurn) {
@@ -174,6 +212,9 @@ var CHESSBOARD = {
             if(!dontSwitchTurn) {
                 CHESSBOARD._commitMoves(CHESSBOARD.gameId);
                 CHESSBOARD.currentGameTurn=(pieceId[0] === 'w' ? 'b' : 'w'); // switch game turn
+                if (CHESSBOARD.gameTimer > 0) {
+                    CHESSBOARD.startTimer(CHESSBOARD.currentGameTurn);
+                }
             }
             CHESSBOARD._verifyCheck();
     },
@@ -212,10 +253,6 @@ var CHESSBOARD = {
     // CONTROLLER
     ///////////////////////////////
 
-    updateTimers: function(whiteTimer,blackTimer) {
-        CHESSBOARD.whiteTimer = whiteTimer;
-        CHESSBOARD.blackTimer = blackTimer;
-    },
 
     mouseDownHandler: function(ev) {            // using a mouse down event here : it's more user friendly than drag&drop when you are using a touch-enabled device
         ev.stopPropagation();   // stop propagation : we don't want the click event to bubble

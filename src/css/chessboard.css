@@ -16,10 +16,10 @@
     height:16em; 
 }
 #infoPanel {
-    width:16em; 
+    width:16em;
 }
 
-#infoPanel, #infoBar {
+#infoPanel {
     overflow: hidden;
 }
 
@@ -28,23 +28,23 @@
 }
 
 .timer {
-    background-color:white;
+    background-color:black;
     display:block;
-    width: 3em;
-    height: 2em;
+    width: 50%;
+    min-width:3em;
+    height: 1em;
+    text-align:center;
+    box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    -webkit-box-sizing:border-box;
 }
-#infoBar {
-    color: white;
-    display:block;
-    height: 2em;
-}
-
 #wTimer {
     float: left;
 }
 #bTimer {
     float: right;
 }
+
 #wSit,#bSit {
     z-index:1000;
     position:absolute;

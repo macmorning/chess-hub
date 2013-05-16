@@ -144,10 +144,15 @@
                     CHESSBOARD.setPlayer('B',response.gameDetails.playerB);
                     CHESSBOARD.setPlayer('w',response.gameDetails.whitePlayer);
                     CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
-                    if(response.gameDetails.gameTimer <= 0) {
+                    CHESSBOARD.gameTimer = response.gameDetails.gameTimer;
+                    if(CHESSBOARD.gameTimer <= 0) {
                         $('.timer').css( { display : 'none' } );
                     } else {
                         $('.timer').css( { display : 'block' } );
+                        CHESSBOARD.whiteTimer = CHESSBOARD.gameTimer*60;
+                        CHESSBOARD.blackTimer = CHESSBOARD.gameTimer*60;
+                        CHESSBOARD.updateTimer('w',CHESSBOARD.whiteTimer);
+                        CHESSBOARD.updateTimer('b',CHESSBOARD.blackTimer);
                     }
                     $('#boardpage_header').text(response.gameDetails.name);
                     $.mobile.changePage($("#boardpage"));
@@ -346,6 +351,7 @@
         $('#board_chat_input').val("");
         $('#board_chat_output').html("");
         $('#login_returnmessage').text("");
+        CHESSBOARD.stopTimer();
         CHESSHUB.disconnect();
         CONTEXT.user = '';
         CONTEXT.key = '';
@@ -474,7 +480,6 @@
             <a id="bSit" href="#" data-role="button" data-inline="true" onclick="CHESSBOARD.sit('b');">Sit Black</a>
             <div id='infoPanel'>
                 <div id='wTimer' class='timer'></div>
-                <div id='infoBar'></div>                
                 <div id='bTimer' class='timer'></div>
             </div>
             <div id='chessBoard'>   <!-- the chessBoard table is created dynamically at init time (see the CHESSBOARD namespace) -->
