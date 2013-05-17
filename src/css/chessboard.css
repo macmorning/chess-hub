@@ -8,6 +8,7 @@
 
 #chessBoardContainer {
     display: none;
+    max-width:55em;
     width:100%;
 }
 
@@ -20,6 +21,7 @@
 }
 
 #infoPanel {
+    border: none;
     overflow: hidden;
 }
 
@@ -32,12 +34,16 @@
     display:block;
     width: 50%;
     min-width:3em;
-    height: 1em;
+    height: 1.2em;
     text-align:center;
     box-sizing:border-box;
     -moz-box-sizing:border-box;
     -webkit-box-sizing:border-box;
 }
+    .timer.current {
+        border:1pt solid white;    
+    }
+
 #wTimer {
     float: left;
 }

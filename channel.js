@@ -120,17 +120,20 @@ Channel.prototype = {
                 if(this.gameTimer > 0) {
                     if (this.blackLastMoveTime === 0) { this.blackLastMoveTime = currDate; }
                     else {
-                        this.blackTimer = this.blackTimer - Math.floor((currDate-this.blackLastMoveTime)/1000) + 1;
-                        this.blackLastMoveTime = currDate;
+                        this.blackTimer = this.blackTimer - Math.floor((currDate-this.blackLastMoveTime)/1000);
+                        this.whiteLastMoveTime = currDate;
                     }
                 }
             } else if (user === this.whitePlayer) {
                 this.switchTurn('b');
                 if(this.gameTimer > 0) {
-                    if (this.whiteLastMoveTime === 0) { this.whiteLastMoveTime = currDate; }
-                    else {
-                        this.whiteTimer = this.whiteTimer - Math.floor((currDate-this.whiteLastMoveTime)/1000) + 1;
+                    if (this.whiteLastMoveTime === 0) { 
                         this.whiteLastMoveTime = currDate;
+                        this.blackLastMoveTime = currDate;  
+                    }
+                    else {
+                        this.whiteTimer = this.whiteTimer - Math.floor((currDate-this.whiteLastMoveTime)/1000);
+                        this.blackLastMoveTime = currDate;
                     }
                 }
             }

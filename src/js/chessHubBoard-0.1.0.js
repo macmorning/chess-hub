@@ -102,9 +102,12 @@ var CHESSBOARD = {
 
     updateTimer: function(color,timer) {
         //JQUERY
-            
-        var minutes = Math.floor(timer / 60);
-        var seconds = timer - (minutes * 60);
+        var minutes = 0;
+        var seconds = 0;
+        if (timer > 0) {
+            minutes = Math.floor(timer / 60);
+            seconds = timer - (minutes * 60);
+        }
         var string = (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
         $('#' + color + 'Timer').html(string);
     },
@@ -113,20 +116,27 @@ var CHESSBOARD = {
 //        console.log('startTimer : ' + color + ' whiteTimer = ' + CHESSBOARD.whiteTimer + ' blackTimer = ' + CHESSBOARD.blackTimer);//TEST
         CHESSBOARD.stopTimer();
         if (color === 'w') {
+            $('#wTimer').addClass('current');
             CHESSBOARD.timerInterval = setInterval(function(){
-                CHESSBOARD.whiteTimer = CHESSBOARD.whiteTimer - 1;
+                if (CHESSBOARD.whiteTimer > 0) {
+                    CHESSBOARD.whiteTimer = CHESSBOARD.whiteTimer - 1;
+                }
                 CHESSBOARD.updateTimer(color,CHESSBOARD.whiteTimer);
             }, 1000);
         } else if (color === 'b') {
+            $('#bTimer').addClass('current');
             CHESSBOARD.timerInterval = setInterval(function(){
-                CHESSBOARD.blackTimer = CHESSBOARD.blackTimer - 1;
+                if (CHESSBOARD.blackTimer > 0) {
+                    CHESSBOARD.blackTimer = CHESSBOARD.blackTimer - 1;
+                }
                 CHESSBOARD.updateTimer(color,CHESSBOARD.blackTimer);
             }, 1000);
         }
     },
 
     stopTimer: function() {
-        clearInterval(CHESSBOARD.timerInterval); 
+        clearInterval(CHESSBOARD.timerInterval);
+        $('.timer').removeClass('current');
     },
 
     move: function(pieceId,destinationId,dontSwitchTurn) {
@@ -886,11 +896,17 @@ var CHESSBOARD = {
         } else if (parameter === 'w') {
             CHESSBOARD.whitePlayer = value;
             if(value) { $('#wSit').css('display','none'); } // JQUERY
-            else { $('#wSit').css('display','block'); }
+            else { 
+                CHESSBOARD.stopTimer();
+                $('#wSit').css('display','block'); // JQUERY
+            }
         } else if (parameter === 'b') {
             CHESSBOARD.blackPlayer = value;
             if(value) { $('#bSit').css('display','none'); }
-            else { $('#bSit').css('display','block'); } // JQUERY
+            else { 
+                CHESSBOARD.stopTimer();
+                $('#bSit').css('display','block'); // JQUERY
+            }
         }
         
         if (CHESSBOARD.blackPlayer && CHESSBOARD.whitePlayer) {
