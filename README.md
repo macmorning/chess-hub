@@ -13,9 +13,9 @@ ___
 Current state
 ---------
 
-    server  : |===============================================================================>                    | 80%
+    server  : |=========================================================================================>          | 90%
 
-    client  : |====================================================================================>               | 85%
+    client  : |=========================================================================================>          | 90%
 
 
 
@@ -52,9 +52,8 @@ TODO
 - [x] handle the user key (to avoid user impersonnification)
 - [x] handle user timeout
 - [x] handle multiple channel polling for each client
-- [ ] receive array of moves (for composite moves like castling or promoting) instead of one service call per move
-- [ ] share code with clients (pieces and board classes)
-- [ ] handle timed games
+- [x] receive array of moves (for composite moves like castling or promoting) instead of one service call per move
+- [x] handle timed games
 
 ___
 client - chessHubClient
@@ -69,7 +68,7 @@ Library that handles connection and messaging with the Hub.
 TODO
 ---------
 - [x] handle the user key (to avoid user impersonnification)
-- [ ] send an array of moves (for composite moves like castling or promoting) instead of one service call per move
+- [x] send an array of moves (for composite moves like castling or promoting) instead of one service call per move
 
 
 ___
@@ -92,10 +91,9 @@ TODO
   - [x] maintain an array of squares with their pieces for fast search
 - [x] finish the "sit" process
 - [x] enforce other rules (check, check mate, castling, en passant)
-- [ ] display whose turn it is
+- [x] display whose turn it is
 - [x] allow to show last move
-- [ ] create classes for pieces and squares, shared with the server
-- [ ] handle timed games
+- [x] handle timed games
 
 ___
 client
