@@ -73,7 +73,7 @@
                 searchGame($('#game_user_level').val(),$('#game_lower_ok').val(),$('#game_higher_ok').val(),$('#game_timer').val(),true);
         });
         $("#loginpage_footer").html(CHESSHUB.name + " version " + CHESSHUB.version);
-        getStats('login_stats');
+        getStats('login_returnmessage');
         
         $('#login_username').focus();
         
@@ -83,8 +83,29 @@
         if(CONTEXT.getUserName) {
             $('#login_username').val(CONTEXT.getUserName);
         }
+        
+        $( '#boardpage' ).on( 'pageshow',function(event){
+            checkContext();
+        });
+        $( '#mainpage' ).on( 'pageshow',function(event){
+            checkContext();
+        });
     });
 
+    function checkContext() {
+        if (!CONTEXT.user) {
+            $('#game_search').button('disable');
+            $('#game_create').button('disable');
+            $('#chessBoardContainer').css({display:'none'});
+            addMessage({category:'chat_sys',msg:'You are not connected; please log off and in again.',to:'MAIN'});
+            addMessage({category:'chat_sys',msg:'You are not connected; please log off and in again.',to:'other channels'});
+        } else {
+            CHESSHUB._abortAjaxCalls();
+            $('#game_search').button('enable');
+            $('#game_create').button('enable');
+            $('#chessBoardContainer').css({display:'block'});
+        }
+    }
     
     function connect(user) {
         $('#login_submit').button('disable');
@@ -101,7 +122,7 @@
                         CHESSHUB.listen('MAIN',
                                 function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
                             );
-                        $.mobile.changePage($("#mainpage"),{changeHash:false});
+                        $.mobile.changePage($("#mainpage"),{});
                         
                         // if a game id was passed as a GET parameter, try joining the gameAcceptHigher
                         if(CONTEXT.getGameId) { 
@@ -146,7 +167,8 @@
                     CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
                     CHESSBOARD.gameTimer = response.gameDetails.gameTimer;
                     if(CHESSBOARD.gameTimer <= 0) {
-                        $('.timer').css( { display : 'none' } );
+                        $('#wTimer').html('white');
+                        $('#bTimer').html('black');
                     } else {
                         $('.timer').css( { display : 'block' } );
                         CHESSBOARD.whiteTimer = CHESSBOARD.gameTimer*60;
@@ -168,6 +190,7 @@
     
     // searchGame
     function searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref,createFlag) {
+        
         // if createFlag is TRUE then this is a creation request
         if(!createFlag) { createFlag = false;}
         $('#game_search').button('disable');
@@ -235,14 +258,14 @@
         if (message.category == "chat_sys") {
             output.html(
                 '<p class="chat_sys"> == ['
-                + message.time + "] " 
+                + (message.time ? message.time : "") + "] " 
                 + message.msg
                 + '</p>'
                 + output.html());
         } else if (message.category == "chat_activity") {
             output.html(
                 '<p class="chat_activity"> == ['
-                + message.time + "] "
+                + (message.time ? message.time : "") + "] "
                 + message.msg
                 + '</p>'
                 + output.html());
@@ -251,7 +274,7 @@
                 if(command[0] == "created") {
                     output.html(
                         '<p class="chat_activity"> == ['
-                        + message.time + '] '
+                        + (message.time ? message.time : "") + '] '
                         + message.user + ' created a game (' + (command[2] == "0" ? "unlimited" : command[2] + " minutes") + ' / level ' + command[3] + ')'
                         + '&nbsp;<a href="#" onclick="joinGame(\'' + command[1] + '\')">join or watch</a></p>'
                         + output.html());
@@ -266,7 +289,7 @@
                     }
                     output.html(
                         '<p class="chat_activity"> == ['
-                        + message.time + "] "
+                        + (message.time ? message.time : "") + "] "
                         + notifMessage
                         + '</p>'
                         + output.html());
@@ -277,7 +300,7 @@
                     CHESSBOARD.setPlayer(command[1],message.user);
                     output.html(
                         '<p class="chat_activity"> == ['
-                        + message.time + "] "
+                        + (message.time ? message.time : "") + "] "
                         + message.user + ' sits as ' + (command[1] == 'w' ? 'White' : 'Black')
                         + '</p>'
                         + output.html());
@@ -297,7 +320,7 @@
                     if(command[1] !== "") { reason = " - " + command[1]; }
                     output.html(
                         '<p class="chat_activity"> == ['
-                        + message.time + "] "
+                        + (message.time ? message.time : "") + "] "
                         + message.user + (command[0] === 'leave' ? ' left' + color + reason : ' joined')
                         + '</p>'
                         + output.html());
@@ -342,7 +365,7 @@
                     output.html("<p class='chat_sys'>Error connecting you to the server :(</p>" + output.html());
                 }
         );
-        return 0;
+        return true;
     }
     
     function logoff() {
@@ -393,7 +416,6 @@
                 <input type='text' id="login_username" onkeypress="{if (event.keyCode==13 && this.value !== '') connect(this.value)}">
                 <button id="login_submit" type="submit">Submit</button>
                 <span class="info" id="login_returnmessage"></span>
-                <span class="info" id="login_stats"></span>
         </div>
     <div id='loginpage_footer'></div>        <!-- version goes here -->
     </div>
@@ -423,7 +445,7 @@
         <span class="mainpage_stats" id="mainpage_stats"></span>
 
         <h3>To search for a game, fill this form and press "search".</h3>
-                <form method="POST" action="" data-ajax="false">
+                <form style="margin-bottom:2em;" method="POST" action="" data-ajax="false">
                     <label for="game_user_level">What is your self estimated skill ?
 <!--                            <a href="#mainpage_popupHelpLevel" data-wrapperels="span" data-mini="false" data-rel="popup" data-shadow='true' data-iconshadow='true' data-role="button" data-inline="true" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>-->
                     </label>
@@ -434,27 +456,20 @@
                         </select>
                     <label for="game_timer">Timer ?</label>
                         <select id="game_timer" data-mini="true">
+                            <option value=60>60 minutes</option>
+                            <option value=45>45 minutes</option>
+                            <option value=30>30 minutes</option>
                             <option value=10>10 minutes</option>
                             <option value=5>5 minutes</option>
                             <option value=0 selected=true>none</option>
                             <option value=-1>indifferent</option>
                         </select>
-                    <label for="game_lower_ok">Allow lower level opponents ?</label>
-                        <select name="game_lower_ok" id="game_lower_ok" data-role="slider">
-                            <option value=1>yes</option>
-                            <option value=0>no</option>
-                        </select>                
-                    <label for="game_lower_ok">Allow higher level opponents ?</label>
-                        <select name="game_higher_ok" id="game_higher_ok" data-role="slider">
-                            <option value=1>yes</option>
-                            <option value=0>no</option>
-                        </select><br/>
                 </form>
     		    <button id="game_search" type="submit" data-inline="true">search</button>
     		    <button id="game_create" type="submit" data-inline="true">create</button>
     </div>
     <div id="mainpage_chat">
-        <input type='text' id="chat_input" onkeyup="chatSpecialKeys(event,'MAIN');">
+<!--        <input type='text' id="chat_input" onkeyup="chatSpecialKeys(event,'MAIN');">-->
         <div id="chat_output"></div>
     </div>
 </div>

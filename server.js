@@ -5,11 +5,29 @@
 //                                              //
 //////////////////////////////////////////////////
 /*
-*    Copyright (C) 2013
-*	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-*	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ * Copyright (c) 2013 Sylvain YVON
+ * 
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE. 
+ */
 
 
 var PORT = process.env.PORT || 8080;
@@ -50,6 +68,8 @@ function escapeHtml(unsafe) {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    } else if (!isNaN(unsafe)) {
+        return unsafe;
     }
     return false;
 }
@@ -247,7 +267,7 @@ function commitGameCommand(channel,user,msg) {
     // this function commits the game commands and pushes the changes to the game channel
     var command = msg.split('-');
     if(command[0] === "move") {
-        return channels[channel].endTurn(user);
+        return channels[channel].endTurn(user,command[1][0]);   // we need both the user and the color of the moved piece
     } else if (command[0] === "sit") {
         if (command[1] === 'w' || command[1] === 'b' ) {
             try { return channels[channel].sitUser(user,command[1]); }
@@ -661,24 +681,33 @@ http.createServer(function (req, res) {
 
             // we are now testing if msg is an array of messages or a single message
             var arrayOfMsg = [];
-            try { arrayOfMsg = JSON.parse(msg); }
-            catch(err) {     // this is not a json string
-                arrayOfMsg.push(msg);
+            var tmpjson = "";
+            try {   // try to parse the message
+                tmpjson = JSON.parse(msg);
+            } catch(err) {     // this is not a json string
+                tmpjson = msg;
             }
-            
-            arrayOfMsg.forEach(function(element){
-                var tmpMsg = escapeHtml(element);
-                if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... msg = ' + tmpMsg + " / user = " + user + " / channel = " + channel + " / category = " + category); }
-                if (category === 'game') {
-                    if (!checkCommand(channel,user,tmpMsg)) {  // the command is invalid
-                        resBadRequest(res,'invalid game command',tmpMsg);
-                        console.log(currTime() + ' [MESSAG] incorrect game command from user ' + user + ' : ' + tmpMsg);
-                        return false;
+            if (util.isArray(tmpjson)) {    // if the result is an array, then use it
+                arrayOfMsg = tmpjson;
+            } else {                        // if not, push it into the array
+                arrayOfMsg.push(tmpjson + "");
+            }
+
+            try {
+                arrayOfMsg.forEach(function(element){
+                    var tmpMsg = escapeHtml(element);
+                    if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... msg = ' + tmpMsg + " / user = " + user + " / channel = " + channel + " / category = " + category); }
+                    if (category === 'game') {
+                        if (!checkCommand(channel,user,tmpMsg)) {  // the command is invalid
+                            resBadRequest(res,'invalid game command',tmpMsg);
+                            console.log(currTime() + ' [MESSAG] incorrect game command from user ' + user + ' : ' + tmpMsg);
+                            return false;
+                        }
+                        commitGameCommand(channel,user,tmpMsg);
                     }
-                    commitGameCommand(channel,user,tmpMsg);
-                }
-                sendMessage(user, tmpMsg, category, channel);
-            });
+                    sendMessage(user, tmpMsg, category, channel);
+                });
+            } catch (err) { resInternalError(res,'error processing array of messages', msg); }
             
             // Every thing seems alright. Forward the message via the specified channel and reply with "ok"
             res.writeHead(200, { 'Content-type': 'application/json'});

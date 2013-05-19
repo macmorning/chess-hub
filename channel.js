@@ -1,10 +1,28 @@
 // Channel object definition
 /*
-*    Copyright (C) 2013
-*	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-*	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ * Copyright (c) 2013 Sylvain YVON
+ * 
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE. 
+ */
 
 var Channel = function(name,id,gameTimer) {
     this.name = name;
@@ -111,11 +129,11 @@ Channel.prototype = {
             this.messages.push({time:message.time,user:message.user,msg:message.msg,category:message.category,to:message.to});
         },
 
-    endTurn: function(user) {
-            if (!user || (user !== this.blackPlayer && user !== this.whitePlayer)) {return false;}
+    endTurn: function(user,color) {
+            if (!user || ((user !== this.blackPlayer && color === 'b') || (user !== this.whitePlayer && color === 'w'))) {return false;}
             var currDate = new Date();
 
-            if (user === this.blackPlayer) {
+            if (color === 'b') {
                 this.switchTurn('w');
                 if(this.gameTimer > 0) {
                     if (this.blackLastMoveTime === 0) { this.blackLastMoveTime = currDate; }
@@ -124,7 +142,8 @@ Channel.prototype = {
                         this.whiteLastMoveTime = currDate;
                     }
                 }
-            } else if (user === this.whitePlayer) {
+                return true;
+            } else if (color === 'w') {
                 this.switchTurn('b');
                 if(this.gameTimer > 0) {
                     if (this.whiteLastMoveTime === 0) { 
@@ -136,7 +155,9 @@ Channel.prototype = {
                         this.blackLastMoveTime = currDate;
                     }
                 }
+                return true;
             }
+            return false;
         },
             
     switchTurn: function(turn) {
