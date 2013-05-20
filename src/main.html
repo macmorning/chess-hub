@@ -383,6 +383,13 @@
         return true;
     }
 
+    function leaveGame() {
+        CHESSHUB.leave(CHESSBOARD.gameId);
+        CHESSBOARD.initChessBoard();
+        return true;
+    }
+
+
     function chatSpecialKeys(event,channel) {
         var key = window.event ? event.keyCode : event.which;
         if(!channel) { channel = CONTEXT.currentGameId; };      // if channel is empty, get the current game ID
@@ -479,12 +486,17 @@
 <div data-role="page" id="boardpage" data-theme="a">
     <header data-role="header">
         <h1 id="boardpage_header"></h1>
-        <a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();$.mobile.changePage($('#loginpage'));">Exit</a>
+        <a href="#boardpage_popupConfirmQuit" data-wrapperels="span" data-mini="true" data-rel="popup" data-icon="delete" data-iconpos="notext">Quit game</a>
         <a href="#boardpage_popupConf" data-wrapperels="span" data-mini="true" data-rel="popup" data-icon="gear" data-iconpos="notext">Configuration</a>
     </header>
         <div data-role="popup" id="boardpage_popupConf" class="ui-content">
             <button data-icon="refresh" id="boardpage_flip" onclick="CHESSBOARD.flip();$('#boardpage_popupConf').popup('close');">flip board</button>
             <button data-icon="chesshub-twitter" id="boardpage_twitter" onclick="window.open('https://twitter.com/intent/tweet?text=Up%20for%20a%20game%20%3F&hashtags=chesshub&url=http%3A%2F%2Fwww.chess-hub.net%2F%3Fgame%3D'+CONTEXT.currentGameId, '_blank');$('#boardpage_popupConf').popup('close');">share with twitter</button>
+        </div>
+        <div data-role="popup" id="boardpage_popupConfirmQuit" class="ui-content">
+            Are you sure you want to leave this game ?
+            <button id="boardpage_quitYes" onclick="leaveGame();$.mobile.changePage($('#mainpage'));">yes</button>
+            <button id="boardpage_quitNo" onclick="$('#boardpage_popupConfirmQuit').popup('close');">no</button>
         </div>
         <div id='chessBoardHidden'>
                 Sorry, this game requires a higher resolution. 
