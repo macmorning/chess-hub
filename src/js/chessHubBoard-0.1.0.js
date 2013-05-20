@@ -136,20 +136,24 @@ var CHESSBOARD = {
         CHESSBOARD.stopTimer();
         if (color === 'w') {
             $('#wTimer').addClass('current');
-            CHESSBOARD.timerInterval = setInterval(function(){
-                if (CHESSBOARD.whiteTimer > 0) {
-                    CHESSBOARD.whiteTimer = CHESSBOARD.whiteTimer - 1;
-                }
-                CHESSBOARD.updateTimer(color,CHESSBOARD.whiteTimer);
-            }, 1000);
+            if(CHESSBOARD.gameTimer > 0) {
+                CHESSBOARD.timerInterval = setInterval(function(){
+                    if (CHESSBOARD.whiteTimer > 0) {
+                        CHESSBOARD.whiteTimer = CHESSBOARD.whiteTimer - 1;
+                    }
+                    CHESSBOARD.updateTimer(color,CHESSBOARD.whiteTimer);
+                }, 1000);
+            }
         } else if (color === 'b') {
             $('#bTimer').addClass('current');
-            CHESSBOARD.timerInterval = setInterval(function(){
-                if (CHESSBOARD.blackTimer > 0) {
-                    CHESSBOARD.blackTimer = CHESSBOARD.blackTimer - 1;
-                }
-                CHESSBOARD.updateTimer(color,CHESSBOARD.blackTimer);
-            }, 1000);
+            if(CHESSBOARD.gameTimer > 0) {
+                CHESSBOARD.timerInterval = setInterval(function(){
+                    if (CHESSBOARD.blackTimer > 0) {
+                        CHESSBOARD.blackTimer = CHESSBOARD.blackTimer - 1;
+                    }
+                    CHESSBOARD.updateTimer(color,CHESSBOARD.blackTimer);
+                }, 1000);
+            }
         }
     },
 
@@ -241,9 +245,7 @@ var CHESSBOARD = {
             if(!dontSwitchTurn) {
                 CHESSBOARD._commitMoves(CHESSBOARD.gameId);
                 CHESSBOARD.currentGameTurn=(pieceId[0] === 'w' ? 'b' : 'w'); // switch game turn
-                if (CHESSBOARD.gameTimer > 0) {
-                    CHESSBOARD.startTimer(CHESSBOARD.currentGameTurn);
-                }
+                CHESSBOARD.startTimer(CHESSBOARD.currentGameTurn);
             }
             CHESSBOARD._verifyCheck();
     },
