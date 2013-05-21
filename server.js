@@ -236,9 +236,6 @@ function loadConfig() {
     });
 }
 
-function leaveGame(i,user) {
-    return channels[i].removeUser(user);    // remove the user from the users array
-}
 
 function joinGame(user,gameId) {
     try { 
@@ -280,8 +277,9 @@ function disconnect(user,reason) {
     if(!reason) { reason = 'quit'; }
     for (var i in channels) {               // remove the user from any game he's in
         if(channels[i].users[user]) {
-            leaveGame(i,user);
-            sendMessage(user,'leave-'+reason,'game',i);    // send the information to users in that channel
+            if(channels[i].removeUser(user)) {    // remove the user from the users array
+                sendMessage(user,'leave-'+reason,'game',i);    // send the information to users in that channel
+            }
         }
     } 
 }
@@ -289,11 +287,13 @@ function disconnect(user,reason) {
 function leave(user,game,reason) {
     if(!reason) { reason = 'left game'; }
     try {
-        if(channels[game].users[user]) {
-            leaveGame(game,user);
+        if(channels[game].removeUser(user)) {
             sendMessage(user,'leave-'+reason,'game',game);    // send the information to users in that channel
         }
     } catch(err) { console.log(err); } 
+}
+
+function leaveGame(gameId,user) {
 }
 
 function houseKeeper() {
@@ -310,7 +310,7 @@ function houseKeeper() {
         }
     }
     for (var game in channels) {
-        if (channels[game].id !== 'MAIN' && !channels[game].playerA && !channels[game].playerB) {
+        if (channels[game].id !== 'MAIN' && !channels[game].playerA && !channels[game].whitePlayer && !channels[game].blackPlayer) {
             console.log(currTime() + ' [HOUSEK] ... delete game without players ' + game);
             sendMessage('SYSTEM','This game has been closed.', 'chat_sys', game);
             delete channels[game];
@@ -344,7 +344,10 @@ function commitGameCommand(channel,user,msg) {
     } else if (command[0] === "sit") {
         if (command[1] === 'w' || command[1] === 'b' ) {
             try { return channels[channel].sitUser(user,command[1]); }
-            catch(err) { return false; }
+            catch(err) { 
+                console.log(err); 
+                return false; 
+            }
         }
     } else if (command[0] === "leave") {
         return channels[channel].removeUser(user);

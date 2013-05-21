@@ -105,11 +105,15 @@ Channel.prototype = {
             }
             if(this.playerA === user) {
                 this.playerA = '';
-            } else if (this.playerB === user) {
+            }
+            if (this.playerB === user) {
                 this.playerB = '';
             }
-            if (this.blackPlayer === user || this.whitePlayer === user) {        // the user was a seated player, close the game
-                this.switchOpen(false);
+            if (this.whitePlayer === user) {
+                this.whitePlayer = '';
+            }
+            if (this.blackPlayer === user) {
+                this.blackPlayer = '';
             }
             if(this.users[user] ) {
                 delete this.users[user];
