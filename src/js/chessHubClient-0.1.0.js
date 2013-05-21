@@ -159,6 +159,18 @@ CHESSHUB = {
         console.log('leaving channel ' + channel);
         CHESSHUB._abortAjaxCalls();
         CHESSHUB.channels[channel] = {};
+        var data = { user: CHESSHUB.user, key: CHESSHUB.key, gameId: channel } ;
+        $.ajax({
+            type: 'POST',
+            url : '/leave',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify(data),
+            error: function(data,status,error) {
+                    console.log('CHESSHUB.leave error - ' + status);
+                    console.log(error);
+                }
+         });
     },
 
     //

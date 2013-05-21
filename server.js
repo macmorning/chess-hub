@@ -207,15 +207,15 @@ function loadConfig() {
                         MAXGAMES        = json.MAXGAMES         || MAXGAMES;
                         MAXMESSAGES     = json.MAXMESSAGES      || MAXMESSAGES;
 
-                        LOGCONFIG       = json.LOGCONFIG        || LOGCONFIG;
-                        LOGSTATIC       = json.LOGSTATIC        || LOGSTATIC;
-                        LOGCONNECT      = json.LOGCONNECT       || LOGCONNECT;
-                        LOGMESSAGING    = json.LOGMESSAGING     || LOGMESSAGING;
-                        LOGPOLLING      = json.LOGPOLLING       || LOGPOLLING;
-                        LOGCHANNEL      = json.LOGCHANNEL       || LOGCHANNEL;
-                        LOGSEARCHING    = json.LOGSEARCHING     || LOGSEARCHING;
-                        LOGSTATS        = json.LOGSTATS         || LOGSTATS;
-                        LOGHOUSEKEEPING = json.LOGHOUSEKEEPING  || LOGHOUSEKEEPING;
+                        LOGCONFIG       = (json.LOGCONFIG > -1 ?        json.LOGCONFIG      : LOGCONFIG);
+                        LOGSTATIC       = (json.LOGSTATIC > -1 ?        json.LOGSTATIC      : LOGSTATIC);
+                        LOGCONNECT      = (json.LOGCONNECT > -1 ?       json.LOGCONNECT     : LOGCONNECT);
+                        LOGMESSAGING    = (json.LOGMESSAGING > -1 ?     json.LOGMESSAGING   : LOGMESSAGING);
+                        LOGPOLLING      = (json.LOGPOLLING > -1 ?       json.LOGPOLLING     : LOGPOLLING);
+                        LOGCHANNEL      = (json.LOGCHANNEL > -1 ?       json.LOGCHANNEL     : LOGCHANNEL);
+                        LOGSEARCHING    = (json.LOGSEARCHING > -1 ?     json.LOGSEARCHING   : LOGSEARCHING);
+                        LOGSTATS        = (json.LOGSTATS > -1 ?         json.LOGSTATS       : LOGSTATS);
+                        LOGHOUSEKEEPING = (json.LOGHOUSEKEEPING > -1 ?  json.LOGHOUSEKEEPING: LOGHOUSEKEEPING);
                         
                         HKINTERVAL      = json.HKINTERVAL       || HKINTERVAL;
                         
@@ -284,6 +284,16 @@ function disconnect(user,reason) {
             sendMessage(user,'leave-'+reason,'game',i);    // send the information to users in that channel
         }
     } 
+}
+
+function leave(user,game,reason) {
+    if(!reason) { reason = 'left game'; }
+    try {
+        if(channels[game].users[user]) {
+            leaveGame(game,user);
+            sendMessage(user,'leave-'+reason,'game',game);    // send the information to users in that channel
+        }
+    } catch(err) { console.log(err); } 
 }
 
 function houseKeeper() {
@@ -462,6 +472,7 @@ http.createServer(function (req, res) {
             disconnect(user);               // then, handle the disconnection
         });
     }
+
     
 //
 // POLLING SERVICE
@@ -638,6 +649,35 @@ http.createServer(function (req, res) {
             }            
         });
     } 
+
+//
+// LEAVING A GAME
+//
+    else if(url_parts.pathname.substr(0, 6) === '/leave') {
+        if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] leave game'); }
+        var user = "";
+        var key = "";
+        var data = "";
+        req.on('data', function(chunk) {
+            data += chunk;
+        });
+        req.on('end', function() {
+            var json = {};
+            try { json = JSON.parse(data); }
+            catch(err) { console.log(err); console.log(data); var json= {};}
+            user = escapeHtml(json.user);
+            key = escapeHtml(json.key);
+            gameId = escapeHtml(json.gameId);
+            if (!checkUserKey(user, key)) {
+                resUnauthorized(res,'The provided key for user ' + user + '  does not match the registered one for the user','provided key for user ' + user + '  = ' + key);
+                return false;
+            }
+            if(LOGMESSAGING) { console.log(currTime() + ' [CONNEC] ... user ' + user + ' leaves game ' + gameId); }
+            res.writeHead(200, { 'Content-Type': 'application/json'});
+            res.end(JSON.stringify([]));    // first, release the client
+            leave(user,gameId);               // then, handle the disconnection
+        });
+    }
 
 //
 // GET GAME STATUS

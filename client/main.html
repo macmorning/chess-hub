@@ -100,7 +100,6 @@
             addMessage({category:'chat_sys',msg:'You are not connected; please log off and in again.',to:'MAIN'});
             addMessage({category:'chat_sys',msg:'You are not connected; please log off and in again.',to:'other channels'});
         } else {
-            CHESSHUB._abortAjaxCalls();
             $('#game_search').button('enable');
             $('#game_create').button('enable');
             $('#chessBoardContainer').css({display:'block'});
