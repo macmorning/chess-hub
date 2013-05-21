@@ -323,7 +323,7 @@ function checkCommand(channel,user,msg) {
     // returns true if ok, false if ko
     var command = msg.split('-');
     if(command[0] === "move") {
-        if (channels[channel].isTurn(user) && command[1]) {
+        if (command[1]) {
             return true;
         }
     } else if (command[0] === "sit") {
