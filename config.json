@@ -1,0 +1,18 @@
+{ 
+    "MAXCLIENTS_2"    : 70,
+    "MAXCLIENTS_1"    : 50,
+    "MAXGAMES"        : 20,
+    "MAXMESSAGES"     : 20,
+    "LOGCONFIG"       : false,
+    "LOGSTATIC"       : false,
+    "LOGCONNECT"      : false,
+    "LOGMESSAGING"    : false,
+    "LOGPOLLING"      : false,
+    "LOGCHANNEL"      : false,
+    "LOGSEARCHING"    : false,
+    "LOGSTATS"        : false,
+    "LOGHOUSEKEEPING" : false,
+    "ANNOUNCE"        : "Welcome to this hub !",
+    "HKINTERVAL"      : 10000
+}
+

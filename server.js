@@ -45,20 +45,26 @@ var Channel = require('./channel.js');
 
 var users = {};         // init the users objects array
 var channels = [];      // init the channels array
+var configFile = SERVERDIR + 'config.json';
+var lastConfigMTime = 0;
+var LASTANNOUNCEMENT = '';
 
+// default configuration values
 var MAXCLIENTS_2    = 70;          // absolute maximum number of clients; any request will be dropped once this number is reached
 var MAXCLIENTS_1    = 50;          // maximum number of clients before refusing new connections
 var MAXGAMES        = 20;          // maximum number of games
 var MAXMESSAGES     = 20;          // maximum number of messages sent at once for the MAIN channel only
 
+var LOGCONFIG       = true;        // enable or disable config logs
 var LOGSTATIC       = false;       // enable or disable static files serving logs
-var LOGCONNECT      = false;        // enable or disable connections logs
+var LOGCONNECT      = false;       // enable or disable connections logs
 var LOGMESSAGING    = false;       // enable or disable messaging logs
 var LOGPOLLING      = false;       // enable or disable polling logs
 var LOGCHANNEL      = false;       // enable or disable channel activity logs
 var LOGSEARCHING    = false;       // enable or disable game searches logs
 var LOGSTATS        = false;       // enable or disable game stats logs
 var LOGHOUSEKEEPING = false;       // enable or disable house keeping logs
+var HKINTERVAL      = 10000;       // housekeeper interval
 
 function escapeHtml(unsafe) {
     if(unsafe && isNaN(unsafe)) {// escapes Html characters
@@ -108,6 +114,7 @@ function currTime() {
     if (minutes < 10) { minutes = "0" + minutes; }
     return(hours + ":" + minutes);
 }
+
 
 function resBadRequest(res,err,data) {
     res.writeHead(400, { 'Content-type': 'text/txt'});
@@ -174,6 +181,61 @@ function sendMessage(from, msg, category, to ) {
     return true;
 }
 
+function loadConfig() {
+    if(LOGCONFIG) { console.log(currTime() + ' [CONFIG] loading config file : ' + configFile);}
+    fs.stat(configFile, function (err, stat) {
+        if(err) {
+            console.log(currTime() + ' [CONFIG] ... ' + err);
+            return false;
+        } else if (lastConfigMTime === Date.parse(stat.mtime)) {
+            return true;
+        } else {
+            fs.readFile(configFile, function(err, data) {
+                if(err) {
+                    console.log(currTime() + ' [CONFIG] ... ' + err);
+                    return false;
+                } else {
+                    var latestAnnouncement = '';
+                    try { 
+                        var json = JSON.parse(data); 
+                        if(LOGCONFIG) { 
+                            console.log(currTime() + ' [CONFIG] ... loading config: ');
+                            console.log(json);
+                        }
+                        MAXCLIENTS_2    = json.MAXCLIENTS_2     || MAXCLIENTS_2;
+                        MAXCLIENTS_1    = json.MAXCLIENTS_1     || MAXCLIENTS_1;
+                        MAXGAMES        = json.MAXGAMES         || MAXGAMES;
+                        MAXMESSAGES     = json.MAXMESSAGES      || MAXMESSAGES;
+
+                        LOGCONFIG       = json.LOGCONFIG        || LOGCONFIG;
+                        LOGSTATIC       = json.LOGSTATIC        || LOGSTATIC;
+                        LOGCONNECT      = json.LOGCONNECT       || LOGCONNECT;
+                        LOGMESSAGING    = json.LOGMESSAGING     || LOGMESSAGING;
+                        LOGPOLLING      = json.LOGPOLLING       || LOGPOLLING;
+                        LOGCHANNEL      = json.LOGCHANNEL       || LOGCHANNEL;
+                        LOGSEARCHING    = json.LOGSEARCHING     || LOGSEARCHING;
+                        LOGSTATS        = json.LOGSTATS         || LOGSTATS;
+                        LOGHOUSEKEEPING = json.LOGHOUSEKEEPING  || LOGHOUSEKEEPING;
+                        
+                        HKINTERVAL      = json.HKINTERVAL       || HKINTERVAL;
+                        
+                        latestAnnouncement = json.ANNOUNCE || '';
+                        if (latestAnnouncement && latestAnnouncement !== LASTANNOUNCEMENT) {
+                            LASTANNOUNCEMENT = latestAnnouncement;
+                            sendMessage('SYSTEM', LASTANNOUNCEMENT, 'chat_sys', 'MAIN' );
+                        }
+                        return true;
+                    }
+                    catch(err) {
+                        console.log(currTime() + ' [CONFIG] ... ' + err);
+                        return false;
+                    }
+                }                
+            });
+        }
+    });
+}
+
 function leaveGame(i,user) {
     return channels[i].removeUser(user);    // remove the user from the users array
 }
@@ -225,6 +287,7 @@ function disconnect(user,reason) {
 }
 
 function houseKeeper() {
+    loadConfig();
     // disconnects inactive users and destroys empty channels
     if(LOGHOUSEKEEPING) { console.log(currTime() + ' [HOUSEK] running');}
     var limitTime = new Date() - 120000;   // drop users if their last activity is more than 2 minutes old
@@ -283,14 +346,15 @@ function commitGameCommand(channel,user,msg) {
 
 // create the main chat channel
 channels['MAIN'] = new Channel('Main','MAIN');
-channels['MAIN'].addMessage({ time : currTime(), user : "ADMIN", msg : "Welcome to Chess Hub !", category : "chat_sys", to : ""  });
 channels['MAIN'].switchOpen(true);                  // mark the main chat channel as open for all
 
 
+
+loadConfig();
 // start the housekeeping interval, every 10s
 setInterval(function() {
         houseKeeper();
-    }, 10000);
+    }, HKINTERVAL);
 
 
 
@@ -353,7 +417,7 @@ http.createServer(function (req, res) {
                 res.writeHead(200, { 'Content-type': 'application/json'});
                 res.end(JSON.stringify( {
                     returncode: 'ok',
-                    returnmessage: 'Welcome ' + user,
+                    returnmessage: LASTANNOUNCEMENT,
                     user: user,
                     key: users[user].key
                 }));
