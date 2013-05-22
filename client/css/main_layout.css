@@ -5,7 +5,9 @@
 #mainpage_chat,
 #mainpage_side { display:block; width:98%; margin: 0 1% 0 1%;}
 
-
+#loginpage_forkme, #mainpage_forkme {
+    display:none;
+}
 
 /* First breakpoint at 512px */
 @media all and (min-width: 32em){
@@ -19,6 +21,10 @@
 /* Second breakpoint at 800px */
 @media all and (min-width: 50em){
     #loginpage_main { width:25em; margin:auto;}
+
+    #loginpage_forkme, #mainpage_forkme {
+        display:block;
+    }
 
     #mainpage_side,#mainpage_chat { float:left; }
 	#mainpage_side { width:39%; margin: 0 1% 0 2%;}

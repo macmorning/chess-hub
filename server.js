@@ -48,6 +48,7 @@ var channels = [];      // init the channels array
 var configFile = SERVERDIR + 'config.json';
 var lastConfigMTime = 0;
 var LASTANNOUNCEMENT = '';
+var LASTFRONTPAGEANNOUNCEMENT = '';
 
 // default configuration values
 var MAXCLIENTS_2    = 70;          // absolute maximum number of clients; any request will be dropped once this number is reached
@@ -144,7 +145,7 @@ function resUnauthorized(res,err,data) {
     console.log(data);
     return true;
 }
-function sendMessage(from, msg, category, to ) {
+function sendMessage(from, msg, category, to, doNotAddToHistory ) {
     // adds a message to the messages array and send it to polling clients
     // sendMessage(from, msg, [category, [to]])
     // from : user issuing the message
@@ -155,6 +156,7 @@ function sendMessage(from, msg, category, to ) {
     //        - chat_activity, chat channel activity : join, leave, quit
     //        - game, game channel activity : sit-[w|b] ; move-piece-square ; leave
     // to : target for the message : a user, a game channel id, or main channel (by default)
+    // doNotAddToHistory : do not add the message to the history; used by announcements for example
     if (!channels[to]) {
         if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... channel ' + to + ' does not exist.');}
         return false;
@@ -163,7 +165,7 @@ function sendMessage(from, msg, category, to ) {
     if (!category) { category = "chat_msg"; }
     message = {time: currTime(), user: from, msg: msg, category: category, to: to };
     if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... sendMessage : ' + message.msg);}
-    channels[to].messages.push(message);
+    if(!doNotAddToHistory) { channels[to].messages.push(message); }
     var json = JSON.stringify( { 
             counter: channels[to].messages.length, 
             append: message, 
@@ -219,10 +221,12 @@ function loadConfig() {
                         
                         HKINTERVAL      = json.HKINTERVAL       || HKINTERVAL;
                         
+                        LASTFRONTPAGEANNOUNCEMENT = json.FRONTPAGEANNOUNCE  || LASTFRONTPAGEANNOUNCEMENT;
+                        
                         latestAnnouncement = json.ANNOUNCE || '';
                         if (latestAnnouncement && latestAnnouncement !== LASTANNOUNCEMENT) {
                             LASTANNOUNCEMENT = latestAnnouncement;
-                            sendMessage('SYSTEM', LASTANNOUNCEMENT, 'chat_sys', 'MAIN' );
+                            sendMessage('SYSTEM', LASTANNOUNCEMENT, 'chat_sys', 'MAIN', true );
                         }
                         return true;
                     }
@@ -840,7 +844,8 @@ http.createServer(function (req, res) {
             res.writeHead(200, { 'Content-type': 'application/json'});
             res.end(JSON.stringify( {
                     users: Object.keys(users).length,
-                    games: Object.keys(channels).length - 1
+                    games: Object.keys(channels).length - 1,
+                    announce: LASTFRONTPAGEANNOUNCEMENT
                 }));
             return true;
         });

@@ -876,7 +876,6 @@ var CHESSBOARD = {
         $('#wGraveyard').empty();
         $('#bGraveyard').empty();
         $('#board_chat_input').val("");
-        $('#board_chat_output').html("");
         $('#wSit').css('display','block');
         $('#bSit').css('display','block');
         CHESSBOARD.stopTimer();
