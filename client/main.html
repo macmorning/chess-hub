@@ -157,46 +157,6 @@
         );
     }
     
-    // joinGame
-    function joinGame(gameId) {
-        var output = $('#chat_output');
-        CHESSHUB.joinGame(gameId,
-                function(response) {
-                    output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '"...</p>'+ output.html());
-                    //CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)
-                    CHESSHUB.listen(response.gameDetails.id,
-                                function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }  // start polling the game channel
-                            );
-                    CONTEXT.currentGameId = response.gameDetails.id;    // set the game informations
-                    CONTEXT.currentGameName = response.gameDetails.name;
-                    CHESSBOARD.initChessBoard(response.gameDetails.id);
-                    CHESSBOARD.setPlayer('A',response.gameDetails.playerA);
-                    CHESSBOARD.setPlayer('B',response.gameDetails.playerB);
-                    CHESSBOARD.setPlayer('w',response.gameDetails.whitePlayer);
-                    CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
-                    CHESSBOARD.gameTimer = response.gameDetails.gameTimer;
-                    if(CHESSBOARD.gameTimer <= 0) {
-                        $('#wTimer').html('white');
-                        $('#bTimer').html('black');
-                    } else {
-                        $('.timer').css( { display : 'block' } );
-                        CHESSBOARD.whiteTimer = CHESSBOARD.gameTimer*60;
-                        CHESSBOARD.blackTimer = CHESSBOARD.gameTimer*60;
-                        CHESSBOARD.updateTimer('w',CHESSBOARD.whiteTimer);
-                        CHESSBOARD.updateTimer('b',CHESSBOARD.blackTimer);
-                    }
-                    $('#boardpage_header').text(response.gameDetails.name);
-                    $.mobile.changePage($("#boardpage"));
-                    $('#game_search').button('enable');
-                    $('#game_create').button('enable');
-                    return true;
-                },
-                function() {
-                    output.html("<p class='chat_sys'>Error joining the game :(</p>" + output.html());
-                }
-        );
-    }
-    
     // searchGame
     function searchGame(playerLevel,playerAllowLower,playerAllowHigher,playerTimerPref,createFlag) {
         
@@ -400,6 +360,54 @@
         return true;
     }
 
+    function getLink(gameId) {
+        return "http://www.chess-hub.net/?game=" + gameId;
+    }
+
+    function openTwitter(gameId) {
+        window.open("https://twitter.com/intent/tweet?text=Up%20for%20a%20game%20%3F&hashtags=chesshub&url=" + getLink(gameId), "_blank");
+    }
+
+    function joinGame(gameId) {
+        var output = $('#chat_output');
+        CHESSHUB.joinGame(gameId,
+                function(response) {
+                    output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '"...</p>'+ output.html());
+                    //CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)
+                    CHESSHUB.listen(response.gameDetails.id,
+                                function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }  // start polling the game channel
+                            );
+                    CONTEXT.currentGameId = response.gameDetails.id;    // set the game informations
+                    CONTEXT.currentGameName = response.gameDetails.name;
+                    CHESSBOARD.initChessBoard(response.gameDetails.id);
+                    CHESSBOARD.setPlayer('A',response.gameDetails.playerA);
+                    CHESSBOARD.setPlayer('B',response.gameDetails.playerB);
+                    CHESSBOARD.setPlayer('w',response.gameDetails.whitePlayer);
+                    CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
+                    CHESSBOARD.gameTimer = response.gameDetails.gameTimer;
+                    if(CHESSBOARD.gameTimer <= 0) {
+                        $('#wTimer').html('white');
+                        $('#bTimer').html('black');
+                    } else {
+                        $('.timer').css( { display : 'block' } );
+                        CHESSBOARD.whiteTimer = CHESSBOARD.gameTimer*60;
+                        CHESSBOARD.blackTimer = CHESSBOARD.gameTimer*60;
+                        CHESSBOARD.updateTimer('w',CHESSBOARD.whiteTimer);
+                        CHESSBOARD.updateTimer('b',CHESSBOARD.blackTimer);
+                    }
+                    $('#boardpage_header').text(response.gameDetails.name);
+                    $('#boardpage_gamelink').val(getLink(response.gameDetails.id));
+                    $.mobile.changePage($("#boardpage"));
+                    $('#game_search').button('enable');
+                    $('#game_create').button('enable');
+                    return true;
+                },
+                function() {
+                    output.html("<p class='chat_sys'>Error joining the game :(</p>" + output.html());
+                }
+        );
+    }
+    
 
     function chatSpecialKeys(event,channel) {
         var key = window.event ? event.keyCode : event.which;
@@ -506,7 +514,9 @@
     </header>
         <div data-role="popup" id="boardpage_popupConf" class="ui-content">
             <button data-icon="refresh" id="boardpage_flip" onclick="CHESSBOARD.flip();$('#boardpage_popupConf').popup('close');">flip board</button>
-            <button data-icon="chesshub-twitter" id="boardpage_twitter" onclick="window.open('https://twitter.com/intent/tweet?text=Up%20for%20a%20game%20%3F&hashtags=chesshub&url=http%3A%2F%2Fwww.chess-hub.net%2F%3Fgame%3D'+CONTEXT.currentGameId, '_blank');$('#boardpage_popupConf').popup('close');">share with twitter</button>
+            <p style="align:center;"><h3>sharing</h3></p>
+            <button data-icon="chesshub-twitter" id="boardpage_twitter" onclick="openTwitter(CONTEXT.currentGameId);$('#boardpage_popupConf').popup('close');">share with twitter</button>
+            <input type='text' id="boardpage_gamelink"></input>
         </div>
         <div data-role="popup" id="boardpage_popupConfirmQuit" class="ui-content">
             Are you sure you want to leave this game ?
