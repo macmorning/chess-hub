@@ -41,16 +41,6 @@
         return result && unescape(result[1]) || "";
     }    
 
-    function currTime() {
-        // write current time in HH:mm format
-        var currentDate = new Date();
-        var hours = currentDate.getHours();
-        if (hours < 10) { hours = "0" + hours; }
-        var minutes = currentDate.getMinutes();
-        if (minutes < 10) { minutes = "0" + minutes; }
-        return(hours + ":" + minutes);
-    }
-
     $(document).ready(function() {
         
 
@@ -214,8 +204,10 @@
         // adds a message to the chat_output div of the current page
 
         var directMessage = false;
-        if(!message.time) {
-            message.time = currTime();
+        if(message.time) {
+            message.time = "[" + message.time + "] ";
+        } else {
+            message.time = "";
         }
         if (message.to == 'MAIN' || !message.to) { 
             var output = $('#chat_output');
@@ -228,15 +220,15 @@
         }
         if (message.category == "chat_sys") {
             output.html(
-                '<p class="chat_sys"> == ['
-                + message.time + "] " 
+                '<p class="chat_sys"> == '
+                + message.time
                 + message.msg
                 + '</p>'
                 + output.html());
         } else if (message.category == "chat_activity") {
             output.html(
-                '<p class="chat_activity"> == ['
-                + message.time + "] "
+                '<p class="chat_activity"> == '
+                + message.time
                 + message.msg
                 + '</p>'
                 + output.html());
@@ -244,8 +236,8 @@
                 var command = message.msg.split('-');
                 if(command[0] == "created") {
                     output.html(
-                        '<p class="chat_activity"> == ['
-                        + message.time + '] '
+                        '<p class="chat_activity"> == '
+                        + message.time
                         + message.user + ' created a game (' + (command[2] == "0" ? "unlimited" : command[2] + " minutes") + ' / level ' + command[3] + ')'
                         + '&nbsp;<a href="#" onclick="joinGame(\'' + command[1] + '\')">join or watch</a></p>'
                         + output.html());
@@ -259,8 +251,8 @@
                         notify(notifMessage);
                     }
                     output.html(
-                        '<p class="chat_activity"> == ['
-                        + message.time + "] "
+                        '<p class="chat_activity"> == '
+                        + message.time
                         + notifMessage
                         + '</p>'
                         + output.html());
@@ -270,8 +262,8 @@
                     }
                     CHESSBOARD.setPlayer(command[1],message.user);
                     output.html(
-                        '<p class="chat_activity"> == ['
-                        + message.time + "] "
+                        '<p class="chat_activity"> == '
+                        + message.time
                         + message.user + ' sits as ' + (command[1] == 'w' ? 'White' : 'Black')
                         + '</p>'
                         + output.html());
@@ -290,8 +282,8 @@
                     var reason = "";
                     if(command[1] !== "") { reason = " - " + command[1]; }
                     output.html(
-                        '<p class="chat_activity"> == ['
-                        + message.time + "] "
+                        '<p class="chat_activity"> == '
+                        + message.time
                         + message.user + (command[0] === 'leave' ? ' left' + color + reason : ' joined')
                         + '</p>'
                         + output.html());
