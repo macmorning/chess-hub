@@ -9,13 +9,16 @@ The goal of this project is to provide a set of web components for online chess 
 
 The 1st version is "hit & run" style. The user provides a login name (no auth) and is directed to the main page, which includes a basic chat system and a form. The form allows the user to search for a game (level, and level span tolerancy). If no game is found, a new one is created. The user is then directed to the board. He "sits" in one of the free chairs (blacks or whites). The game starts when both chairs are occupied.
 
+Head to http://www.chess-hub.net/ to try it.
+
+
 ___
 Current state
 ---------
 
-    server  : |=========================================================================================>          | 90%
+    server  : |==============================================================================================>     | 95%
 
-    client  : |=========================================================================================>          | 90%
+    client  : |==============================================================================================>     | 95%
 
 
 
@@ -127,9 +130,9 @@ TODO
 - [ ] add a "invite" button
    - [x] via Twitter, 
    - [ ] email, 
-   - [ ] or other services
-- [ ] finish the main page design
-- [ ] work on the login page; describe the app, show the stats
+   - [x] or other services
+- [x] finish the main page design
+- [x] work on the login page; describe the app, show the stats
 - [ ] save the context into local storage
 - [ ] handle reconnection (or page refresh)
 
