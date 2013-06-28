@@ -20,6 +20,14 @@ Current state
 
     client  : |==============================================================================================>     | 95%
 
+___
+Installation
+---------
+- git clone
+- npm install (installs all gruntjs dependencies)
+- (sudo) npm install -g grunt-cli (if you wish to use grunt)
+- node server.jslint
+- profit
 
 
 ___
@@ -27,7 +35,7 @@ server - the Hub
 =========
 
 Built with NodeJS. No framework.
-Using gruntj with jslint & uglify.
+Using gruntjs with jslint & uglify.
 
 1st version Goals :
 --------
