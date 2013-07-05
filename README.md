@@ -23,11 +23,12 @@ Current state
 ___
 Installation
 ---------
-- git clone
+- install nodejs & npm
+- create a dir & run git clone
 - npm install (installs all gruntjs dependencies)
 - (sudo) npm install -g grunt-cli (if you wish to use grunt)
-- node server.jslint
-- profit
+- node server.js
+- open in browser
 
 
 ___
