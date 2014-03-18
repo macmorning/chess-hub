@@ -210,15 +210,15 @@ var CHESSBOARD = {
             }
             
             // pawn capturing "en passant"
-            if (!CHESSBOARD.chessBoard[numericTo] && CHESSBOARD.pieces[pieceId].class === 'wpawn' && CHESSBOARD.chessBoard[numericTo-1] && (numericMove === 11 || numericMove === -9)) {
+            if (!CHESSBOARD.chessBoard[numericTo] && CHESSBOARD.pieces[pieceId].class === 'wpawn' && CHESSBOARD.pieces[pieceId].sqId[3] === '5' && CHESSBOARD.chessBoard[numericTo-1] && (numericMove === 11 || numericMove === -9)) {
                 var targetPiece = CHESSBOARD.chessBoard[numericTo-1];
-                if ( targetPiece !== '') {
+               if ( targetPiece !== '') {
                     CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true); // move opponents piece to the graveyard, don't commit
                 }                 
             }
-            if (!CHESSBOARD.chessBoard[numericTo] && CHESSBOARD.pieces[pieceId].class === 'bpawn' && CHESSBOARD.chessBoard[numericTo+1] && (numericMove === -11 || numericMove === 9)) {
+            if (!CHESSBOARD.chessBoard[numericTo] && CHESSBOARD.pieces[pieceId].class === 'bpawn'  && CHESSBOARD.pieces[pieceId].sqId[3] === '4' && CHESSBOARD.chessBoard[numericTo+1] && (numericMove === -11 || numericMove === 9)) {
                 var targetPiece = CHESSBOARD.chessBoard[numericTo+1];
-                if ( targetPiece !== '') {
+                 if ( targetPiece !== '') {
                     CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true); // move opponents piece to the graveyard, don't commit
                 } 
             }
