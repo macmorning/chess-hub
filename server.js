@@ -116,7 +116,6 @@ function currTime() {
     return(hours + ":" + minutes);
 }
 
-
 function resBadRequest(res,err,data) {
     res.writeHead(400, { 'Content-type': 'text/txt'});
     res.end('Bad request');

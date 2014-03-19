@@ -127,6 +127,8 @@
                         if(CONTEXT.getGameId) { 
                             joinGame(CONTEXT.getGameId);
                         }
+                    } else {
+                        $('#login_returnmessage').text("Server replied : " + response.returnmessage);
                     }
 				},
                 function() {    // callback function for error event

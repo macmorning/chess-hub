@@ -5,7 +5,7 @@
     "MAXMESSAGES"       : 20,
     "LOGCONFIG"         : false,
     "LOGSTATIC"         : false,
-    "LOGCONNECT"        : false,
+    "LOGCONNECT"        : true,
     "LOGMESSAGING"      : false,
     "LOGPOLLING"        : false,
     "LOGCHANNEL"        : false,
