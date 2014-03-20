@@ -419,12 +419,9 @@ var CHESSBOARD = {
             if (CHESSBOARD.pieces[pieceId].class === 'wpawn' && target.id[3] === "8"
                 || CHESSBOARD.pieces[pieceId].class === 'bpawn' && target.id[3] === "1") {
                 if ( document.getElementById(pieceId[0]+'Graveyard').children.length ) { 
-                    console.log(document.getElementById(pieceId[0]+'Graveyard').children.length);
                     CHESSBOARD.promoting[pieceId[0]] = target.id;   // player can promote a pawn; save the destination square id
                     CHESSBOARD._markSquare(pieceId[0]+"Graveyard","selected",true);
-                    console.log('promoting');
                 } else {
-                    console.log('NOT promoting');
                 }
             }
             
