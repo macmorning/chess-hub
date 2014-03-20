@@ -320,7 +320,14 @@ var CHESSBOARD = {
             
             return true;
         } 
-
+        // user is promoting, but clicks on a piece that is not currently in his graveyard
+        else if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece 
+            && ((CHESSBOARD.pieces[ev.target.id].sqId !== 'wGraveyard' && CHESSBOARD.whitePlayer === CONTEXT.user && CHESSBOARD.promoting['w']) 
+                || (CHESSBOARD.pieces[ev.target.id].sqId !== 'bGraveyard'  && CHESSBOARD.blackPlayer === CONTEXT.user && CHESSBOARD.promoting['b']))) {
+            return false;
+        }
+        
+        
         // user is not holding a piece yet and is clicking on one, but the clicked piece is not the right color
         else if (ev.target.tagName === 'IMG' && !CHESSBOARD.selectedPiece 
             && (ev.target.id[0] !== CHESSBOARD.currentGameTurn 
