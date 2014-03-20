@@ -245,6 +245,16 @@ var CHESSBOARD = {
             if(!dontSwitchTurn) {
                 CHESSBOARD._commitMoves(CHESSBOARD.gameId);
                 CHESSBOARD.currentGameTurn=(pieceId[0] === 'w' ? 'b' : 'w'); // switch game turn
+                // new turn starts; remove the "en passant" flags for the new current user's pawns
+                for (var p in CHESSBOARD.pieces) {     // parse the pieces array
+                    // if the piece is a pawn, of current players color
+                    if (CHESSBOARD.pieces[p].class === CHESSBOARD.currentGameTurn + 'pawn' 
+                            && CHESSBOARD.pieces[p].enPassant === true) {
+                        CHESSBOARD.pieces[p].enPassant = false ;
+                    }
+                }
+
+                // start Timer
                 CHESSBOARD.startTimer(CHESSBOARD.currentGameTurn);
             }
             CHESSBOARD._verifyCheck();
