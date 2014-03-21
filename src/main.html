@@ -55,10 +55,10 @@
             window.location = compatPage;
         }
 
-        window.onunload = function(){
-            logoff();
-            $.mobile.changePage($("#loginpage"));
-        };
+        //window.onunload = function(){
+        //    clearContext();
+        //    $.mobile.changePage($("#loginpage"));
+        //};
         
         $("#login_submit").click(function(event) {
                 event.preventDefault();
@@ -77,10 +77,14 @@
         
         $('#login_username').focus();
         
+        
+        loadContext();
         CONTEXT.getUserName = getUrlVar('user');
         CONTEXT.getGameId = getUrlVar('game');
         
         if(CONTEXT.getUserName) {
+            $('#login_username').val(CONTEXT.getUserName);
+        } else if (CONTEXT.user) {
             $('#login_username').val(CONTEXT.getUserName);
         }
         
@@ -90,7 +94,38 @@
         $( '#mainpage' ).on( 'pageshow',function(event){
             checkContext();
         });
+        
     });
+
+    function saveContext() {
+        localStorage.Context = JSON.stringify(CONTEXT);
+        return true;
+    }
+
+    function loadContext() {
+        if(localStorage.Context) {
+            CONTEXT = JSON.parse(localStorage.Context);
+        }
+        return true;
+    }
+
+    function clearContext() {
+        $('#chat_input').val("");
+        $('#chat_output').html("");
+        $('#board_chat_input').val("");
+        $('#board_chat_output').html("");
+        $('#login_returnmessage').text("");
+        CHESSBOARD.stopTimer();
+        CHESSHUB.disconnect();
+        CONTEXT.user = '';
+        CONTEXT.key = '';
+        CONTEXT.history = [];
+        CONTEXT.currentHistoryIndex = 0;
+        CONTEXT.currentGameId = '';
+        CONTEXT.currentGameName = '';
+        saveContext();
+        return true;
+    }
 
     function checkContext() {
         if (!CONTEXT.user) {
@@ -109,7 +144,10 @@
     function connect(user) {
         $('#login_submit').button('disable');
         $.mobile.loading('show');
-        CHESSHUB.connect(user,
+        if(CONTEXT.user !== user) {
+            clearContext(); // if a user/key was stored in localStorage and the user does not match, clear the context; if they match, we can use the key to try and reconnect the user 
+        }
+        CHESSHUB.connect(user, CONTEXT.key,
                 function(response) {                    // callback function for success event
                     $('#login_submit').button('enable');
                     $.mobile.loading('hide');
@@ -127,6 +165,7 @@
                         if(CONTEXT.getGameId) { 
                             joinGame(CONTEXT.getGameId);
                         }
+                        saveContext();
                     } else {
                         $('#login_returnmessage').text("Server replied : " + response.returnmessage);
                     }
@@ -309,7 +348,7 @@
                 notify(message.user + " - " + message.msg);
             }
         }
-        
+        saveContext();
         return true;
     }
 
@@ -333,20 +372,6 @@
         return true;
     }
     
-    function logoff() {
-        $('#chat_input').val("");
-        $('#chat_output').html("");
-        $('#board_chat_input').val("");
-        $('#board_chat_output').html("");
-        $('#login_returnmessage').text("");
-        CHESSBOARD.stopTimer();
-        CHESSHUB.disconnect();
-        CONTEXT.user = '';
-        CONTEXT.key = '';
-        CONTEXT.history = [];
-        CONTEXT.currentHistoryIndex = 0;
-        return true;
-    }
 
     function leaveGame() {
         CHESSHUB.leave(CHESSBOARD.gameId);
@@ -449,7 +474,7 @@
 <div data-role="page" id="mainpage" data-theme="a">
     <header data-role="header">
         <h1>Chess Hub</h1>
-		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="logoff();$.mobile.changePage($('#loginpage'));">Exit</a>
+		<a href="javascript:void(0)" data-icon="delete" data-iconpos="notext" onclick="clearContext();$.mobile.changePage($('#loginpage'));">Exit</a>
 <!--		<a href="#configpage" data-icon="gear" data-iconpos="notext">Configuration</a>-->
 	</header>
 

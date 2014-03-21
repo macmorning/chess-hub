@@ -177,7 +177,7 @@ CHESSHUB = {
     //  function : connect(user, successCallBack, errorCallBack)
     //  connects a user to the chesshub server
     //
-    connect: function(user, successCallBack, errorCallBack) {
+    connect: function(user, key, successCallBack, errorCallBack) {
             CHESSHUB.init();
             var data = { user: user, clientLib: CHESSHUB.name, clientVersion: CHESSHUB.version } ;
             $.ajax({
