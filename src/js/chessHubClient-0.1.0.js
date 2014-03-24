@@ -179,7 +179,7 @@ CHESSHUB = {
     //
     connect: function(user, key, successCallBack, errorCallBack) {
             CHESSHUB.init();
-            var data = { user: user, clientLib: CHESSHUB.name, clientVersion: CHESSHUB.version } ;
+            var data = { user: user, key: key, clientLib: CHESSHUB.name, clientVersion: CHESSHUB.version } ;
             $.ajax({
                 type: 'POST',
                 url : '/connect',

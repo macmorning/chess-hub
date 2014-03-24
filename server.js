@@ -409,6 +409,7 @@ http.createServer(function (req, res) {
                 }));
         }
         var user = "";
+        var key = "";
         var data = "";
         req.on('data', function(chunk) {
             data += chunk;
@@ -418,6 +419,8 @@ http.createServer(function (req, res) {
             try { json = JSON.parse(data); }
             catch(err) { console.log(err); console.log(data); var json= {};}
             user = escapeHtml(json.user);
+            key = escapeHtml(json.key);
+            
             if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... connect ' + user); }
 
             if (!user) {
@@ -437,7 +440,15 @@ http.createServer(function (req, res) {
                     user: user,
                     key: users[user].key
                 }));
-            } else {
+            } else if(users[user] && checkUserKey(user,key)){
+                if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... ' + user + ' is already connected with this key, accepting connection'); }
+                res.end(JSON.stringify( {
+                    returncode: 'ok',
+                    returnmessage: LASTANNOUNCEMENT,
+                    user: user,
+                    key: users[user].key
+                }));
+            } else if(users[user] && !checkUserKey(user,key)){
                 if(LOGCONNECT) { console.log(currTime() + ' [CONNEC] ... ' + user + ' is already reserved'); }
                 res.writeHead(200, { 'Content-Type': 'application/json'});
                 res.end(JSON.stringify( {
