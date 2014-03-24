@@ -23,7 +23,8 @@
         currentGameId: '',
         currentGameName: '',
         getGameId:'',
-        getUserName:''
+        getUserName:'',
+        connected:false
     };
 
     // current browser doesn't have a console
@@ -55,10 +56,10 @@
             window.location = compatPage;
         }
 
-        //window.onunload = function(){
-        //    clearContext();
-        //    $.mobile.changePage($("#loginpage"));
-        //};
+        window.onunload = function(){
+            clearContext();
+            $.mobile.changePage($("#loginpage"));
+        };
         
         $("#login_submit").click(function(event) {
                 event.preventDefault();
@@ -72,6 +73,7 @@
                 event.preventDefault();
                 searchGame($('#game_user_level').val(),$('#game_lower_ok').val(),$('#game_higher_ok').val(),$('#game_timer').val(),true);
         });
+        
         $("#loginpage_footer").html(CHESSHUB.name + " version " + CHESSHUB.version);
         getStats('login_returnmessage');
         
@@ -85,7 +87,7 @@
         if(CONTEXT.getUserName) {
             $('#login_username').val(CONTEXT.getUserName);
         } else if (CONTEXT.user) {
-            $('#login_username').val(CONTEXT.getUserName);
+            $('#login_username').val(CONTEXT.user);
         }
         
         $( '#boardpage' ).on( 'pageshow',function(event){
@@ -117,8 +119,9 @@
         $('#login_returnmessage').text("");
         CHESSBOARD.stopTimer();
         CHESSHUB.disconnect();
-        CONTEXT.user = '';
-        CONTEXT.key = '';
+        CONTEXT.connected = false;
+        //CONTEXT.user = '';
+        //CONTEXT.key = '';
         CONTEXT.history = [];
         CONTEXT.currentHistoryIndex = 0;
         CONTEXT.currentGameId = '';
@@ -128,6 +131,7 @@
     }
 
     function checkContext() {
+        loadContext();
         if (!CONTEXT.user) {
             $('#game_search').button('disable');
             $('#game_create').button('disable');
@@ -142,7 +146,8 @@
     }
     
     function connect(user) {
-        $('#login_submit').button('disable');
+        try {$('#login_submit').button('disable');}
+        catch(e) { /* don't give a shwing */}
         $.mobile.loading('show');
         if(CONTEXT.user !== user) {
             clearContext(); // if a user/key was stored in localStorage and the user does not match, clear the context; if they match, we can use the key to try and reconnect the user 
@@ -154,6 +159,7 @@
                     if(response.returncode == 'ok'){    // user is connected; start polling for messaging and switch to main page
                         CONTEXT.user = response.user;
                         CONTEXT.key = response.key;
+                        CONTEXT.connected = true;
                         getStats('mainpage_stats');
                         CHESSHUB.listen('MAIN',
                                 function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
