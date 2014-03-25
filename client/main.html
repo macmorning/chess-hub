@@ -57,13 +57,12 @@
         }
 
         window.onunload = function(){
-            clearContext();
-            $.mobile.changePage($("#loginpage"));
+            disconnectContext();
         };
         
         $("#login_submit").click(function(event) {
                 event.preventDefault();
-                connect($("#login_username").val());
+                login($("#login_username").val());
         });
         $("#game_search").click(function(event) {
                 event.preventDefault();
@@ -99,6 +98,7 @@
         
     });
 
+
     function saveContext() {
         localStorage.Context = JSON.stringify(CONTEXT);
         return true;
@@ -111,75 +111,98 @@
         return true;
     }
 
+    function disconnectContext() {
+        CHESSBOARD.stopTimer();
+        CHESSHUB.disconnect();
+        CONTEXT.connected = false;
+        saveContext();
+        return true;
+    }
+
     function clearContext() {
         $('#chat_input').val("");
         $('#chat_output').html("");
         $('#board_chat_input').val("");
         $('#board_chat_output').html("");
         $('#login_returnmessage').text("");
-        CHESSBOARD.stopTimer();
-        CHESSHUB.disconnect();
-        CONTEXT.connected = false;
-        //CONTEXT.user = '';
-        //CONTEXT.key = '';
         CONTEXT.history = [];
         CONTEXT.currentHistoryIndex = 0;
         CONTEXT.currentGameId = '';
         CONTEXT.currentGameName = '';
+        disconnectContext();
         saveContext();
         return true;
     }
 
     function checkContext() {
         loadContext();
-        if (!CONTEXT.user) {
+        if (!CONTEXT.connected && (!CONTEXT.user || !CONTEXT.key)) {
             $('#game_search').button('disable');
             $('#game_create').button('disable');
             $('#chessBoardContainer').css({display:'none'});
             addMessage({category:'chat_sys',msg:'You are not connected; please log off and in again.',to:'MAIN'});
             addMessage({category:'chat_sys',msg:'You are not connected; please log off and in again.',to:'other channels'});
+        } else if (!CONTEXT.connected && CONTEXT.user && CONTEXT.key) {
+            connect(CONTEXT.user,function(){
+                if (window.location.hash === '#mainpage') {
+                    CHESSHUB.listen('MAIN',
+                            function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
+                        );
+                } else if (window.location.hash === '#boardpage') {
+                    joinGame(CONTEXT.currentGameId);
+                }
+            });           
         } else {
             $('#game_search').button('enable');
             $('#game_create').button('enable');
             $('#chessBoardContainer').css({display:'block'});
         }
     }
-    
-    function connect(user) {
-        try {$('#login_submit').button('disable');}
-        catch(e) { /* don't give a shwing */}
+
+    function login(user) {
+        $('#login_submit').button('disable');
         $.mobile.loading('show');
         if(CONTEXT.user !== user) {
             clearContext(); // if a user/key was stored in localStorage and the user does not match, clear the context; if they match, we can use the key to try and reconnect the user 
         }
+        connect(user,function() {
+                $('#login_submit').button('enable');
+                $.mobile.loading('hide');
+                getStats('mainpage_stats');
+                $.mobile.changePage($("#mainpage"),{});
+                CHESSHUB.listen('MAIN',
+                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
+                    );
+                // if a game id was passed as a GET parameter, try joining the gameAcceptHigher
+                if(CONTEXT.getGameId) { 
+                    joinGame(CONTEXT.getGameId);
+                }
+            }, function(err) {
+                $('#login_returnmessage').text("Server replied : " + err);
+                $('#login_submit').button('enable');
+                $.mobile.loading('hide');
+            });
+    }
+        
+    function connect(user,success,fail) {
         CHESSHUB.connect(user, CONTEXT.key,
                 function(response) {                    // callback function for success event
-                    $('#login_submit').button('enable');
-                    $.mobile.loading('hide');
                     if(response.returncode == 'ok'){    // user is connected; start polling for messaging and switch to main page
                         CONTEXT.user = response.user;
                         CONTEXT.key = response.key;
                         CONTEXT.connected = true;
-                        getStats('mainpage_stats');
-                        CHESSHUB.listen('MAIN',
-                                function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
-                            );
                         addMessage({category:'chat_sys',user:'SYSTEM',msg:response.returnmessage});
-                        $.mobile.changePage($("#mainpage"),{});
+                        // if a function was passed to connect() then execute it
+                        if (typeof(success) === 'function') {success();};
                         
-                        // if a game id was passed as a GET parameter, try joining the gameAcceptHigher
-                        if(CONTEXT.getGameId) { 
-                            joinGame(CONTEXT.getGameId);
-                        }
                         saveContext();
                     } else {
-                        $('#login_returnmessage').text("Server replied : " + response.returnmessage);
+                        // if a function was passed to connect() then execute it
+                        if (typeof(fail) === 'function') {fail(response.returnmessage);};
                     }
 				},
                 function() {    // callback function for error event
-                    $('#login_submit').button('enable');
-                    $.mobile.loading('hide');
-                    $('#login_returnmessage').text("Error connecting you to the server :(");
+                    if (typeof(fail) === 'function') {fail('error connecting to server');};
                 }
         );
         return true;
@@ -404,6 +427,7 @@
                             );
                     CONTEXT.currentGameId = response.gameDetails.id;    // set the game informations
                     CONTEXT.currentGameName = response.gameDetails.name;
+                    saveContext();
                     CHESSBOARD.initChessBoard(response.gameDetails.id);
                     CHESSBOARD.setPlayer('A',response.gameDetails.playerA);
                     CHESSBOARD.setPlayer('B',response.gameDetails.playerB);
