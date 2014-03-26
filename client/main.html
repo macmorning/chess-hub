@@ -125,6 +125,7 @@
         $('#board_chat_input').val("");
         $('#board_chat_output').html("");
         $('#login_returnmessage').text("");
+        getStats('login_returnmessage');
         CONTEXT.history = [];
         CONTEXT.currentHistoryIndex = 0;
         CONTEXT.currentGameId = '';
@@ -145,7 +146,8 @@
         } else if (!CONTEXT.connected && CONTEXT.user && CONTEXT.key) {
             connect(CONTEXT.user,function(){
                 if (window.location.hash === '#mainpage') {
-                    CHESSHUB.listen('MAIN',
+                        getStats('mainpage_stats');
+                        CHESSHUB.listen('MAIN',
                             function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
                         );
                 } else if (window.location.hash === '#boardpage') {
@@ -491,7 +493,7 @@
         <div id='loginpage_main'>
             Chess-Hub is a simple web platform for online free chess play. No registration is required, just a username that will be yours for the time of your play session. 
             <h2>Please enter a username</h2>
-                <input type='text' id="login_username" onkeypress="{if (event.keyCode==13 && this.value !== '') connect(this.value)}">
+                <input type='text' id="login_username" onkeypress="{if (event.keyCode==13 && this.value !== '') login(this.value)}">
                 <button id="login_submit" type="submit">Submit</button>
                 <span class="info" id="login_returnmessage"></span>
         </div>
