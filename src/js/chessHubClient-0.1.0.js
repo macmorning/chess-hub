@@ -67,6 +67,8 @@ CHESSHUB = {
     //  recursive long polling function
     //
     _poll: function(channel,newMessageCallBack) {
+        //console.log(CHESSHUB.channels[channel]);
+
         if(!CHESSHUB.channels[channel] || CHESSHUB.channels[channel].counter.isNaN)
         {
             return false;
@@ -85,8 +87,10 @@ CHESSHUB = {
                     CHESSHUB.channels[channel].counter = response.counter;
                 }
                 if($.isArray(response.append)) { 
+                    //console.log(response.append);
                     response.append.forEach(function(message) { newMessageCallBack(message,response.whiteTimer,response.blackTimer); });
                 } else {
+                    //console.log('string : ' + response.append);
                     newMessageCallBack(response.append,response.whiteTimer,response.blackTimer);
                 }
                 CHESSHUB._poll(channel,newMessageCallBack);

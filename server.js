@@ -689,7 +689,7 @@ http.createServer(function (req, res) {
                 resUnauthorized(res,'The provided key for user ' + user + '  does not match the registered one for the user','provided key for user ' + user + '  = ' + key);
                 return false;
             }
-            if(LOGMESSAGING) { console.log(currTime() + ' [CONNEC] ... user ' + user + ' leaves game ' + gameId); }
+            if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... user ' + user + ' leaves game ' + gameId); }
             res.writeHead(200, { 'Content-Type': 'application/json'});
             res.end(JSON.stringify([]));    // first, release the client
             leave(user,gameId);               // then, handle the disconnection
@@ -705,6 +705,7 @@ http.createServer(function (req, res) {
         // channel : channel to dispatch the message to
         // category : message category; either chat_msg or game
         // msg : message
+        if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] getGame'); }
         var user = "";
         var key = "";
         var gameId = "";
@@ -730,6 +731,7 @@ http.createServer(function (req, res) {
                 resUnauthorized(res,'The provided key for user ' + user + '  does not match the registered one for the user','provided key for user ' + user + '  = ' + key);
                 return false;
             }
+            if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... user ' + user + ' requests game information for ' + gameId); }
             try { 
                     var channel = channels[gameId];
                     var tmpChannel = {name: channel.name, 

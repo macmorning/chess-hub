@@ -146,11 +146,15 @@
         } else if (!CONTEXT.connected && CONTEXT.user && CONTEXT.key) {
             connect(CONTEXT.user,function(){
                 if (window.location.hash === '#mainpage') {
-                        getStats('mainpage_stats');
-                        CHESSHUB.listen('MAIN',
-                            function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
-                        );
+                    getStats('mainpage_stats');
+                    CHESSHUB.listen('MAIN',
+                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
+                    );
                 } else if (window.location.hash === '#boardpage') {
+                    getStats('mainpage_stats');
+                    CHESSHUB.listen('MAIN',
+                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
+                    );
                     joinGame(CONTEXT.currentGameId);
                 }
             });           
@@ -305,6 +309,7 @@
                 + '</p>'
                 + output.html());
         } else if (message.category == "game") {
+                console.log(message);
                 var command = message.msg.split('-');
                 if(command[0] == "created") {
                     output.html(
@@ -419,6 +424,7 @@
     }
 
     function joinGame(gameId) {
+        console.log('joining game ' + gameId);
         var output = $('#chat_output');
         CHESSHUB.joinGame(gameId,
                 function(response) {
