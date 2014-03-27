@@ -163,7 +163,7 @@ var CHESSBOARD = {
         $('.timer').removeClass('current');
     },
 
-    move: function(pieceId,destinationId,dontSwitchTurn) {
+    move: function(pieceId,destinationId,dontSwitchTurn,dontSend) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
         var from = CHESSBOARD.pieces[pieceId].sqId;
@@ -171,8 +171,9 @@ var CHESSBOARD = {
 		var numericTo = parseInt(CHESSBOARD._numeric(destinationId),10); 
 		var numericMove = numericTo - numericFrom;
 
-            if(pieceId[0] === 'w' && CHESSBOARD.whitePlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'w'
-                || pieceId[0] === 'b' && CHESSBOARD.blackPlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'b') {
+            if(!dontSend && 
+                (pieceId[0] === 'w' && CHESSBOARD.whitePlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'w'
+                || pieceId[0] === 'b' && CHESSBOARD.blackPlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'b')) {
                 // only record moves of current player pieces to send to the server
                 CHESSBOARD.arrayOfMoves.push('move-' + pieceId + '-' + destinationId);
             }

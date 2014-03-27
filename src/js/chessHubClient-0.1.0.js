@@ -88,10 +88,10 @@ CHESSHUB = {
                 }
                 if($.isArray(response.append)) { 
                     //console.log(response.append);
-                    response.append.forEach(function(message) { newMessageCallBack(message,response.whiteTimer,response.blackTimer,response.counter); });
+                    response.append.forEach(function(message) { newMessageCallBack(message,response.newMsg,response.whiteTimer,response.blackTimer,response.counter); });
                 } else {
                     //console.log('string : ' + response.append);
-                    newMessageCallBack(response.append,response.whiteTimer,response.blackTimer,response.counter);
+                    newMessageCallBack(response.append,response.newMsg,response.whiteTimer,response.blackTimer,response.counter);
                 }
                 CHESSHUB._poll(channel,newMessageCallBack);
             },

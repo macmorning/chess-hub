@@ -149,12 +149,12 @@
                 if (window.location.hash === '#mainpage') {
                     getStats('mainpage_stats');
                     CHESSHUB.listen('MAIN',
-                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer,counter); }
+                        function(message,whiteTimer,blackTimer) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
                     );
                 } else if (window.location.hash === '#boardpage') {
                     getStats('mainpage_stats');
                     CHESSHUB.listen('MAIN',
-                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer,counter); }
+                        function(message,whiteTimer,blackTimer) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
                     );
                     joinGame(CONTEXT.currentGameId);
                 }
@@ -178,7 +178,7 @@
                 getStats('mainpage_stats');
                 $.mobile.changePage($("#mainpage"),{});
                 CHESSHUB.listen('MAIN',
-                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer,counter); }
+                        function(message,whiteTimer,blackTimer) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
                     );
                 // if a game id was passed as a GET parameter, try joining the gameAcceptHigher
                 if(CONTEXT.getGameId) { 
@@ -277,9 +277,11 @@
         }, 1000);
     }
     
-    function addMessage(message,whiteTimer,blackTimer,counter) {
+    function addMessage(message,newMsg,whiteTimer,blackTimer,counter) {
         // adds a message to the chat_output div of the current page
+        // newMsg : boolean indicating if the messages are history or current move
         // counter is the current channel messages array length
+        
         var directMessage = false;
         if(message.time) {
             message.time = "[" + message.time + "] ";
@@ -310,7 +312,6 @@
                 + '</p>'
                 + output.html());
         } else if (message.category == "game") {
-                console.log(message);
                 var command = message.msg.split('-');
                 if(command[0] == "created") {
                     output.html(
@@ -324,8 +325,8 @@
                     if (whiteTimer && blackTimer) {
                         CHESSBOARD.updateTimers(whiteTimer,blackTimer);
                     }
-                    if ((CHESSBOARD.whitePlayer !== CONTEXT.user && CHESSBOARD.blackPlayer !== CONTEXT.user)) { 
-                        CHESSBOARD.move(command[1], command[2]);
+                    if (!newMsg || (CHESSBOARD.whitePlayer !== CONTEXT.user && CHESSBOARD.blackPlayer !== CONTEXT.user)) { 
+                        CHESSBOARD.move(command[1], command[2], true); // don't analyze nor send move to server
                         notify(notifMessage);
                     }
                     output.html(
@@ -443,6 +444,9 @@
                     CHESSBOARD.setPlayer('w',response.gameDetails.whitePlayer);
                     CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
                     CHESSBOARD.gameTimer = response.gameDetails.gameTimer;
+                    CHESSBOARD.currentGameTurn = response.gameDetails.currentTurn;
+
+                    CHESSBOARD.counter = response.gameDetails.counter;
                     if(CHESSBOARD.gameTimer <= 0) {
                         $('#wTimer').html('white');
                         $('#bTimer').html('black');
@@ -453,6 +457,7 @@
                         CHESSBOARD.updateTimer('w',CHESSBOARD.whiteTimer);
                         CHESSBOARD.updateTimer('b',CHESSBOARD.blackTimer);
                     }
+                    CHESSBOARD.startTimer(CHESSBOARD.currentGameTurn);
                     $('#boardpage_header').text(response.gameDetails.name);
                     $('#boardpage_gamelink').val(getLink(response.gameDetails.id));
                     $.mobile.changePage($("#boardpage"));

@@ -166,7 +166,8 @@ function sendMessage(from, msg, category, to, doNotAddToHistory ) {
     if(LOGMESSAGING) { console.log(currTime() + ' [MESSAG] ... sendMessage : ' + message.msg);}
     if(!doNotAddToHistory) { channels[to].messages.push(message); }
     var json = JSON.stringify( { 
-            counter: channels[to].messages.length, 
+            counter: channels[to].messages.length,
+            newMsg: true, 
             append: message, 
             whiteTimer : channels[to].whiteTimer, 
             blackTimer : channels[to].blackTimer 
@@ -548,6 +549,7 @@ http.createServer(function (req, res) {
                 res.writeHead(200, { 'Content-type': 'application/json'});
                 res.end(JSON.stringify( {
                     counter: channels[channel].messages.length,
+                    newMsg: false, 
                     append: lastMessages
                 }));
             } else {
@@ -738,6 +740,8 @@ http.createServer(function (req, res) {
                                 open: channel.open, 
                                 id: channel.id, 
                                 messages: channel.messages, 
+                                currentTurn: channel.currentTurn,
+                                counter: channel.messages.length,
                                 playerA: channel.playerA, 
                                 playerB: channel.playerB,
                                 whitePlayer: channel.whitePlayer,
