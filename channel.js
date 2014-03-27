@@ -42,6 +42,7 @@ var Channel = function(name,id,gameTimer) {
     this.gameAcceptLower= false;
     this.gameStarted = false;
     this.gameTimer = gameTimer || 0;
+    this.counter = 0;
     if (this.gameTimer > 0) {
         this.whiteTimer = this.gameTimer * 60;
         this.blackTimer = this.gameTimer * 60;
@@ -63,6 +64,7 @@ Channel.prototype = {
     blackPlayer: '',
     blackTimer: 0,
     blackLastMoveTime: 0,
+    counter: 0,
     currentTurn: 'w',       // w or b
     gameLevel: '',          // level of the game, [0,6]
     gameAcceptHigher: false,// allow player B to join even if his level is more than 1 level higher than the game level
@@ -131,6 +133,7 @@ Channel.prototype = {
 
     addMessage: function(message) {
             this.messages.push({time:message.time,user:message.user,msg:message.msg,category:message.category,to:message.to});
+            this.counter = this.messages.length;
         },
 
     endTurn: function(user,color) {
