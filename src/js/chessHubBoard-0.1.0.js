@@ -51,6 +51,7 @@ var CHESSBOARD = {
     timerInterval: '',              // set to an interval when a countdown is required
     currentGameTurn: '',            // 'w' or 'b'
     gameHistory: [],                // turns history
+    counter: 0,
     chessBoard: { 11:'', 12:'', 13:'', 14:'', 15:'', 16:'', 17:'', 18:'', 
                     21:'', 22:'', 23:'', 24:'', 25:'', 26:'', 27:'', 28:'', 
                     31:'', 32:'', 33:'', 34:'', 35:'', 36:'', 37:'', 38:'', 
@@ -913,6 +914,7 @@ var CHESSBOARD = {
         CHESSBOARD.whiteCanCastleQueenSide = true;
         CHESSBOARD.currentGameTurn= '';
         CHESSBOARD.gameHistory = [];
+        CHESSBOARD.counter = 0;
         return 0;
     },
     

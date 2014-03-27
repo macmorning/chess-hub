@@ -113,6 +113,7 @@
 
     function disconnectContext() {
         CHESSBOARD.stopTimer();
+        CHESSBOARD.initChessBoard();
         CHESSHUB.disconnect();
         CONTEXT.connected = false;
         saveContext();
@@ -148,12 +149,12 @@
                 if (window.location.hash === '#mainpage') {
                     getStats('mainpage_stats');
                     CHESSHUB.listen('MAIN',
-                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
+                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer,counter); }
                     );
                 } else if (window.location.hash === '#boardpage') {
                     getStats('mainpage_stats');
                     CHESSHUB.listen('MAIN',
-                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
+                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer,counter); }
                     );
                     joinGame(CONTEXT.currentGameId);
                 }
@@ -177,7 +178,7 @@
                 getStats('mainpage_stats');
                 $.mobile.changePage($("#mainpage"),{});
                 CHESSHUB.listen('MAIN',
-                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }
+                        function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer,counter); }
                     );
                 // if a game id was passed as a GET parameter, try joining the gameAcceptHigher
                 if(CONTEXT.getGameId) { 
@@ -276,9 +277,9 @@
         }, 1000);
     }
     
-    function addMessage(message,whiteTimer,blackTimer) {
+    function addMessage(message,whiteTimer,blackTimer,counter) {
         // adds a message to the chat_output div of the current page
-
+        // counter is the current channel messages array length
         var directMessage = false;
         if(message.time) {
             message.time = "[" + message.time + "] ";
@@ -323,7 +324,7 @@
                     if (whiteTimer && blackTimer) {
                         CHESSBOARD.updateTimers(whiteTimer,blackTimer);
                     }
-                    if (message.user != CONTEXT.user) { 
+                    if ((CHESSBOARD.whitePlayer !== CONTEXT.user && CHESSBOARD.blackPlayer !== CONTEXT.user)) { 
                         CHESSBOARD.move(command[1], command[2]);
                         notify(notifMessage);
                     }
