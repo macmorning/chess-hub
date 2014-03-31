@@ -326,7 +326,7 @@
                         CHESSBOARD.updateTimers(whiteTimer,blackTimer);
                     }
                     if (!newMsg || (CHESSBOARD.whitePlayer !== CONTEXT.user && CHESSBOARD.blackPlayer !== CONTEXT.user)) { 
-                        CHESSBOARD.move(command[1], command[2], true); // don't analyze nor send move to server
+                        CHESSBOARD.move(command[1], command[2], false, true); // don't analyze nor send move to server
                         notify(notifMessage);
                     }
                     output.html(
