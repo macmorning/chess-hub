@@ -149,12 +149,12 @@
                 if (window.location.hash === '#mainpage') {
                     getStats('mainpage_stats');
                     CHESSHUB.listen('MAIN',
-                        function(message,whiteTimer,blackTimer) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
+                        function(message,newMsg,whiteTimer,blackTimer,counter) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
                     );
                 } else if (window.location.hash === '#boardpage') {
                     getStats('mainpage_stats');
                     CHESSHUB.listen('MAIN',
-                        function(message,whiteTimer,blackTimer) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
+                        function(message,newMsg,whiteTimer,blackTimer,counter) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
                     );
                     joinGame(CONTEXT.currentGameId);
                 }
@@ -281,7 +281,7 @@
         // adds a message to the chat_output div of the current page
         // newMsg : boolean indicating if the messages are history or current move
         // counter is the current channel messages array length
-        
+        //console.log(message + '-' + newMsg + '-' + whiteTimer + '-' + blackTimer + '-' + counter);
         var directMessage = false;
         if(message.time) {
             message.time = "[" + message.time + "] ";
@@ -327,6 +327,9 @@
                     }
                     if (!newMsg || (CHESSBOARD.whitePlayer !== CONTEXT.user && CHESSBOARD.blackPlayer !== CONTEXT.user)) { 
                         CHESSBOARD.move(command[1], command[2], false, true); // don't analyze nor send move to server
+                        notify(notifMessage);
+                    } else {
+                        CHESSBOARD.move(command[1], command[2], false, false); 
                         notify(notifMessage);
                     }
                     output.html(
