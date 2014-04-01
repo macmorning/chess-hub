@@ -166,7 +166,8 @@ var CHESSBOARD = {
     move: function(pieceId,destinationId,dontSwitchTurn,dontSend) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
-        console.log(pieceId+'-'+destinationId+'-'+dontSwitchTurn+'-'+dontSend);
+        
+        //console.log('move : ' + pieceId+'-'+destinationId+'-'+dontSwitchTurn+'-'+dontSend);
         var from = CHESSBOARD.pieces[pieceId].sqId;
 		var numericFrom = parseInt(CHESSBOARD._numeric(from),10);
 		var numericTo = parseInt(CHESSBOARD._numeric(destinationId),10); 

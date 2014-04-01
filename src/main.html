@@ -178,7 +178,7 @@
                 getStats('mainpage_stats');
                 $.mobile.changePage($("#mainpage"),{});
                 CHESSHUB.listen('MAIN',
-                        function(message,whiteTimer,blackTimer) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
+                        function(message,newMsg,whiteTimer,blackTimer,counter) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
                     );
                 // if a game id was passed as a GET parameter, try joining the gameAcceptHigher
                 if(CONTEXT.getGameId) { 
@@ -281,7 +281,9 @@
         // adds a message to the chat_output div of the current page
         // newMsg : boolean indicating if the messages are history or current move
         // counter is the current channel messages array length
-        //console.log(message + '-' + newMsg + '-' + whiteTimer + '-' + blackTimer + '-' + counter);
+        //console.log('addMessage => ' + newMsg + '-' + whiteTimer + '-' + blackTimer + '-' + counter);
+        //console.log(message);
+        //console.log('called by ' + arguments.callee.caller.toString());
         var directMessage = false;
         if(message.time) {
             message.time = "[" + message.time + "] ";
@@ -328,7 +330,7 @@
                     if (!newMsg || (CHESSBOARD.whitePlayer !== CONTEXT.user && CHESSBOARD.blackPlayer !== CONTEXT.user)) { 
                         CHESSBOARD.move(command[1], command[2], false, true); // don't analyze nor send move to server
                         notify(notifMessage);
-                    } else {
+                    } else if (newMsg && message.user !== CONTEXT.user) {
                         CHESSBOARD.move(command[1], command[2], false, false); 
                         notify(notifMessage);
                     }
@@ -436,7 +438,7 @@
                     output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '"...</p>'+ output.html());
                     //CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)
                     CHESSHUB.listen(response.gameDetails.id,
-                                function(message,whiteTimer,blackTimer) { addMessage(message,whiteTimer,blackTimer); }  // start polling the game channel
+                                function(message,newMsg,whiteTimer,blackTimer) { addMessage(message,newMsg,whiteTimer,blackTimer); }  // start polling the game channel
                             );
                     CONTEXT.currentGameId = response.gameDetails.id;    // set the game informations
                     CONTEXT.currentGameName = response.gameDetails.name;

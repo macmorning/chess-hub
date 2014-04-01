@@ -237,6 +237,7 @@ CHESSHUB = {
             console.log('CHESSHUB.sendMessage error - Not connected');
             return;
         }
+        //console.log('sendMessage => ' + text + '/' + channel + '/' + category + '/' + successCallBack + '/' + errorCallBack);
         if(!channel) { channel = 'MAIN';}
         if(!category) { category = 'chat_msg';}
         var data = { user: CHESSHUB.user, channel: channel, key: CHESSHUB.key, msg: text, category: category } ;
