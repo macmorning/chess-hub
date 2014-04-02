@@ -163,11 +163,11 @@ var CHESSBOARD = {
         $('.timer').removeClass('current');
     },
 
-    move: function(pieceId,destinationId,dontSwitchTurn,dontSend) {
+    move: function(pieceId,destinationId,dontSwitchTurn,dontSend,newMsg) {
     // moves a piece "piece" from its current position to a target square "destination"
     // first the piece/img is moved, then it's appended to target square/div, and finally it's repositioned at 0:0 relatively to its new parent
         
-        //console.log('move : ' + pieceId+'-'+destinationId+'-'+dontSwitchTurn+'-'+dontSend);
+        console.log('move : ' + pieceId+'-'+destinationId+'-'+dontSwitchTurn+'-'+dontSend+'-'+newMsg);
         var from = CHESSBOARD.pieces[pieceId].sqId;
 		var numericFrom = parseInt(CHESSBOARD._numeric(from),10);
 		var numericTo = parseInt(CHESSBOARD._numeric(destinationId),10); 
@@ -204,7 +204,7 @@ var CHESSBOARD = {
             if(destinationId[0] === 's') {  // this is not already a piece capture (moving to bGraveyard or wGraveyard
                 var targetPiece = CHESSBOARD.chessBoard[CHESSBOARD._numeric(destinationId)];
                 if ( targetPiece !== '') {
-                    CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true,dontSend); // move opponents piece to the graveyard, don't commit
+                    CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true,dontSend,newMsg); // move opponents piece to the graveyard, don't commit
                 } 
             }
             // pawn double move; flag it as possibly taken "en passant"
@@ -217,13 +217,13 @@ var CHESSBOARD = {
             if (!CHESSBOARD.chessBoard[numericTo] && CHESSBOARD.pieces[pieceId].class === 'wpawn' && CHESSBOARD.pieces[pieceId].sqId[3] === '5' && CHESSBOARD.chessBoard[numericTo-1] && (numericMove === 11 || numericMove === -9)) {
                 var targetPiece = CHESSBOARD.chessBoard[numericTo-1];
                if ( targetPiece !== '') {
-                    CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true,dontSend); // move opponents piece to the graveyard, don't commit
+                    CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true,dontSend,newMsg); // move opponents piece to the graveyard, don't commit
                 }                 
             }
             if (!CHESSBOARD.chessBoard[numericTo] && CHESSBOARD.pieces[pieceId].class === 'bpawn'  && CHESSBOARD.pieces[pieceId].sqId[3] === '4' && CHESSBOARD.chessBoard[numericTo+1] && (numericMove === -11 || numericMove === 9)) {
                 var targetPiece = CHESSBOARD.chessBoard[numericTo+1];
                  if ( targetPiece !== '') {
-                    CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true,dontSend); // move opponents piece to the graveyard, don't commit
+                    CHESSBOARD.move(targetPiece,CHESSBOARD.pieces[targetPiece].id[0]+'Graveyard',true,dontSend,newMsg); // move opponents piece to the graveyard, don't commit
                 } 
             }
 
@@ -236,7 +236,7 @@ var CHESSBOARD = {
             var marginLeft = destinationSelector.width() * 0.05;  // change this if you change the width of the pieces in chessboard.css
             // JQUERY
             pieceSelector.animate({ top: "+=" + (destinationSelector.position().top - pieceSelector.position().top) +"px" , left : "+=" + (destinationSelector.position().left - pieceSelector.position().left + marginLeft) +"px" }, 
-                        "fast", 
+                        (newMsg ? "fast":0), 
                         undefined, 
                         function () {
                             pieceSelector.prependTo(destinationSelector);
