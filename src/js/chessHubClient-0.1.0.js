@@ -66,7 +66,7 @@ CHESSHUB = {
     //  private function : _poll()
     //  recursive long polling function
     //
-    _poll: function(channel,newMessageCallBack) {
+    _poll: function(channel,newMessageCallBack,usersCallBack) {
         //console.log(CHESSHUB.channels[channel]);
 
         if(!CHESSHUB.channels[channel] || CHESSHUB.channels[channel].counter.isNaN)
@@ -91,8 +91,8 @@ CHESSHUB = {
                 } else {
                     newMessageCallBack(response.append,response.newMsg,response.whiteTimer,response.blackTimer,response.counter);
                 }
-                
-                CHESSHUB._poll(channel,newMessageCallBack);
+                usersCallBack(response.users);
+                CHESSHUB._poll(channel,newMessageCallBack,usersCallBack);
             },
             error: function(data,status,error) {
                     // the error event can be triggered because the node server is down (status = error)
@@ -100,7 +100,7 @@ CHESSHUB = {
                     console.log('CHESSHUB._poll : error - ' + status);
                     console.log(error);
                     if (error !== 'Bad Request') {
-                        setTimeout(function() {CHESSHUB._poll(channel,newMessageCallBack);},10000); // retry after 10 seconds
+                        setTimeout(function() {CHESSHUB._poll(channel,newMessageCallBack,usersCallBack);},10000); // retry after 10 seconds
                     }
             }
         });
@@ -143,7 +143,7 @@ CHESSHUB = {
     //  function : listen(channel)
     //  starts polling for the specified channel
     //
-    listen: function(channel,newMessageCallBack) {
+    listen: function(channel,newMessageCallBack,usersCallBack) {
         CHESSHUB.channels[channel] = { counter : 0, name : channel, history : [] };
         if(!newMessageCallBack || Object.getPrototypeOf(newMessageCallBack) !== Function.prototype) { 
             console.log('listen : no handler provided for message');
@@ -151,7 +151,13 @@ CHESSHUB = {
                 console.log('listen : no handler provided for message');
             };
         }
-        this._poll(channel,newMessageCallBack);
+        if(!usersCallBack || Object.getPrototypeOf(usersCallBack) !== Function.prototype) { 
+            console.log('users list : no handler provided for users');
+            newMessageCallBack = function(message) { 
+                console.log('users list : no handler provided for users');
+            };
+        }
+        this._poll(channel,newMessageCallBack,usersCallBack);
     },
 
     //

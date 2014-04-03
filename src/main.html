@@ -149,12 +149,16 @@
                 if (window.location.hash === '#mainpage') {
                     getStats('mainpage_stats');
                     CHESSHUB.listen('MAIN',
-                        function(message,newMsg,whiteTimer,blackTimer,counter) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
+                        function(message,newMsg,whiteTimer,blackTimer,counter) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); },   // newMesageCallBack
+                        function(){}                                                                                                            // usersCallBack
                     );
                 } else if (window.location.hash === '#boardpage') {
                     getStats('mainpage_stats');
                     CHESSHUB.listen('MAIN',
-                        function(message,newMsg,whiteTimer,blackTimer,counter) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
+                        function(message,newMsg,whiteTimer,blackTimer,counter) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); },   // newMesageCallBack
+                        function(users){                                                                                                        // usersCallBack
+                            updateUsers(users);
+                        }
                     );
                     joinGame(CONTEXT.currentGameId);
                 }
@@ -178,7 +182,8 @@
                 getStats('mainpage_stats');
                 $.mobile.changePage($("#mainpage"),{});
                 CHESSHUB.listen('MAIN',
-                        function(message,newMsg,whiteTimer,blackTimer,counter) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); }
+                        function(message,newMsg,whiteTimer,blackTimer,counter) { addMessage(message,newMsg,whiteTimer,blackTimer,counter); },       // newMesageCallBack
+                        function(){}                                                                                                                // usersCallBack
                     );
                 // if a game id was passed as a GET parameter, try joining the gameAcceptHigher
                 if(CONTEXT.getGameId) { 
@@ -277,6 +282,20 @@
         }, 1000);
     }
     
+    function updateUsers(users) {
+        // updates tu users list, if the users array is different from CONTEXT.users
+        // users : array of strings
+        if (!users || users === CHESSBOARD.users) {
+            return false;
+        } 
+        CHESSBOARD.users = users;
+        $('#board_users_list').empty();
+        users.forEach(function(user) {
+            $('#board_users_list').append('<span class="user">'+user+'</span>');
+        });
+        return true;
+    }
+
     function addMessage(message,newMsg,whiteTimer,blackTimer,counter) {
         // adds a message to the chat_output div of the current page
         // newMsg : boolean indicating if the messages are history or current move
@@ -438,7 +457,10 @@
                     output.html('<p class="chat_sys">Joining game : "' + response.gameDetails.name + '"...</p>'+ output.html());
                     //CHESSHUB.leave('MAIN');         // leave the main channel (stop polling it)
                     CHESSHUB.listen(response.gameDetails.id,
-                                function(message,newMsg,whiteTimer,blackTimer) { addMessage(message,newMsg,whiteTimer,blackTimer); }  // start polling the game channel
+                                function(message,newMsg,whiteTimer,blackTimer) { addMessage(message,newMsg,whiteTimer,blackTimer); },   // newMesageCallBack
+                            function(users) {                                                                                           // usersCallBack
+                               updateUsers(users);
+                            }
                             );
                     CONTEXT.currentGameId = response.gameDetails.id;    // set the game informations
                     CONTEXT.currentGameName = response.gameDetails.name;
@@ -611,6 +633,7 @@
         </div>
         <div id='boardpage_chat'>
             <input type='text' id="board_chat_input" onkeyup="chatSpecialKeys(event,'');">
+            <div id="board_users_list"></div>
             <div id="board_chat_output"></div>
         </div>
 

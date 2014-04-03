@@ -99,6 +99,12 @@
     width:100%;
 }
 
+#board_users_list {
+    display:none;
+    width:100%;
+    border: 0.2em solid black;    
+}
+
 .chessBoardRow {
     float:left;
     display:block;
@@ -334,6 +340,9 @@ img.bpawn {
         margin: 0.5em 0.5em 0 53em;
         width:auto;
         float:none;
+    }
+    #board_users_list {
+        display:block;
     }
 }
 

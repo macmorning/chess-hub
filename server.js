@@ -170,7 +170,8 @@ function sendMessage(from, msg, category, to, doNotAddToHistory ) {
             newMsg: true, 
             append: message, 
             whiteTimer : channels[to].whiteTimer, 
-            blackTimer : channels[to].blackTimer 
+            blackTimer : channels[to].blackTimer,
+            users : channels[to].listUsers()
         });
     var i = 0;
     for(var user in channels[to].users) {
@@ -550,7 +551,8 @@ http.createServer(function (req, res) {
                 res.end(JSON.stringify( {
                     counter: channels[channel].messages.length,
                     newMsg: false, 
-                    append: lastMessages
+                    append: lastMessages,
+                    users: channels[channel].listUsers()
                 }));
             } else {
                 res.writeHead(200, {'Content-Type': 'application/json'});
