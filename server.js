@@ -750,7 +750,8 @@ http.createServer(function (req, res) {
                                 gameAcceptHigher: channel.gameAcceptHigher,
                                 gameAcceptLower: channel.gameAcceptLower,
                                 gameTimer: channel.gameTimer,
-                                gameStarted: channel.gameStarted};
+                                gameStarted: channel.gameStarted,
+                                users: channel.listUsers()};
 
                     res.writeHead(200, { 'Content-type': 'application/json'});
                     res.end(JSON.stringify( {

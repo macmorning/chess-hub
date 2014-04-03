@@ -80,6 +80,10 @@ Channel.prototype = {
             }
         },
 
+    listUsers: function() {
+        return(Object.keys(this.users));
+    },
+
     addUser: function(user) {
             if(user && !this.users[user]) {
                 this.users[user] = {lastActivity: new Date()};

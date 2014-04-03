@@ -450,7 +450,7 @@
                     CHESSBOARD.setPlayer('b',response.gameDetails.blackPlayer);
                     CHESSBOARD.gameTimer = response.gameDetails.gameTimer;
                     CHESSBOARD.currentGameTurn = response.gameDetails.currentTurn;
-
+                    CHESSBOARD.users = response.gameDetails.users;
                     CHESSBOARD.counter = response.gameDetails.counter;
                     if(CHESSBOARD.gameTimer <= 0) {
                         $('#wTimer').html('white');
