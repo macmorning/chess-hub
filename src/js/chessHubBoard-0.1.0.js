@@ -431,7 +431,7 @@ var CHESSBOARD = {
             
 
             CHESSBOARD._markSquare(CHESSBOARD.pieces[CHESSBOARD.selectedPiece.attr('id')].sqId,"selected",false);
-            CHESSBOARD.move(pieceId,target.id,(CHESSBOARD.promoting[pieceId[0]] ? true:false));    // if player can promote a pawn, do not switch turn
+            CHESSBOARD.move(pieceId,target.id,(CHESSBOARD.promoting[pieceId[0]] ? true:false),false,true);    // if player can promote a pawn, do not switch turn
             CHESSBOARD.selectedPiece='';
 
             return true;

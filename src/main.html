@@ -323,7 +323,7 @@
                         + '&nbsp;<a href="#" onclick="joinGame(\'' + command[1] + '\')">join or watch</a></p>'
                         + output.html());
                 } else if (command[0] == "move") {
-                    var notifMessage = message.user + ' plays ' + CHESSBOARD.pieces[command[1]].name + " - " + CHESSBOARD.pieces[command[1]].sqId.substring(2,4);
+                    var notifMessage = message.user + ' plays ' + CHESSBOARD.pieces[command[1]].name + " - " + command[2].substring(2,4);
                     if (whiteTimer && blackTimer) {
                         CHESSBOARD.updateTimers(whiteTimer,blackTimer);
                     }
