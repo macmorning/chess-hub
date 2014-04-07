@@ -308,7 +308,7 @@ function houseKeeper() {
     var limitTime = new Date() - 120000;   // drop users if their last activity is more than 2 minutes old
     for (var user in users) {
         if (users[user].lastActivity < limitTime) {
-            console.log(currTime() + ' [HOUSEK] ... disconnect ' + user);
+            console.log(currTime() + ' [HOUSEK] disconnect ' + user);
             if(LOGHOUSEKEEPING) { console.log(currTime() + ' [HOUSEK] ... last activity = ' + users[user].lastActivity);}
             if(LOGHOUSEKEEPING) { console.log(currTime() + ' [HOUSEK] ... limit time = ' + limitTime);}
             disconnect(user,'timeout');
@@ -316,7 +316,7 @@ function houseKeeper() {
     }
     for (var game in channels) {
         if (channels[game].id !== 'MAIN' && !channels[game].playerA && !channels[game].whitePlayer && !channels[game].blackPlayer) {
-            console.log(currTime() + ' [HOUSEK] ... delete game without players ' + game);
+            console.log(currTime() + ' [HOUSEK] delete game without players ' + game);
             sendMessage('SYSTEM','This game has been closed.', 'chat_sys', game);
             delete channels[game];
         }
@@ -634,7 +634,8 @@ http.createServer(function (req, res) {
                                                         gameAcceptHigher: channel.gameAcceptHigher,
                                                         gameAcceptLower: channel.gameAcceptLower,
                                                         gameTimer: channel.gameTimer,
-                                                        gameStarted: channel.gameStarted};
+                                                        gameStarted: channel.gameStarted,
+                                                        users: channel.listUsers()};
 
                         res.writeHead(200, {'Content-Type': 'application/json'});
                         res.end(JSON.stringify( {

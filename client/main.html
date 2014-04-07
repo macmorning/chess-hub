@@ -291,7 +291,7 @@
         CHESSBOARD.users = users;
         $('#board_users_list').empty();
         users.forEach(function(user) {
-            $('#board_users_list').append('<span class="user">'+user+'</span>');
+            $('#board_users_list').append('<p class="user">'+user+'</p>');
         });
         return true;
     }
@@ -300,9 +300,9 @@
         // adds a message to the chat_output div of the current page
         // newMsg : boolean indicating if the messages are history or current move
         // counter is the current channel messages array length
-        //console.log('addMessage => ' + newMsg + '-' + whiteTimer + '-' + blackTimer + '-' + counter);
-        //console.log(message);
-        //console.log('called by ' + arguments.callee.caller.toString());
+        console.log('addMessage => ' + newMsg + '-' + whiteTimer + '-' + blackTimer + '-' + counter);
+        console.log(message);
+        
         var directMessage = false;
         if(message.time) {
             message.time = "[" + message.time + "] ";
@@ -461,7 +461,7 @@
                             function(users) {                                                                                           // usersCallBack
                                updateUsers(users);
                             }
-                            );
+                        );
                     CONTEXT.currentGameId = response.gameDetails.id;    // set the game informations
                     CONTEXT.currentGameName = response.gameDetails.name;
                     saveContext();
