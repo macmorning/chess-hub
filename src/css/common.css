@@ -30,10 +30,15 @@ div#chat_output > p, div#board_chat_output > p {
     margin: 0.2em;
     line-height: 1em;
 }
-p.user {
+p.list_user {
     margin: 0.2em;
     line-height: 1em;
 }
+a.list_user {
+    color: #FFFFFF;
+    text-decoration:none;
+}
+
 p.chat_sys {
     font-weight: bold;
     color: #AA0000;

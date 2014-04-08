@@ -81,7 +81,7 @@ Channel.prototype = {
         },
 
     listUsers: function() {
-        return(Object.keys(this.users));
+        return(Object.keys(this.users).sort());
         },
 
     addUser: function(user) {

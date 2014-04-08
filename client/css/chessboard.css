@@ -100,15 +100,14 @@
 }
 
 #board_users_list {
-    display:none;
     margin: 0 1% 0 1%;
-    width:100%;
+    width:97%;
     border: 0.2em solid black;
     background-color:black;    
     border-radius:10px;
 }
 
-p.user {
+p.list_user {
     position:relative;
     display: block;
     width: 100%;
@@ -355,6 +354,7 @@ img.bpawn {
         display:block;
     }
     p.user {
+        margin: 0.5em 0.5em 0 0.5em;
         width: 25%;
     }
 }

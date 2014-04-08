@@ -283,7 +283,7 @@
     }
     
     function updateUsers(users) {
-        // updates tu users list, if the users array is different from CONTEXT.users
+        // updates the users list, if the users array is different from CONTEXT.users
         // users : array of strings
         if (!users || users === CHESSBOARD.users) {
             return false;
@@ -291,7 +291,9 @@
         CHESSBOARD.users = users;
         $('#board_users_list').empty();
         users.forEach(function(user) {
-            $('#board_users_list').append('<p class="user">'+user+'</p>');
+            $('#board_users_list').append('<p class="list_user"><a href="javascript:void(0)" class="list_user" onclick="copyUserName(\'' + user + '\',\'board_chat_input\');">'
+                + (CHESSBOARD.whitePlayer === user ? '&#9679;&nbsp;':'') + (CHESSBOARD.blackPlayer === user ? '&#9675;&nbsp;':'') + user + '</a>'
+                + '</p>');
         });
         return true;
     }
@@ -300,8 +302,8 @@
         // adds a message to the chat_output div of the current page
         // newMsg : boolean indicating if the messages are history or current move
         // counter is the current channel messages array length
-        console.log('addMessage => ' + newMsg + '-' + whiteTimer + '-' + blackTimer + '-' + counter);
-        console.log(message);
+        //console.log('addMessage => ' + newMsg + '-' + whiteTimer + '-' + blackTimer + '-' + counter);
+        //console.log(message);
         
         var directMessage = false;
         if(message.time) {
