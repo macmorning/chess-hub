@@ -400,9 +400,9 @@
             output.html(
                 '<p class="'
                 + message.category
-                + '"><span class="chat_time">['
+                + '"><span class="chat_time">'
                 + message.time
-                + ']</span> <span class="chat_user">&lt;<a href="javascript:void(0)" class="chat_user" onclick="copyUserName(\'' + message.user + '\',\''+(message.to == "MAIN" ? "chat_input" : "board_chat_input")+'\');">'
+                + '</span> <span class="chat_user">&lt;<a href="javascript:void(0)" class="chat_user" onclick="copyUserName(\'' + message.user + '\',\''+(message.to == "MAIN" ? "chat_input" : "board_chat_input")+'\');">'
                 + message.user + "</a>&gt;"
                 + '</span> <span class="chat_msg'  + (directMessage ? ' chat_direct':'') + '">'
                 + message.msg

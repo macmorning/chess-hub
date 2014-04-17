@@ -173,6 +173,8 @@ var CHESSBOARD = {
 		var numericFrom = parseInt(CHESSBOARD._numeric(from),10);
 		var numericTo = parseInt(CHESSBOARD._numeric(destinationId),10); 
 		var numericMove = numericTo - numericFrom;
+		var algebric = CHESSBOARD.pieces[pieceId].shortname+from[2]+from[3]+'-'+destinationId[2]+destinationId[3];
+
 
             if(!dontSend && 
                 (pieceId[0] === 'w' && CHESSBOARD.whitePlayer === CONTEXT.user && CHESSBOARD.currentGameTurn === 'w'
@@ -734,9 +736,7 @@ var CHESSBOARD = {
                 CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',true);  // mark the king as checked
                 CHESSBOARD._markSquare(CHESSBOARD.pieces[p].sqId,'check',true);     // mark the "checker" as ... checked :p
                 CHESSBOARD.pieces[king].isCheck = true;
-//                console.log(king + ' is check');
             } else {
-//                console.log(king + ' is NOT check');
                 CHESSBOARD._markSquare(CHESSBOARD.pieces[king].sqId,'check',false);
                 CHESSBOARD.pieces[king].isCheck = false;
             }
@@ -751,6 +751,7 @@ var CHESSBOARD = {
                     type: 'king',
                     order: 0,
                     name : CHESSBOARD.colors[c] + ' king',
+                    shortname : 'K',
                     class : c + 'king',
                     sqId : 'sq' + 'e' + (c==="w"?1:8),
                     initx : 5,
@@ -762,6 +763,7 @@ var CHESSBOARD = {
                     type: 'queen',
                     order: 1,
                     name : CHESSBOARD.colors[c] + ' queen',
+                    shortname : 'Q',
                     class : c + 'queen',
                     sqId : 'sq' + 'd' + (c==="w"?1:8),
                     initx : 4,
@@ -772,6 +774,7 @@ var CHESSBOARD = {
                     type: 'rook',
                     order: 2,
                     name : CHESSBOARD.colors[c] + ' rook (a)',
+                    shortname : 'R',
                     class : c + 'rook',
                     sqId : 'sq' + 'a' + (c==="w"?1:8),
                     initx : 1,
@@ -782,6 +785,7 @@ var CHESSBOARD = {
                     type: 'rook',
                     order: 3,
                     name : CHESSBOARD.colors[c] + ' rook (h)',
+                    shortname : 'R',
                     class : c + 'rook',
                     sqId : 'sq' + 'h' + (c==="w"?1:8),
                     initx : 8,
@@ -792,6 +796,7 @@ var CHESSBOARD = {
                     type: 'knight',
                     order: 4,
                     name : CHESSBOARD.colors[c] + ' knight (b)',
+                    shortname : 'N',
                     class : c + 'knight',
                     sqId : 'sq' + 'b' + (c==="w"?1:8),
                     initx : 2,
@@ -802,6 +807,7 @@ var CHESSBOARD = {
                     type: 'knight',
                     order: 2,
                     name : CHESSBOARD.colors[c] + ' knight (g)',
+                    shortname : 'N',
                     class : c + 'knight',
                     sqId : 'sq' + 'g' + (c==="w"?1:8),
                     initx : 7,
@@ -812,6 +818,7 @@ var CHESSBOARD = {
                     type: 'bishop',
                     order: 6,
                     name : CHESSBOARD.colors[c] + ' bishop (c)',
+                    shortname : 'B',
                     class : c + 'bishop',
                     sqId : 'sq' + 'c' + (c==="w"?1:8),
                     initx : 3,
@@ -822,6 +829,7 @@ var CHESSBOARD = {
                     type: 'bishop',
                     order: 7,
                     name : CHESSBOARD.colors[c] + ' bishop (f)',
+                    shortname : 'B',
                     class : c + 'bishop',
                     sqId : 'sq' + 'f' + (c==="w"?1:8),
                     initx : 6,
@@ -833,6 +841,7 @@ var CHESSBOARD = {
                             type: 'pawn',
                             order: 7+i,
                             name: CHESSBOARD.colors[c] + ' pawn (' + CHESSBOARD.chessBoardColumns[i] + ')',
+                            shortname : '',
                             class: c + 'pawn',
                             sqId : 'sq' + CHESSBOARD.chessBoardColumns[i] + (c==="w"?2:7),
                             initx : i,
